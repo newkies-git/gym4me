@@ -1,0 +1,195 @@
+<template>
+  <div class="settings-wrapper container">
+    <div class="header flex-between">
+      <h2>Account Settings</h2>
+      <button class="btn btn-ghost" @click="router.back()">Back</button>
+    </div>
+
+    <div class="grid-2" style="margin-top: 2rem;">
+      <div class="left-panel">
+        <!-- Profile Info Section -->
+        <div class="info-section glass">
+          <h3>Profile Information</h3>
+          <div class="info-group">
+              <label>Email</label>
+              <p>{{ auth.user?.email }}</p>
+          </div>
+          <div class="info-group">
+              <label>Role</label>
+              <p>{{ auth.user?.role }}</p>
+          </div>
+          <div class="info-group" v-if="auth.user?.nickname">
+              <label>Nickname</label>
+              <p>{{ auth.user?.nickname }}</p>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone glass" style="margin-top: 2rem;">
+          <h3 class="text-danger">Danger Zone</h3>
+          <p class="sm-text">Once you delete your account, there is no going back. Please be certain.</p>
+          <button class="btn btn-danger" style="margin-top: 1.5rem;" @click="showDeleteModal = true">Delete Account</button>
+        </div>
+      </div>
+
+      <!-- Ticket History Section (For Members) -->
+      <div v-if="!auth.isTrainer" class="history-section glass">
+        <h3>PT Session History</h3>
+        <div v-if="loadingHistory" class="sm-text">Loading...</div>
+        <ul v-else-if="ticketHistory.length > 0" class="history-list">
+            <li v-for="log in ticketHistory" :key="log.id" class="history-item flex-between" style="flex-direction: row; align-items: center;">
+                <div class="log-date" style="font-weight: 600; font-size: 0.9rem;">{{ formatDate(log.createdAt) }}</div>
+                <div class="log-details" style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; text-align: right;">
+                    <span class="badge" :class="getBadgeClass(log.action)">{{ log.action }}</span>
+                    <span style="font-size: 0.95rem;">{{ log.amountChanged > 0 ? '+' : '' }}{{ log.amountChanged }} sessions</span>
+                    <span class="sm-text" style="font-size: 0.8rem; color: var(--text-muted);">by: {{ log.trainerEmail }}</span>
+                </div>
+            </li>
+        </ul>
+        <div v-else class="empty-state">No PT session history found.</div>
+      </div>
+    </div>
+
+    <!-- Account Deletion Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+        <div class="modal-content glass" style="max-width: 450px;">
+            <h3 class="text-danger">Delete Account</h3>
+            <p style="margin-bottom: 1rem;">This action cannot be undone. This will permanently delete your personal workouts, body profiles, and remove your data from our servers.</p>
+            <p style="margin-bottom: 1.5rem;">Please type <strong>탈퇴 확인</strong> to confirm.</p>
+            
+            <div class="field">
+                <input type="text" v-model="deleteConfirmText" placeholder="탈퇴 확인" style="text-align: center; font-size: 1.1rem;">
+            </div>
+            
+            <p v-if="deleteError" class="error-text" style="margin-bottom: 1.5rem;">{{ deleteError }}</p>
+            
+            <div class="modal-actions">
+                <button class="btn btn-ghost" @click="showDeleteModal = false" :disabled="isDeleting">Cancel</button>
+                <button class="btn btn-danger" @click="executeDeletion" :disabled="deleteConfirmText !== '탈퇴 확인' || isDeleting">
+                    {{ isDeleting ? 'Deleting...' : 'Permanently Delete' }}
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { useUIStore } from '../stores/uiStore'
+import { db } from '../firebase/config'
+import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore'
+import emailjs from '@emailjs/browser'
+
+const auth = useAuthStore()
+const ui = useUIStore()
+const router = useRouter()
+
+const ticketHistory = ref<any[]>([])
+const loadingHistory = ref(false)
+const showDeleteModal = ref(false)
+const deleteConfirmText = ref('')
+const isDeleting = ref(false)
+const deleteError = ref('')
+
+onMounted(() => {
+    if (!auth.isTrainer) {
+        loadTicketHistory()
+    }
+})
+
+const loadTicketHistory = async () => {
+    if (!auth.user?.email) return;
+    loadingHistory.value = true;
+    try {
+        const q = query(
+            collection(db, 'ticketHistory'),
+            where('clientEmail', '==', auth.user.email)
+        )
+        const snapshot = await getDocs(q)
+        let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        logs.sort((a: any, b: any) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0))
+        ticketHistory.value = logs;
+    } catch(e) {
+        console.error("Failed to load history", e)
+    } finally {
+        loadingHistory.value = false;
+    }
+}
+
+const formatDate = (timestamp: any) => timestamp ? timestamp.toDate().toLocaleString() : '';
+
+const getBadgeClass = (action: string) => {
+    if (action === 'ADD') return 'success';
+    if (action === 'DEDUCT') return 'danger';
+    return 'warning';
+}
+
+const executeDeletion = async () => {
+    if (deleteConfirmText.value !== '탈퇴 확인' || !auth.user?.email || !auth.user?.uid) return;
+    isDeleting.value = true;
+    deleteError.value = '';
+    const userEmail = auth.user.email;
+    const userUid = auth.user.uid;
+    
+    try {
+        const scheduleQ = query(collection(db, 'schedules'), where('userEmail', '==', userEmail));
+        const scheduleSnap = await getDocs(scheduleQ);
+        const scheduleDeletes = scheduleSnap.docs.map(d => deleteDoc(d.ref));
+        
+        const profileQ = query(collection(db, 'bodyProfiles'), where('userEmail', '==', userEmail));
+        const profileSnap = await getDocs(profileQ);
+        const profileDeletes = profileSnap.docs.map(d => deleteDoc(d.ref));
+        
+        const ticketQ = query(collection(db, 'ticketHistory'), where('clientEmail', '==', userEmail));
+        const ticketSnap = await getDocs(ticketQ);
+        const ticketDeletes = ticketSnap.docs.map(d => deleteDoc(d.ref));
+        
+        await Promise.all([...scheduleDeletes, ...profileDeletes, ...ticketDeletes]);
+        await deleteDoc(doc(db, 'users', userUid));
+        
+        ui.showToast('Account and data deleted successfully.', 'success')
+        await auth.logout();
+        router.push('/');
+    } catch(e: any) {
+        deleteError.value = e.message || 'An error occurred during deletion.';
+        isDeleting.value = false;
+        ui.showToast('Deletion failed: ' + deleteError.value, 'error')
+    }
+}
+</script>
+
+<style scoped>
+.settings-wrapper { padding: 1rem 0; }
+.header { margin-bottom: 2rem; }
+
+.info-section, .history-section, .danger-zone { padding: 2rem; }
+h3 { margin-bottom: 1.5rem; }
+
+.info-group { margin-bottom: 1.25rem; }
+.info-group label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.25rem; }
+.info-group p { font-size: 1.05rem; }
+
+.history-list { max-height: 500px; overflow-y: auto; }
+.badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem; color: white; display: inline-block; font-weight: 600; }
+.badge.success { background: #10b981; }
+.badge.danger { background: #f43f5e; }
+.badge.warning { background: #f59e0b; }
+.empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
+
+.danger-zone { border: 1px solid rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.05); }
+.text-danger { color: #f43f5e !important; }
+
+.sm-text { font-size: 0.85rem; color: var(--text-muted); }
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; backdrop-filter: blur(5px);
+}
+.modal-content { padding: 2.5rem; width: 90%; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+</style>

@@ -1,0 +1,42 @@
+# MacOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+
+# Backend
+backend/target/
+backend/build/
+backend/.gradle/
+backend/bin/
+backend/out/
+backend/*.log
+backend/help.md
+backend/.apt_generated
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings
+backend/.springBeans
+backend/.sts4-cache
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# SQLite & Litestream
+*.db
+*.db-shm
+*.db-wal
+litestream.yml
