@@ -1,0 +1,1 @@
+export const DEFAULT_SCHEDULE_TIME = '18:00'

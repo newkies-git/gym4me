@@ -55,17 +55,17 @@
         <div class="modal-content glass" style="max-width: 450px;">
             <h3 class="text-danger">Delete Account</h3>
             <p style="margin-bottom: 1rem;">This action cannot be undone. This will permanently delete your personal workouts, body profiles, and remove your data from our servers.</p>
-            <p style="margin-bottom: 1.5rem;">Please type <strong>탈퇴 확인</strong> to confirm.</p>
+            <p style="margin-bottom: 1.5rem;">Please type <strong>{{ deleteConfirmKeyword }}</strong> to confirm.</p>
             
             <div class="field">
-                <input type="text" v-model="deleteConfirmText" placeholder="탈퇴 확인" style="text-align: center; font-size: 1.1rem;">
+                <input type="text" v-model="deleteConfirmText" :placeholder="deleteConfirmKeyword" style="text-align: center; font-size: 1.1rem;">
             </div>
             
             <p v-if="deleteError" class="error-text" style="margin-bottom: 1.5rem;">{{ deleteError }}</p>
             
             <div class="modal-actions">
                 <button class="btn btn-ghost" @click="showDeleteModal = false" :disabled="isDeleting">Cancel</button>
-                <button class="btn btn-danger" @click="executeDeletion" :disabled="deleteConfirmText !== '탈퇴 확인' || isDeleting">
+                <button class="btn btn-danger" @click="executeDeletion" :disabled="deleteConfirmText !== deleteConfirmKeyword || isDeleting">
                     {{ isDeleting ? 'Deleting...' : 'Permanently Delete' }}
                 </button>
             </div>
@@ -77,6 +77,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { auth as firebaseAuth, db } from '../firebase/config'
@@ -86,6 +87,7 @@ import { deleteUser } from 'firebase/auth'
 const auth = useAuthStore()
 const ui = useUIStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const ticketHistory = ref<any[]>([])
 const loadingHistory = ref(false)
@@ -93,6 +95,7 @@ const showDeleteModal = ref(false)
 const deleteConfirmText = ref('')
 const isDeleting = ref(false)
 const deleteError = ref('')
+const deleteConfirmKeyword = t('settings.deleteConfirmKeyword')
 
 onMounted(() => {
     if (!auth.isTrainer) {
@@ -128,7 +131,7 @@ const getBadgeClass = (action: string) => {
 }
 
 const executeDeletion = async () => {
-    if (deleteConfirmText.value !== '탈퇴 확인' || !auth.user?.email || !auth.user?.uid) return;
+    if (deleteConfirmText.value !== deleteConfirmKeyword || !auth.user?.email || !auth.user?.uid) return;
     isDeleting.value = true;
     deleteError.value = '';
     const userEmail = auth.user.email;

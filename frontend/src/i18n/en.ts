@@ -219,6 +219,7 @@ export default {
         placeholder: 'e.g. Squat',
         searchBtn: 'Search',
         repeatBtn: 'Repeat Today',
+        repeatedWorkoutTitle: 'Repeated Workout',
         noResults: 'No past logs found for "{query}".',
         sets: '{n} Sets',
         reps: '{n} Reps',

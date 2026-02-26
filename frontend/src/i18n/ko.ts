@@ -219,6 +219,7 @@ export default {
         placeholder: '예: 스쿼트',
         searchBtn: '검색',
         repeatBtn: '오늘 반복',
+        repeatedWorkoutTitle: '반복 운동',
         noResults: '"{query}"에 대한 이전 기록이 없습니다.',
         sets: '{n} 세트',
         reps: '{n} 회',

@@ -25,13 +25,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import { getSchedules, addSchedule, updateSchedule } from '../../services/firebaseService'
 import { arrayUnion } from 'firebase/firestore'
 import type { ExerciseRecord } from '../../types'
+import { DEFAULT_SCHEDULE_TIME } from '../../constants/schedule'
 
 const auth = useAuthStore()
 const router = useRouter()
+const { t } = useI18n()
 
 // Search & Repeat Logic
 const searchExerciseQuery = ref('')
@@ -79,8 +82,8 @@ const repeatExercise = async (record: ExerciseRecord) => {
           const newDoc = await addSchedule({
               clientEmail: auth.user?.email,
               dateStr: todayStr,
-              time: '18:00',
-              title: 'Repeated Workout',
+              time: DEFAULT_SCHEDULE_TIME,
+              title: t('search.repeatedWorkoutTitle'),
               type: 'PERSONAL',
               targetType: 'INDIVIDUAL',
               status: 'APPROVED'

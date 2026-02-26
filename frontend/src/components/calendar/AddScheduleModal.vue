@@ -43,6 +43,7 @@
 import { ref, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { addSchedule } from '../../services/firebaseService'
+import { DEFAULT_SCHEDULE_TIME } from '../../constants/schedule'
 
 const props = defineProps<{
   isOpen: boolean;
@@ -61,7 +62,7 @@ const auth = useAuthStore()
 const saving = ref(false)
 const form = ref({
     date: new Date().toISOString().split('T')[0],
-    time: '18:00',
+    time: DEFAULT_SCHEDULE_TIME,
     title: '',
     notes: ''
 })
@@ -70,7 +71,7 @@ watch(() => props.isOpen, (val) => {
   if (val) {
     form.value = {
       date: new Date().toISOString().split('T')[0],
-      time: '18:00',
+      time: DEFAULT_SCHEDULE_TIME,
       title: '',
       notes: ''
     }
