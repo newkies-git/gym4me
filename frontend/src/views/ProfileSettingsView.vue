@@ -24,6 +24,34 @@
           </div>
         </div>
 
+        <div class="password-section glass" style="margin-top: 2rem;">
+          <h3>{{ t('settings.changePassword') }}</h3>
+          <p class="sm-text">{{ t('settings.changePasswordDesc') }}</p>
+
+          <div v-if="canChangePassword" style="margin-top: 1rem;">
+            <div class="field">
+              <label>{{ t('settings.currentPassword') }}</label>
+              <input v-model="passwordForm.currentPassword" type="password" autocomplete="current-password" />
+            </div>
+            <div class="field">
+              <label>{{ t('settings.newPassword') }}</label>
+              <input v-model="passwordForm.newPassword" type="password" autocomplete="new-password" />
+            </div>
+            <div class="field">
+              <label>{{ t('settings.confirmNewPassword') }}</label>
+              <input v-model="passwordForm.confirmNewPassword" type="password" autocomplete="new-password" />
+            </div>
+
+            <p v-if="passwordError" class="error-text" style="margin-top: 0.75rem;">{{ passwordError }}</p>
+            <button class="btn btn-primary" style="margin-top: 1rem;" :disabled="changingPassword" @click="handleChangePassword">
+              {{ changingPassword ? t('settings.changingPassword') : t('settings.changePasswordBtn') }}
+            </button>
+          </div>
+          <div v-else style="margin-top: 1rem;" class="sm-text">
+            {{ t('settings.passwordUnsupported') }}
+          </div>
+        </div>
+
         <!-- Danger Zone -->
         <div class="danger-zone glass" style="margin-top: 2rem;">
           <h3 class="text-danger">Danger Zone</h3>
@@ -75,14 +103,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { auth as firebaseAuth, db } from '../firebase/config'
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore'
-import { deleteUser } from 'firebase/auth'
+import { deleteUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 
 const auth = useAuthStore()
 const ui = useUIStore()
@@ -96,6 +124,18 @@ const deleteConfirmText = ref('')
 const isDeleting = ref(false)
 const deleteError = ref('')
 const deleteConfirmKeyword = t('settings.deleteConfirmKeyword')
+const changingPassword = ref(false)
+const passwordError = ref('')
+
+const passwordForm = ref({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
+})
+
+const canChangePassword = computed(() =>
+    !!firebaseAuth.currentUser?.providerData.some((provider) => provider.providerId === 'password')
+)
 
 onMounted(() => {
     if (!auth.isTrainer) {
@@ -128,6 +168,52 @@ const getBadgeClass = (action: string) => {
     if (action === 'ADD') return 'success';
     if (action === 'DEDUCT') return 'danger';
     return 'warning';
+}
+
+const handleChangePassword = async () => {
+    passwordError.value = ''
+    const currentUser = firebaseAuth.currentUser
+    if (!currentUser || !currentUser.email) {
+        passwordError.value = t('settings.passwordUserNotFound')
+        return
+    }
+
+    if (!passwordForm.value.currentPassword || !passwordForm.value.newPassword || !passwordForm.value.confirmNewPassword) {
+        passwordError.value = t('settings.passwordAllFieldsRequired')
+        return
+    }
+
+    if (passwordForm.value.newPassword.length < 8) {
+        passwordError.value = t('settings.passwordMinLength')
+        return
+    }
+
+    if (passwordForm.value.newPassword !== passwordForm.value.confirmNewPassword) {
+        passwordError.value = t('settings.passwordMismatch')
+        return
+    }
+
+    changingPassword.value = true
+    try {
+        const credential = EmailAuthProvider.credential(currentUser.email, passwordForm.value.currentPassword)
+        await reauthenticateWithCredential(currentUser, credential)
+        await updatePassword(currentUser, passwordForm.value.newPassword)
+        passwordForm.value = { currentPassword: '', newPassword: '', confirmNewPassword: '' }
+        ui.showToast(t('settings.passwordChangeSuccess'), 'success')
+    } catch (e: any) {
+        if (e?.code === 'auth/wrong-password' || e?.code === 'auth/invalid-credential') {
+            passwordError.value = t('settings.passwordCurrentInvalid')
+        } else if (e?.code === 'auth/weak-password') {
+            passwordError.value = t('settings.passwordWeak')
+        } else if (e?.code === 'auth/requires-recent-login') {
+            passwordError.value = t('settings.passwordReloginRequired')
+        } else {
+            passwordError.value = e?.message || t('settings.passwordChangeFailed')
+        }
+        ui.showToast(t('settings.passwordChangeFailed'), 'error')
+    } finally {
+        changingPassword.value = false
+    }
 }
 
 const executeDeletion = async () => {
@@ -193,7 +279,7 @@ const executeDeletion = async () => {
 .settings-wrapper { padding: 1rem 0; }
 .header { margin-bottom: 2rem; }
 
-.info-section, .history-section, .danger-zone { padding: 2rem; }
+.info-section, .history-section, .password-section, .danger-zone { padding: 2rem; }
 h3 { margin-bottom: 1.5rem; }
 
 .info-group { margin-bottom: 1.25rem; }

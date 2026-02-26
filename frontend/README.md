@@ -4,9 +4,24 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
-## init_admin.ts
+## SITE_ADMIN bootstrap
 
-`init_admin.ts` no longer contains hard-coded credentials. Set these environment variables before running it:
+### 1) Automatic bootstrap on first signup (recommended)
+
+If `VITE_SITE_ADMIN_EMAIL` is set, when that email signs up and no admin has been bootstrapped yet,
+the account is created as `SITE_ADMIN (lvl 100)` once.
+
+- `VITE_SITE_ADMIN_EMAIL`
+
+### 2) Manual promote script
+
+Run manual promote after the target user has signed up:
+
+```bash
+npm run init:admin
+```
+
+Set these environment variables before running:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -14,4 +29,5 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - `VITE_FIREBASE_STORAGE_BUCKET`
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
+- `VITE_SITE_ADMIN_EMAIL` (optional, for automatic bootstrap only)
 - `SITE_ADMIN_EMAIL`
