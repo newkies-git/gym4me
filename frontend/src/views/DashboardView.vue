@@ -15,8 +15,11 @@
       <button class="btn btn-primary" @click="simulatePurchase" style="margin-top: 1rem;">[TEST] Buy 10 PT Sessions</button>
     </div>
 
-    <!-- Trainer Specific Section: Client Management -->
-    <ClientManager v-if="auth.isTrainer" />
+    <!-- Trainer Specific Section: Client & Class Management -->
+    <div v-if="auth.isTrainer">
+      <ClientManager />
+      <ClassManager />
+    </div>
 
     <!-- General Stats -->
     <div class="stats-grid" style="margin-top: 2rem;">
@@ -59,6 +62,7 @@
 import { computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import ClientManager from '../components/dashboard/ClientManager.vue'
+import ClassManager from '../components/dashboard/ClassManager.vue'
 import PastExerciseSearch from '../components/dashboard/PastExerciseSearch.vue'
 import StatCard from '../components/ui/StatCard.vue'
 

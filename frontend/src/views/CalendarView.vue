@@ -1,14 +1,16 @@
 <template>
   <div class="calendar-wrapper container">
     <div class="header">
-      <h2>{{ clientEmail ? `Schedule for ${clientEmail}` : 'My Training Schedule' }}</h2>
+      <h2>{{ headerTitle }}</h2>
       <div class="actions">
         <!-- Trainer Action -->
-        <button v-if="auth.isTrainer && clientEmail" class="btn btn-primary" @click="showModal('PT')">Assign PT Session</button>
+        <button v-if="auth.isTrainer && (clientEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
+          Assign {{ classId ? 'Class' : 'PT' }} Session
+        </button>
         <!-- Member Action (Only for Members or Trainers) -->
         <button v-if="auth.isMember || auth.isTrainer" class="btn btn-ghost" @click="showModal('PERSONAL')">Log Personal Workout</button>
-        <!-- Back to Dashboard for Trainer -->
-        <button v-if="clientEmail" class="btn btn-ghost" @click="router.push('/dashboard')">Back</button>
+        <!-- Back to Dashboard -->
+        <button class="btn btn-ghost" @click="router.push('/dashboard')">Back</button>
       </div>
     </div>
     
@@ -19,9 +21,12 @@
           <div class="day-num">{{ day.num }}</div>
         </div>
         <div class="events">
-          <div v-for="event in getEventsForDay(day.dateStr)" :key="event.id" class="event-card" :class="event.type.toLowerCase()">
+          <div v-for="event in getEventsForDay(day.dateStr)" :key="event.id" class="event-card" :class="[event.type.toLowerCase(), { 'class-event': event.targetType === 'CLASS' }]">
             <div class="event-time" v-if="event.time">{{ event.time }}</div>
-            <div class="event-title">{{ event.title }}</div>
+            <div class="event-title">
+              <span v-if="event.targetType === 'CLASS'" class="badge-mini">CLASS</span>
+              {{ event.title }}
+            </div>
             <div class="event-status">{{ event.status }}</div>
             <button class="btn btn-sm" style="margin-top:0.5rem; width:100%; border:1px solid currentColor" @click="viewDetails(event)">Open Details</button>
           </div>
@@ -33,6 +38,7 @@
       v-model:is-open="isAddModalOpen" 
       :schedule-type="scheduleType" 
       :client-email="clientEmail" 
+      :class-id="classId"
       @saved="loadSchedules" 
     />
     
@@ -59,26 +65,37 @@ const route = useRoute()
 const router = useRouter()
 
 const clientEmail = computed(() => route.query.client as string | undefined)
+const classId = computed(() => route.query.classId as string | undefined)
+
+const headerTitle = computed(() => {
+    if (classId.value) return 'Class Training Schedule'
+    if (clientEmail.value) return `Schedule for ${clientEmail.value}`
+    return 'My Training Schedule'
+})
 
 const isAddModalOpen = ref(false)
 const scheduleType = ref<'PT' | 'PERSONAL'>('PERSONAL')
 
 const targetEmail = computed(() => clientEmail.value || auth.user?.email)
-const events = computed(() => scheduleStore.getSchedulesByEmail(targetEmail.value || ''))
+const displayKey = computed(() => classId.value || targetEmail.value || '')
+const events = computed(() => scheduleStore.getSchedulesByEmail(displayKey.value))
 
 const selectedEvent = ref<CalendarEvent | null>(null)
 const isDetailsModalOpen = ref(false)
 
 const loadSchedules = async (force = false) => {
-    if (!targetEmail.value) return;
-    await scheduleStore.fetchSchedules(targetEmail.value, force)
+    if (classId.value) {
+        await scheduleStore.fetchClassSchedules(classId.value, force)
+    } else if (targetEmail.value) {
+        await scheduleStore.fetchSchedules(targetEmail.value, force)
+    }
 }
 
 onMounted(() => {
     loadSchedules()
 })
 
-watch(clientEmail, () => {
+watch([clientEmail, classId], () => {
     loadSchedules()
 })
 
@@ -152,7 +169,26 @@ const getEventsForDay = (dateStr: string) => {
 }
 .event-card.pt { background: rgba(192, 132, 252, 0.2); border-left: 3px solid #c084fc; }
 .event-card.personal { background: rgba(99, 102, 241, 0.2); border-left: 3px solid #6366f1; }
-.event-title { font-weight: 600; margin-bottom: 0.2rem; }
+.event-card.class-event { 
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(192, 132, 252, 0.1),
+        rgba(192, 132, 252, 0.1) 10px,
+        rgba(192, 132, 252, 0.2) 10px,
+        rgba(192, 132, 252, 0.2) 20px
+    );
+    border-left: 3px solid #c084fc;
+}
+.badge-mini {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+    background: #c084fc;
+    color: white;
+    border-radius: 4px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+}
+.event-title { font-weight: 600; margin-bottom: 0.2rem; display: flex; align-items: center; }
 .event-status { font-size: 0.7rem; opacity: 0.8; }
 .btn-sm { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.1); }
 </style>

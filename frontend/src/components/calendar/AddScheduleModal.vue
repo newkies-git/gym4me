@@ -4,8 +4,9 @@
       <h3>{{ scheduleType === 'PT' ? 'Assign PT Session' : 'Log Personal Workout' }}</h3>
       
       <form @submit.prevent="save">
-        <div v-if="auth.isTrainer && clientEmail && scheduleType === 'PT'" class="field row">
-            <span class="sm-text">Client: {{ clientEmail }}</span>
+        <div v-if="auth.isTrainer && scheduleType === 'PT'" class="field row">
+            <span v-if="clientEmail" class="sm-text">Client: {{ clientEmail }}</span>
+            <span v-if="classId" class="sm-text badge">Class Session</span>
         </div>
         
         <div class="field">
@@ -47,6 +48,7 @@ const props = defineProps<{
   isOpen: boolean;
   scheduleType: 'PT' | 'PERSONAL';
   clientEmail?: string;
+  classId?: string;
 }>()
 
 const emit = defineEmits<{
@@ -82,16 +84,26 @@ const close = () => {
 const save = async () => {
   saving.value = true;
   try {
-      const scheduleData = {
-          userEmail: props.clientEmail || auth.user?.email, 
+      const scheduleData: any = {
           trainerEmail: props.scheduleType === 'PT' ? auth.user?.email : null,
           type: props.scheduleType,
+          targetType: props.classId ? 'CLASS' : 'INDIVIDUAL',
           date: form.value.date,
           time: form.value.time,
           title: form.value.title,
           notes: form.value.notes,
-          status: props.scheduleType === 'PT' && props.clientEmail ? 'PENDING' : 'APPROVED'
+          status: props.scheduleType === 'PT' ? 'PENDING' : 'APPROVED'
       };
+
+      if (props.classId) {
+          scheduleData.classId = props.classId;
+          // For class schedules, userEmail isn't a single person, 
+          // but we might store the trainer's email as owner.
+          scheduleData.userEmail = auth.user?.email; 
+      } else {
+          scheduleData.clientEmail = props.clientEmail;
+          scheduleData.userEmail = props.clientEmail || auth.user?.email;
+      }
       
       await addSchedule(scheduleData);
       emit('saved');

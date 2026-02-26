@@ -14,42 +14,128 @@ import {
     runTransaction,
     type DocumentData
 } from 'firebase/firestore'
-import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym } from '../types'
+import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym, GymClass } from '../types'
 
 // Schedules
 export const getSchedules = async (targetEmail: string): Promise<CalendarEvent[]> => {
-    const q = query(
+    // 1. 개인 일정 (Individual)
+    const qIndividual = query(
         collection(db, 'schedules'),
-        where('userEmail', '==', targetEmail)
+        where('clientEmail', '==', targetEmail),
+        where('targetType', '==', 'INDIVIDUAL')
     )
-    const snapshot = await getDocs(q)
-    return snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        title: docSnap.data().title,
-        dateStr: docSnap.data().date,
-        time: docSnap.data().time,
-        type: docSnap.data().type as 'PT' | 'PERSONAL',
-        status: docSnap.data().status as 'PENDING' | 'APPROVED' | 'COMPLETED' | 'CANCELLED',
-        clientEmail: docSnap.data().clientEmail,
-        notes: docSnap.data().notes,
-        mediaUrl: docSnap.data().mediaUrl,
-        records: docSnap.data().records || []
-    }))
+
+    // 2. 개인이 작성한 메모성 일정 (Personal)
+    const qPersonal = query(
+        collection(db, 'schedules'),
+        where('userEmail', '==', targetEmail),
+        where('targetType', '==', 'INDIVIDUAL')
+    )
+
+    // 3. 클래스 일정 (Class) - 소속된 클래스 목록을 먼저 조회해야 함
+    const qClasses = query(
+        collection(db, 'classes'),
+        where('traineeEmails', 'array-contains', targetEmail)
+    )
+    const classSnap = await getDocs(qClasses)
+    const classIds = classSnap.docs.map(d => d.id)
+
+    let classSchedules: CalendarEvent[] = []
+    if (classIds.length > 0) {
+        // ClassId가 소속된 목록에 있는 일정들 조회
+        const qClassSchedules = query(
+            collection(db, 'schedules'),
+            where('classId', 'in', classIds.slice(0, 10)) // Firestore 'in' limitation: 10
+        )
+        const classSchedSnap = await getDocs(qClassSchedules)
+        classSchedules = classSchedSnap.docs.map(docSnap => mapSnapshotToEvent(docSnap))
+    }
+
+    const [indivSnap, persSnap] = await Promise.all([getDocs(qIndividual), getDocs(qPersonal)])
+
+    const individualSchedules = indivSnap.docs.map(docSnap => mapSnapshotToEvent(docSnap))
+    const personalSchedules = persSnap.docs.map(docSnap => mapSnapshotToEvent(docSnap))
+
+    // Merge and deduplicate by ID
+    const all = [...individualSchedules, ...personalSchedules, ...classSchedules]
+    const unique = Array.from(new Map(all.map(item => [item.id, item])).values())
+
+    return unique
 }
 
-export const addSchedule = async (scheduleData: Partial<DocumentData>) => {
+export const getSchedulesByClass = async (classId: string): Promise<CalendarEvent[]> => {
+    const q = query(
+        collection(db, 'schedules'),
+        where('classId', '==', classId)
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(docSnap => mapSnapshotToEvent(docSnap))
+}
+
+const mapSnapshotToEvent = (docSnap: any): CalendarEvent => {
+    const data = docSnap.data()
+    return {
+        id: docSnap.id,
+        title: data.title,
+        dateStr: data.date,
+        time: data.time,
+        type: data.type,
+        targetType: data.targetType || 'INDIVIDUAL',
+        status: data.status,
+        clientEmail: data.clientEmail,
+        classId: data.classId,
+        trainerEmail: data.trainerEmail,
+        notes: data.notes,
+        mediaUrl: data.mediaUrl,
+        signatureUrl: data.signatureUrl,
+        completedAt: data.completedAt,
+        records: data.records || []
+    }
+}
+
+export const addSchedule = async (scheduleData: Partial<CalendarEvent>) => {
     return await addDoc(collection(db, 'schedules'), {
         ...scheduleData,
         createdAt: serverTimestamp()
     })
 }
 
-export const updateSchedule = async (id: string, updates: Partial<DocumentData>) => {
+export const updateSchedule = async (id: string, updates: any) => {
     return await updateDoc(doc(db, 'schedules', id), updates)
 }
 
-// Clients
+// Classes
+export const createClass = async (classData: Omit<GymClass, 'id'>) => {
+    const data: any = { ...classData }
+    if (data.gymId === undefined) delete data.gymId
+    return await addDoc(collection(db, 'classes'), {
+        ...data,
+        createdAt: serverTimestamp()
+    })
+}
+
+export const getClassesByTrainer = async (trainerEmail: string): Promise<GymClass[]> => {
+    const q = query(collection(db, 'classes'), where('trainerEmail', '==', trainerEmail))
+    const snap = await getDocs(q)
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as GymClass))
+}
+
+export const addTraineeToClass = async (classId: string, traineeEmail: string) => {
+    const classRef = doc(db, 'classes', classId)
+    const classSnap = await getDoc(classRef)
+    if (!classSnap.exists()) throw new Error("Class not found")
+
+    const traineeEmails = classSnap.data().traineeEmails || []
+    if (traineeEmails.includes(traineeEmail)) return
+
+    return await updateDoc(classRef, {
+        traineeEmails: [...traineeEmails, traineeEmail]
+    })
+}
+
+// Clients (Existing)
 export const getClientsByTrainer = async (trainerEmail: string): Promise<ClientInfo[]> => {
+    // ... (logic remains similar but we can also fetch from classes if needed)
     const q = query(collection(db, 'users'), where('trainerEmail', '==', trainerEmail))
     const snapshot = await getDocs(q)
     return snapshot.docs.map(docSnap => ({
@@ -93,7 +179,6 @@ export const createGym = async (gymData: Partial<Gym>) => {
         ...gymData,
         createdAt: serverTimestamp()
     })
-    // Also update the manager's profile to link to this gym and set role to MANAGER (lvl 20)
     if (gymData.managerEmail) {
         const q = query(collection(db, 'users'), where('email', '==', gymData.managerEmail))
         const snap = await getDocs(q)
@@ -128,17 +213,47 @@ export const updateTrainerRole = async (uid: string, role: string, lvl: number, 
     return await updateDoc(doc(db, 'users', uid), updates)
 }
 
-// Session Completion & Signatures
 export const completeSession = async (eventId: string, signatureUrl: string) => {
     const eventRef = doc(db, 'schedules', eventId)
+    const eventSnap = await getDoc(eventRef)
+    if (!eventSnap.exists()) throw new Error("Event not found")
+    const eventData = eventSnap.data() as CalendarEvent
+
+    // Determine target emails for deduction
+    const emailsToDeduct: string[] = []
+    if (eventData.type === 'PT') {
+        if (eventData.targetType === 'CLASS' && eventData.classId) {
+            const classSnap = await getDoc(doc(db, 'classes', eventData.classId))
+            if (classSnap.exists()) {
+                emailsToDeduct.push(...(classSnap.data().traineeEmails || []))
+            }
+        } else if (eventData.clientEmail) {
+            emailsToDeduct.push(eventData.clientEmail)
+        }
+    }
+
+    // Resolve UIDs for those emails (outside transaction)
+    const uidsToDeduct: string[] = []
+    if (emailsToDeduct.length > 0) {
+        const usersQ = query(collection(db, 'users'), where('email', 'in', emailsToDeduct.slice(0, 10)))
+        const usersSnap = await getDocs(usersQ)
+        usersSnap.docs.forEach(d => {
+            uidsToDeduct.push(d.id)
+        })
+    }
 
     await runTransaction(db, async (transaction) => {
-        const eventSnap = await transaction.get(eventRef)
-        if (!eventSnap.exists()) throw new Error("Event not found")
+        const currentEventSnap = await transaction.get(eventRef)
+        if (!currentEventSnap.exists()) throw new Error("Event not found")
+        if (currentEventSnap.data().status === 'COMPLETED') throw new Error("Already completed")
 
-        const eventData = eventSnap.data()
-        if (eventData.status === 'COMPLETED') throw new Error("Already completed")
+        // 1. All Reads First
+        const userSnaps = []
+        for (const uid of uidsToDeduct) {
+            userSnaps.push(await transaction.get(doc(db, 'users', uid)))
+        }
 
+        // 2. All Writes Second
         // Update Event
         transaction.update(eventRef, {
             status: 'COMPLETED',
@@ -146,25 +261,23 @@ export const completeSession = async (eventId: string, signatureUrl: string) => 
             completedAt: serverTimestamp()
         })
 
-        // If PT, decrement sessions for the client
-        if (eventData.type === 'PT' && eventData.clientEmail) {
-            const userQuery = query(collection(db, 'users'), where('email', '==', eventData.clientEmail))
-            const userSnap = await getDocs(userQuery)
-
-            if (!userSnap.empty) {
-                const userDoc = userSnap.docs[0]
-                const currentSessions = userDoc.data().remainingSessions || 0
+        // Deduct credits for all resolved users
+        for (const userSnap of userSnaps) {
+            if (userSnap.exists()) {
+                const userData = userSnap.data()
+                const currentSessions = userData.remainingSessions || 0
                 if (currentSessions > 0) {
-                    transaction.update(doc(db, 'users', userDoc.id), {
+                    transaction.update(userSnap.ref, {
                         remainingSessions: currentSessions - 1
                     })
 
-                    // Log ticket history
+                    // Log history
                     const historyRef = doc(collection(db, 'ticketHistory'))
                     transaction.set(historyRef, {
-                        userEmail: eventData.clientEmail,
-                        type: 'DEDUCTION',
-                        amount: 1,
+                        clientEmail: userData.email,
+                        trainerEmail: eventData.trainerEmail,
+                        action: 'DEDUCT',
+                        amountChanged: -1,
                         remainingSessions: currentSessions - 1,
                         reason: `PT Session Completed: ${eventData.title}`,
                         createdAt: serverTimestamp()
@@ -201,7 +314,6 @@ export const updateTrainerProfile = async (email: string, profile: Partial<Train
         updatedAt: serverTimestamp()
     }, { merge: true })
 
-    // Log history
     await addDoc(collection(db, 'profileHistory'), {
         trainerEmail: email,
         before,
@@ -217,7 +329,6 @@ export const getProfileHistory = async (email: string): Promise<ProfileHistory[]
     )
     const snapshot = await getDocs(q)
     const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ProfileHistory))
-    // Manual sort because composite index might not exist yet
     return logs.sort((a: any, b: any) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0))
 }
 
@@ -229,7 +340,6 @@ export const getBodyProfiles = async (targetEmail: string): Promise<BodyRecord[]
         id: docSnap.id,
         ...(docSnap.data() as Omit<BodyRecord, 'id'>)
     }))
-    // Sort ascending by date
     loaded.sort((a, b) => a.date.localeCompare(b.date))
     return loaded
 }

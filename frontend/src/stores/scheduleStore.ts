@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import { getSchedules, addSchedule, updateSchedule } from '../services/firebaseService'
+import { getSchedules, addSchedule, updateSchedule, getSchedulesByClass } from '../services/firebaseService'
 import type { CalendarEvent } from '../types'
 import { useAuthStore } from './auth'
 
 export const useScheduleStore = defineStore('schedule', {
     state: () => ({
-        schedules: {} as Record<string, CalendarEvent[]>, // Keyed by email
+        schedules: {} as Record<string, CalendarEvent[]>, // Keyed by email OR classId
         loading: false,
         lastFetch: {} as Record<string, number>
     }),
@@ -13,7 +13,6 @@ export const useScheduleStore = defineStore('schedule', {
         async fetchSchedules(targetEmail: string, force = false) {
             if (!targetEmail) return;
 
-            // Cache for 5 minutes unless forced
             const last = this.lastFetch[targetEmail] || 0;
             if (!force && this.schedules[targetEmail] && (Date.now() - last < 300000)) {
                 return;
@@ -26,6 +25,25 @@ export const useScheduleStore = defineStore('schedule', {
                 this.lastFetch[targetEmail] = Date.now();
             } catch (e) {
                 console.error("Failed to fetch schedules for", targetEmail, e);
+            } finally {
+                this.loading = false;
+            }
+        },
+        async fetchClassSchedules(classId: string, force = false) {
+            if (!classId) return;
+
+            const last = this.lastFetch[classId] || 0;
+            if (!force && this.schedules[classId] && (Date.now() - last < 300000)) {
+                return;
+            }
+
+            this.loading = true;
+            try {
+                const results = await getSchedulesByClass(classId);
+                this.schedules[classId] = results;
+                this.lastFetch[classId] = Date.now();
+            } catch (e) {
+                console.error("Failed to fetch schedules for class", classId, e);
             } finally {
                 this.loading = false;
             }

@@ -1,11 +1,24 @@
 <template>
   <div v-if="event && isOpen" class="modal-overlay" @click.self="close">
     <div class="modal-content glass details-modal">
-      <h3>{{ event.title }}</h3>
+      <div class="flex-between">
+          <h3>{{ event.title }}</h3>
+          <span v-if="event.targetType === 'CLASS'" class="badge info">CLASS</span>
+      </div>
       <p class="sm-text">Date: {{ event.dateStr }} | Time: {{ event.time }} | Status: {{ event.status }}</p>
       
       <div v-if="event.notes" style="margin-top: 1rem; margin-bottom: 2rem;">
           <strong>Notes:</strong> <p>{{ event.notes }}</p>
+      </div>
+
+      <div v-if="event.targetType === 'CLASS' && event.classId" style="margin-bottom: 2rem;">
+          <strong>Class Trainees:</strong>
+          <div v-if="loadingClassInfo" class="sm-text">Loading group info...</div>
+          <div v-else class="trainee-list-mini" style="margin-top: 0.5rem;">
+              <span v-for="email in classEmails" :key="email" class="trainee-tag">
+                  {{ email }}
+              </span>
+          </div>
       </div>
 
       <div class="record-section">
@@ -79,10 +92,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { updateSchedule, completeSession } from '../../services/firebaseService'
-import { arrayUnion } from 'firebase/firestore'
+import { arrayUnion, doc, getDoc } from 'firebase/firestore'
+import { db } from '../../firebase/config'
 import SignaturePad from '../ui/SignaturePad.vue'
 import type { CalendarEvent, ExerciseRecord } from '../../types'
 
@@ -132,6 +146,27 @@ const saveRecord = async () => {
 const tempSignature = ref('')
 const completing = ref(false)
 
+const loadingClassInfo = ref(false)
+const classEmails = ref<string[]>([])
+
+watch(() => props.event, async (newEv) => {
+    if (newEv?.targetType === 'CLASS' && newEv.classId) {
+        loadingClassInfo.value = true
+        try {
+            const snap = await getDoc(doc(db, 'classes', newEv.classId))
+            if (snap.exists()) {
+                classEmails.value = snap.data().traineeEmails || []
+            }
+        } catch (e) {
+            console.error("Failed to fetch class info", e)
+        } finally {
+            loadingClassInfo.value = false
+        }
+    } else {
+        classEmails.value = []
+    }
+}, { immediate: true })
+
 const handleSignAndComplete = async () => {
     if(!props.event || !tempSignature.value) return;
     completing.value = true;
@@ -170,4 +205,13 @@ const handleSignAndComplete = async () => {
     border-radius: 0.5rem;
     margin-top: 0.5rem;
 }
+.trainee-list-mini { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.trainee-tag {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  border-radius: 1rem;
+}
+.badge.info { background: var(--primary); color: white; }
 </style>

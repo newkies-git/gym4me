@@ -32,14 +32,25 @@ export interface ExerciseRecord {
   weight?: number;
 }
 
+export interface GymClass {
+  id: string;
+  name: string;
+  trainerEmail: string;
+  traineeEmails: string[];
+  gymId?: string;
+  createdAt: any;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
   dateStr: string;
   time: string;
   type: 'PT' | 'PERSONAL';
+  targetType: 'INDIVIDUAL' | 'CLASS';
   status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'CANCELLED';
-  clientEmail?: string;
+  clientEmail?: string; // INDIVIDUAL 인 경우
+  classId?: string;     // CLASS 인 경우
   trainerEmail?: string;
   notes?: string;
   mediaUrl?: string;
