@@ -2,26 +2,26 @@
   <div class="container auth-container">
     <div class="glass auth-card">
       <div class="tabs">
-        <button :class="{ active: isLogin }" @click="isLogin = true">Login</button>
-        <button :class="{ active: !isLogin }" @click="isLogin = false">Signup</button>
+        <button :class="{ active: isLogin }" @click="isLogin = true">{{ t('auth.login') }}</button>
+        <button :class="{ active: !isLogin }" @click="isLogin = false">{{ t('auth.signup') }}</button>
       </div>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="field">
-          <label>Email</label>
+          <label>{{ t('auth.email') }}</label>
           <input v-model="form.email" type="email" required placeholder="name@example.com" />
         </div>
         <div class="field">
-          <label>Password</label>
+          <label>{{ t('auth.password') }}</label>
           <input v-model="form.password" type="password" required />
         </div>
         <div v-if="!isLogin" class="field">
-          <label>Nickname / Name</label>
-          <input v-model="form.nickname" type="text" placeholder="Your display name" />
+          <label>{{ t('auth.nickname') }}</label>
+          <input v-model="form.nickname" type="text" :placeholder="t('auth.nicknamePlaceholder')" />
         </div>
         
         <button type="submit" class="btn btn-primary" :disabled="loading" style="width: 100%; margin-top: 1rem;">
-          {{ loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account') }}
+          {{ loading ? t('auth.processing') : (isLogin ? t('auth.signIn') : t('auth.createAccount')) }}
         </button>
         <p v-if="error" class="error-text" style="margin-top: 1rem;">{{ error }}</p>
       </form>
@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { auth, db } from '../firebase/config'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
@@ -40,6 +41,7 @@ const router = useRouter()
 const isLogin = ref(true)
 const loading = ref(false)
 const error = ref('')
+const { t } = useI18n()
 
 const form = reactive({
   email: '',
@@ -70,14 +72,14 @@ const handleSubmit = async () => {
       
       isLogin.value = true
       form.nickname = ''
-      alert("Account created! Please log in.")
+      alert(t('auth.accountCreated'))
     }
   } catch (e: any) {
     // Handle Firebase errors
     if (e.code === 'auth/email-already-in-use') {
-        error.value = 'Email is already in use.'
+        error.value = t('auth.errEmailInUse')
     } else if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
-        error.value = 'Invalid email or password.'
+        error.value = t('auth.errInvalidCredential')
     } else {
         error.value = e.message
     }

@@ -1,18 +1,18 @@
 <template>
   <div class="dashboard-wrapper container">
     <div class="header">
-      <h2>Hello, {{ auth.user?.nickname || 'Athlete' }}!</h2>
-      <p class="subtitle" v-if="auth.isSiteAdmin">Site Admin Dashboard</p>
-      <p class="subtitle" v-else-if="auth.isManager">Manager Dashboard</p>
-      <p class="subtitle" v-else-if="auth.isTrainer">Trainer Dashboard</p>
-      <p class="subtitle" v-else-if="auth.isMember">Member Dashboard</p>
-      <p class="subtitle" v-else>Observer Dashboard</p>
+      <h2>{{ t('dashboard.hello', { name: auth.user?.nickname || 'Athlete' }) }}</h2>
+      <p class="subtitle" v-if="auth.isSiteAdmin">{{ t('dashboard.siteAdminDashboard') }}</p>
+      <p class="subtitle" v-else-if="auth.isManager">{{ t('dashboard.managerDashboard') }}</p>
+      <p class="subtitle" v-else-if="auth.isTrainer">{{ t('dashboard.trainerDashboard') }}</p>
+      <p class="subtitle" v-else-if="auth.isMember">{{ t('dashboard.memberDashboard') }}</p>
+      <p class="subtitle" v-else>{{ t('dashboard.observerDashboard') }}</p>
     </div>
 
     <!-- Observer Warning -->
     <div v-if="auth.isObserver && !auth.isMember && !auth.isTrainer" class="glass alert-banner" style="margin-top: 1rem;">
-      <p>You are currently in <strong>Observer Mode</strong>. Purchase a training voucher to unlock full features.</p>
-      <button class="btn btn-primary" @click="simulatePurchase" style="margin-top: 1rem;">[TEST] Buy 10 PT Sessions</button>
+      <p v-html="t('dashboard.observerMsg')"></p>
+      <button class="btn btn-primary" @click="simulatePurchase" style="margin-top: 1rem;">{{ t('dashboard.buyTestSessions') }}</button>
     </div>
 
     <!-- Trainer Specific Section: Client & Class Management -->
@@ -26,20 +26,20 @@
       <StatCard 
         v-if="!auth.isTrainer"
         :value="myRemainingSessions"
-        label="Remaining PT Sessions"
+        :label="t('dashboard.remainingSessions')"
         :is-danger="(myRemainingSessions || 0) <= 5"
       />
       
       <StatCard 
         v-if="!auth.isTrainer"
         :value="myExpirationDate ? formatDate(myExpirationDate) : 'N/A'"
-        label="PT Expiration"
+        :label="t('dashboard.ptExpiration')"
         :is-danger="isExpiringSoon(myExpirationDate)"
       />
       
       <StatCard 
         value="4"
-        label="Upcoming Sessions"
+        :label="t('dashboard.upcomingSessions')"
       />
     </div>
 
@@ -48,10 +48,10 @@
       <PastExerciseSearch />
 
       <div class="quick-actions glass">
-        <h3>Quick Actions</h3>
+        <h3>{{ t('dashboard.quickActions') }}</h3>
         <div class="action-buttons">
-          <router-link to="/calendar" class="btn btn-primary">View Calendar</router-link>
-          <router-link to="/profile" class="btn btn-ghost">My Body Profile</router-link>
+          <router-link to="/calendar" class="btn btn-primary">{{ t('dashboard.viewCalendar') }}</router-link>
+          <router-link to="/profile" class="btn btn-ghost">{{ t('dashboard.myBodyProfile') }}</router-link>
         </div>
       </div>
     </div>
@@ -60,6 +60,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import ClientManager from '../components/dashboard/ClientManager.vue'
 import ClassManager from '../components/dashboard/ClassManager.vue'
@@ -67,6 +68,7 @@ import PastExerciseSearch from '../components/dashboard/PastExerciseSearch.vue'
 import StatCard from '../components/ui/StatCard.vue'
 
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const myRemainingSessions = computed(() => auth.user?.remainingSessions || 0)
 const myExpirationDate = computed(() => auth.user?.expirationDate || '')

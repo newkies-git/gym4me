@@ -6,21 +6,21 @@
       
       <div class="hero-content">
         <h1 class="hero-title">
-          Welcome to <span class="gradient-text">gym4me</span>
+          {{ t('home.heroTitle') }} <span class="gradient-text">gym4me</span>
         </h1>
         <p class="hero-subtitle">
-          Your personal training management companion. Manage your PT schedules, track your personal workouts, and achieve your fitness goals.
+          {{ t('home.heroSubtitle') }}
         </p>
         
         <div class="hero-actions">
           <router-link v-if="auth.isAuthenticated" to="/dashboard" class="btn btn-primary btn-lg pulse-hover">
-            Go to Dashboard
+            {{ t('home.goToDashboard') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
           </router-link>
           <router-link v-else to="/auth" class="btn btn-primary btn-lg pulse-hover">
-            Get Started
+            {{ t('home.getStarted') }}
              <svg xmlns="http://www.w3.org/2000/svg" class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
@@ -30,22 +30,22 @@
     </div>
 
     <section class="features-section container">
-      <h2 class="section-title text-center">Transform Your Training</h2>
+      <h2 class="section-title text-center">{{ t('home.transformTitle') }}</h2>
       <div class="features-grid">
         <div class="feature-card glass">
           <div class="feature-icon bg-indigo">📅</div>
-          <h3>Smart Scheduling</h3>
-          <p>Easily manage PT sessions and your personal workout routines in one unified calendar.</p>
+          <h3>{{ t('home.smartScheduling') }}</h3>
+          <p>{{ t('home.smartSchedulingDesc') }}</p>
         </div>
         <div class="feature-card glass">
           <div class="feature-icon bg-pink">📸</div>
-          <h3>Visual Progress</h3>
-          <p>Trainers can directly upload photos and videos of your form for better feedback.</p>
+          <h3>{{ t('home.visualProgress') }}</h3>
+          <p>{{ t('home.visualProgressDesc') }}</p>
         </div>
         <div class="feature-card glass">
           <div class="feature-icon bg-purple">🔄</div>
-          <h3>Repeat & Improve</h3>
-          <p>Search your past training records and easily repeat workouts to track your progressive overload.</p>
+          <h3>{{ t('home.repeatImprove') }}</h3>
+          <p>{{ t('home.repeatImproveDesc') }}</p>
         </div>
       </div>
     </section>
@@ -54,7 +54,10 @@
 
 <script setup lang="ts">
 import { useAuthStore } from '../stores/auth'
+import { useI18n } from 'vue-i18n'
+
 const auth = useAuthStore()
+const { t } = useI18n()
 </script>
 
 <style scoped>

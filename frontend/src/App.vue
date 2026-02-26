@@ -6,25 +6,25 @@
         <router-link to="/" class="logo">gym4me</router-link>
         <div class="nav-links">
           <template v-if="auth.isAuthenticated">
-            <router-link to="/dashboard" class="btn btn-ghost">Dashboard</router-link>
-            <router-link to="/calendar" class="btn btn-primary">Calendar</router-link>
+            <router-link to="/dashboard" class="btn btn-ghost">{{ t('nav.dashboard') }}</router-link>
+            <router-link to="/calendar" class="btn btn-primary">{{ t('nav.calendar') }}</router-link>
             
             <!-- Specific Roles -->
-            <router-link v-if="auth.isTrainer" to="/trainer-profile" class="btn btn-ghost">Trainer Bio</router-link>
-            <router-link v-if="auth.isManager" to="/manage-trainers" class="btn btn-ghost">Trainer MGT</router-link>
-            <router-link v-if="auth.isManager" to="/manage-gym" class="btn btn-ghost">Gym MGT</router-link>
-            <router-link v-if="auth.isSiteAdmin" to="/manage-managers" class="btn btn-ghost">Manager MGT</router-link>
+            <router-link v-if="auth.isTrainer" to="/trainer-profile" class="btn btn-ghost">{{ t('nav.trainerBio') }}</router-link>
+            <router-link v-if="auth.isManager" to="/manage-trainers" class="btn btn-ghost">{{ t('nav.trainerMgt') }}</router-link>
+            <router-link v-if="auth.isManager" to="/manage-gym" class="btn btn-ghost">{{ t('nav.gymMgt') }}</router-link>
+            <router-link v-if="auth.isSiteAdmin" to="/manage-managers" class="btn btn-ghost">{{ t('nav.managerMgt') }}</router-link>
             
-            <router-link to="/profile" class="btn btn-ghost">Profile</router-link>
-            <router-link to="/settings" class="btn btn-ghost">Settings</router-link>
+            <router-link to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</router-link>
+            <router-link to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</router-link>
             
             <div class="user-info">
               <span class="sm-text">{{ auth.user?.nickname || auth.user?.email }}</span>
-              <button @click="logout" class="btn btn-ghost btn-sm">Logout</button>
+              <button @click="logout" class="btn btn-ghost btn-sm">{{ t('nav.logout') }}</button>
             </div>
           </template>
           <template v-else>
-            <router-link to="/auth" class="btn btn-primary">Login / Sign Up</router-link>
+            <router-link to="/auth" class="btn btn-primary">{{ t('nav.loginSignup') }}</router-link>
           </template>
         </div>
       </div>
@@ -49,10 +49,12 @@
 import { useAuthStore } from './stores/auth'
 import { useUIStore } from './stores/uiStore'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const auth = useAuthStore()
 const ui = useUIStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const logout = () => {
   auth.logout()
