@@ -9,20 +9,22 @@
       @pointerleave="handlePointerUp"
     ></canvas>
     <div class="controls flex-between">
-      <button class="btn btn-ghost btn-sm" @click="clear">Clear</button>
-      <span class="sm-text">Sign above for confirmation</span>
+      <button class="btn btn-ghost btn-sm" @click="clear">{{ t('eventDetails.clearSignature') }}</button>
+      <span class="sm-text">{{ t('eventDetails.signHint') }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let ctx: CanvasRenderingContext2D | null = null
 let isDrawing = false
 
 const emit = defineEmits(['update:modelValue'])
+const { t } = useI18n()
 
 onMounted(() => {
   if (canvasRef.value) {

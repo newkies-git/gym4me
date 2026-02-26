@@ -1,10 +1,10 @@
 <template>
   <div class="trainer-section glass" style="margin-bottom: 2rem;">
-    <h3>My Clients</h3>
+    <h3>{{ t('clientMgr.myClients') }}</h3>
     
     <div class="add-client-form">
-      <input type="email" v-model="searchEmail" placeholder="Search user by email..." @keyup.enter="searchClient">
-      <button class="btn btn-primary" @click="searchClient" :disabled="loading">Search & Add</button>
+      <input type="email" v-model="searchEmail" :placeholder="t('clientMgr.searchPlaceholder')" @keyup.enter="searchClient">
+      <button class="btn btn-primary" @click="searchClient" :disabled="loading">{{ t('clientMgr.searchAndAdd') }}</button>
     </div>
     <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
 
@@ -13,35 +13,35 @@
         <div class="client-info">
           <strong style="display: flex; align-items: center; gap: 0.5rem;">
               {{ client.nickname || extractName(client.email) }}
-              <span v-if="client.remainingSessions !== undefined && client.remainingSessions <= 5" class="badge danger" title="Low Sessions">⚠️ {{ client.remainingSessions }} Left</span>
-              <span v-if="isExpiringSoon(client.expirationDate)" class="badge danger" title="Expiring Soon">⚠️ Expiring</span>
+              <span v-if="client.remainingSessions !== undefined && client.remainingSessions <= 5" class="badge danger" :title="t('clientMgr.lowSessionsTitle')">⚠️ {{ t('clientMgr.lowSessionsLeft', { n: client.remainingSessions }) }}</span>
+              <span v-if="isExpiringSoon(client.expirationDate)" class="badge danger" :title="t('clientMgr.expiringSoonTitle')">⚠️ {{ t('clientMgr.expiringShort') }}</span>
           </strong>
           <span class="sm-text">{{ client.email }}</span>
-          <span class="sm-text mt-1" v-if="client.remainingSessions !== undefined">PT: {{ client.remainingSessions }} sessions (Valid 'til: {{ client.expirationDate || 'N/A' }})</span>
+          <span class="sm-text mt-1" v-if="client.remainingSessions !== undefined">{{ t('clientMgr.membershipLine', { sessions: client.remainingSessions, expiration: client.expirationDate || t('common.na') }) }}</span>
         </div>
         <div class="client-actions">
-            <button class="btn btn-ghost btn-sm" @click="openSessionModal(client)">Edit PT</button>
-            <button class="btn btn-ghost btn-sm" @click="viewClientSchedule(client)">Calendar</button>
-            <button class="btn btn-ghost btn-sm" @click="router.push(`/profile?client=${client.email}`)">Profile</button>
+            <button class="btn btn-ghost btn-sm" @click="openSessionModal(client)">{{ t('clientMgr.editPt') }}</button>
+            <button class="btn btn-ghost btn-sm" @click="viewClientSchedule(client)">{{ t('clientMgr.viewCalendar') }}</button>
+            <button class="btn btn-ghost btn-sm" @click="router.push(`/profile?client=${client.email}`)">{{ t('clientMgr.profile') }}</button>
         </div>
       </li>
-      <li v-if="clients.length === 0" class="empty-state">No clients assigned yet. Add some!</li>
+      <li v-if="clients.length === 0" class="empty-state">{{ t('clientMgr.noClients') }}</li>
     </ul>
 
     <!-- Edit Session Modal -->
-    <BaseModal v-model:isOpen="isSessionModalOpen" title="Edit PT Membership" max-width="400px">
-      <p class="sm-text" style="margin-bottom: 1rem;">Client: {{ selectedClient?.email }}</p>
+    <BaseModal v-model:isOpen="isSessionModalOpen" :title="t('clientMgr.editMembershipTitle')" max-width="400px">
+      <p class="sm-text" style="margin-bottom: 1rem;">{{ t('eventDetails.client') }}: {{ selectedClient?.email }}</p>
       <div class="field">
-          <label>Remaining Sessions</label>
+          <label>{{ t('clientMgr.remainingSessionsLabel') }}</label>
           <input type="number" v-model.number="editSessionForm.remaining" min="0">
       </div>
       <div class="field">
-          <label>Expiration Date</label>
+          <label>{{ t('clientMgr.expirationDateLabel') }}</label>
           <input type="date" v-model="editSessionForm.expiration">
       </div>
       <template #footer>
-          <button class="btn btn-ghost" @click="isSessionModalOpen = false">Cancel</button>
-          <button class="btn btn-primary" @click="saveSessionUpdates" :disabled="savingSessions">Save</button>
+          <button class="btn btn-ghost" @click="isSessionModalOpen = false">{{ t('common.cancel') }}</button>
+          <button class="btn btn-primary" @click="saveSessionUpdates" :disabled="savingSessions">{{ t('common.save') }}</button>
       </template>
     </BaseModal>
   </div>
@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import { useClientStore } from '../../stores/clientStore'
 import { logTicketHistory } from '../../services/firebaseService'
@@ -59,6 +60,7 @@ import BaseModal from '../ui/BaseModal.vue'
 const auth = useAuthStore()
 const clientStore = useClientStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const searchEmail = ref('')
 const loading = computed(() => clientStore.loading)
@@ -78,7 +80,7 @@ const searchClient = async () => {
   try {
     await clientStore.addClientByEmail(searchEmail.value.trim());
     searchEmail.value = '';
-    alert('Client added successfully!');
+    alert(t('clientMgr.addSuccess'));
   } catch(e: any) {
     errorMsg.value = e.message;
   }
@@ -136,7 +138,7 @@ const saveSessionUpdates = async () => {
 
       isSessionModalOpen.value = false;
   } catch(e: any) {
-      alert(e.message)
+      alert(t('common.errorWithMessage', { msg: e.message }))
   } finally {
       savingSessions.value = false;
   }

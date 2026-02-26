@@ -1,38 +1,38 @@
 <template>
   <div v-if="isOpen" class="modal-overlay" @click.self="close">
     <div class="modal-content glass">
-      <h3>{{ scheduleType === 'PT' ? 'Assign PT Session' : 'Log Personal Workout' }}</h3>
+      <h3>{{ scheduleType === 'PT' ? t('scheduleModal.addPT') : t('scheduleModal.addPersonal') }}</h3>
       
       <form @submit.prevent="save">
         <div v-if="auth.isTrainer && scheduleType === 'PT'" class="field row">
-            <span v-if="clientEmail" class="sm-text">Client: {{ clientEmail }}</span>
-            <span v-if="classId" class="sm-text badge">Class Session</span>
+            <span v-if="clientEmail" class="sm-text">{{ t('eventDetails.client') }}: {{ clientEmail }}</span>
+            <span v-if="classId" class="sm-text badge">{{ t('calendar.classBadge') }}</span>
         </div>
         
         <div class="field">
-            <label>Title <span class="danger">*</span></label>
-            <input type="text" v-model="form.title" required placeholder="e.g. Full Body Workout">
+            <label>{{ t('scheduleModal.title') }} <span class="danger">*</span></label>
+            <input type="text" v-model="form.title" required :placeholder="t('scheduleModal.titlePlaceholder')">
         </div>
         
         <div class="field row">
             <div style="flex:1">
-                <label>Date <span class="danger">*</span></label>
+                <label>{{ t('scheduleModal.date') }} <span class="danger">*</span></label>
                 <input type="date" v-model="form.date" required>
             </div>
             <div style="flex:1">
-                <label>Time <span class="danger">*</span></label>
+                <label>{{ t('scheduleModal.time') }} <span class="danger">*</span></label>
                 <input type="time" v-model="form.time" required>
             </div>
         </div>
 
         <div class="field">
-            <label>Notes</label>
-            <textarea v-model="form.notes" rows="3" placeholder="Condition, target areas, etc."></textarea>
+            <label>{{ t('eventDetails.notes') }}</label>
+            <textarea v-model="form.notes" rows="3" :placeholder="t('scheduleModal.notesPlaceholder')"></textarea>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" @click="close" :disabled="saving">Cancel</button>
-          <button type="submit" class="btn btn-primary" :disabled="saving">Save</button>
+          <button type="button" class="btn btn-ghost" @click="close" :disabled="saving">{{ t('scheduleModal.cancel') }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="saving">{{ t('scheduleModal.save') }}</button>
         </div>
       </form>
     </div>
@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import { addSchedule } from '../../services/firebaseService'
 import { DEFAULT_SCHEDULE_TIME } from '../../constants/schedule'
@@ -58,6 +59,7 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const saving = ref(false)
 const form = ref({
@@ -110,7 +112,7 @@ const save = async () => {
       emit('saved');
       close();
   } catch(e: any) {
-      alert(e.message)
+      alert(t('common.errorWithMessage', { msg: e.message }))
   } finally {
       saving.value = false;
   }

@@ -10,11 +10,11 @@
       <p>{{ t('gymMgt.noGymAssigned') }}</p>
       <div class="field" style="margin-top: 1rem;">
         <label>{{ t('gymMgt.nameLabel') }}</label>
-        <input v-model="newGym.name" type="text" placeholder="Power Gym" />
+        <input v-model="newGym.name" type="text" :placeholder="t('gymMgt.namePlaceholder')" />
       </div>
       <div class="field">
         <label>{{ t('gymMgt.locationLabel') }}</label>
-        <input v-model="newGym.location" type="text" placeholder="Seoul, Gangnam" />
+        <input v-model="newGym.location" type="text" :placeholder="t('gymMgt.locationPlaceholder')" />
       </div>
       <button class="btn btn-primary" style="margin-top: 1rem;" @click="handleCreateGym">{{ t('gymMgt.createMyGym') }}</button>
     </div>

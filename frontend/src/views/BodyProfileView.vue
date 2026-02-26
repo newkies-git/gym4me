@@ -69,7 +69,7 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
             muscleMass: payload.muscleMass || undefined,
         });
     } catch(e: any) {
-        alert(e.message)
+        alert(t('common.errorWithMessage', { msg: e.message }))
     }
 }
 </script>

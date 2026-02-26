@@ -1,23 +1,23 @@
 <template>
   <div class="search-section glass">
-    <h3>🔍 Search Past Exercises</h3>
-    <p class="sm-text" style="margin-bottom: 1rem;">Looking to beat your old records? Search a workout name to repeat it.</p>
+    <h3>{{ t('search.title') }}</h3>
+    <p class="sm-text" style="margin-bottom: 1rem;">{{ t('search.subtitle') }}</p>
     <div class="search-bar">
-      <input type="text" v-model="searchExerciseQuery" placeholder="e.g. Squat" @keyup.enter="searchPastExercises">
-      <button class="btn btn-primary" @click="searchPastExercises">Search</button>
+      <input type="text" v-model="searchExerciseQuery" :placeholder="t('search.placeholder')" @keyup.enter="searchPastExercises">
+      <button class="btn btn-primary" @click="searchPastExercises">{{ t('search.searchBtn') }}</button>
     </div>
     
     <div class="search-results mt-4" v-if="searchResults.length > 0">
         <div v-for="res in searchResults" :key="res.id" class="result-card">
             <div class="res-info">
                 <strong>{{ res.date }}</strong> - {{ res.record.name }}
-                <span class="sm-text block">{{ res.record.sets }} Sets x {{ res.record.reps }} Reps <template v-if="res.record.weight">@ {{ res.record.weight }}kg</template></span>
+                <span class="sm-text block">{{ t('search.sets', { n: res.record.sets }) }} x {{ t('search.reps', { n: res.record.reps }) }} <template v-if="res.record.weight">@ {{ res.record.weight }}kg</template></span>
             </div>
-            <button class="btn btn-sm" @click="repeatExercise(res.record)">Repeat Today</button>
+            <button class="btn btn-sm" @click="repeatExercise(res.record)">{{ t('search.repeatBtn') }}</button>
         </div>
     </div>
     <div v-else-if="hasSearched" class="empty-state mt-4">
-        No past logs found for "{{ searchExerciseQuery }}".
+        {{ t('search.noResults', { query: searchExerciseQuery }) }}
     </div>
   </div>
 </template>
@@ -103,10 +103,10 @@ const repeatExercise = async (record: ExerciseRecord) => {
           status: 'COMPLETED'
       });
       
-      alert(`Added ${record.name} to today's schedule!`);
+      alert(t('search.addedToday', { name: record.name }));
       router.push('/calendar');
   } catch (e: any) {
-      alert(e.message)
+      alert(t('common.errorWithMessage', { msg: e.message }))
   }
 }
 </script>

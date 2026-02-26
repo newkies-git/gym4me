@@ -1,13 +1,13 @@
 <template>
   <div class="history-section glass">
-    <h3>History</h3>
+    <h3>{{ t('profileHistory.title') }}</h3>
     <ul class="history-list">
         <li v-for="rec in reversedRecords" :key="rec.id" class="history-item">
             <div class="date" style="font-weight:bold; font-size:0.9rem;">{{ rec.date }}</div>
             <div class="stats">
                 <span class="badge w">{{ rec.weight }}kg</span>
-                <span v-if="rec.bodyFat" class="badge f">Fat: {{ rec.bodyFat }}%</span>
-                <span v-if="rec.muscleMass" class="badge m">Muscle: {{ rec.muscleMass }}kg</span>
+                <span v-if="rec.bodyFat" class="badge f">{{ t('body.bodyFatLabel') }}: {{ rec.bodyFat }}%</span>
+                <span v-if="rec.muscleMass" class="badge m">{{ t('body.muscleMassLabel') }}: {{ rec.muscleMass }}kg</span>
             </div>
         </li>
     </ul>
@@ -16,11 +16,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { BodyRecord } from '../../types'
 
 const props = defineProps<{
     records: BodyRecord[]
 }>()
+
+const { t } = useI18n()
 
 const reversedRecords = computed(() => {
     return [...props.records].reverse()

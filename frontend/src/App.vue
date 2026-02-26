@@ -58,7 +58,7 @@ const { t } = useI18n()
 
 const logout = () => {
   auth.logout()
-  ui.showToast('Successfully logged out.', 'info')
+  ui.showToast(t('common.loggedOut'), 'info')
   router.push('/')
 }
 </script>

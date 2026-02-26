@@ -70,6 +70,8 @@ router.beforeEach((to, from, next) => {
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
         next('/auth')
+    } else if (auth.isAuthenticated && auth.user?.mustChangePassword && to.path !== '/settings') {
+        next('/settings')
     } else if (to.meta.requiresSiteAdmin && !auth.isSiteAdmin) {
         next('/dashboard')
     } else if (to.meta.requiresManager && !auth.isManager) {

@@ -9,7 +9,7 @@
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="field">
           <label>{{ t('auth.email') }}</label>
-          <input v-model="form.email" type="email" required placeholder="name@example.com" />
+          <input v-model="form.email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
         </div>
         <div class="field">
           <label>{{ t('auth.password') }}</label>
@@ -35,7 +35,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { auth, db } from '../firebase/config'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc, runTransaction, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 const router = useRouter()
 const isLogin = ref(true)
@@ -50,56 +50,23 @@ const form = reactive({
 })
 
 const configuredSiteAdminEmail = (import.meta.env.VITE_SITE_ADMIN_EMAIL || '').trim().toLowerCase()
+const configuredSiteAdminInitialPassword = import.meta.env.VITE_SITE_ADMIN_INITIAL_PASSWORD || ''
 
-const bootstrapSiteAdminIfNeeded = async (uid: string, email: string) => {
+const markInitialSiteAdminIfNeeded = async (uid: string, email: string, password: string) => {
   const normalizedEmail = email.trim().toLowerCase()
   const isBootstrapTarget = configuredSiteAdminEmail && configuredSiteAdminEmail === normalizedEmail
-  const bootstrapRef = doc(db, 'system', 'siteAdminBootstrap')
+  const isInitialPassword = configuredSiteAdminInitialPassword && configuredSiteAdminInitialPassword === password
+  if (!isBootstrapTarget || !isInitialPassword) return false
+
   const userRef = doc(db, 'users', uid)
-
-  if (!isBootstrapTarget) {
-    await setDoc(userRef, {
-      email,
-      nickname: form.nickname,
-      role: 'OBSERVER',
-      lvl: 1,
-      createdAt: serverTimestamp()
-    })
-    return false
-  }
-
-  return await runTransaction(db, async (tx) => {
-    const [bootstrapSnap, userSnap] = await Promise.all([
-      tx.get(bootstrapRef),
-      tx.get(userRef)
-    ])
-
-    if (userSnap.exists()) {
-      return userSnap.data().role === 'SITE_ADMIN'
-    }
-
-    const canBootstrap = !bootstrapSnap.exists()
-    const role = canBootstrap ? 'SITE_ADMIN' : 'OBSERVER'
-    const lvl = canBootstrap ? 100 : 1
-
-    tx.set(userRef, {
-      email,
-      nickname: form.nickname,
-      role,
-      lvl,
-      createdAt: serverTimestamp()
-    })
-
-    if (canBootstrap) {
-      tx.set(bootstrapRef, {
-        email: normalizedEmail,
-        uid,
-        createdAt: serverTimestamp()
-      })
-    }
-
-    return canBootstrap
-  })
+  await setDoc(userRef, {
+    email,
+    role: 'SITE_ADMIN',
+    lvl: 100,
+    mustChangePassword: true,
+    updatedAt: serverTimestamp()
+  }, { merge: true })
+  return true
 }
 
 const handleSubmit = async () => {
@@ -108,23 +75,26 @@ const handleSubmit = async () => {
   try {
     if (isLogin.value) {
       // Firebase Login
-      await signInWithEmailAndPassword(auth, form.email, form.password)
+      const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password)
+      await markInitialSiteAdminIfNeeded(userCredential.user.uid, form.email, form.password)
       router.push('/')
     } else {
       // Firebase Signup
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password)
       const user = userCredential.user
 
-      // Bootstrap SITE_ADMIN once when configured email signs up first.
-      const becameSiteAdmin = await bootstrapSiteAdminIfNeeded(user.uid, form.email)
+      // All new users start as OBSERVER.
+      await setDoc(doc(db, 'users', user.uid), {
+        email: form.email,
+        nickname: form.nickname,
+        role: 'OBSERVER',
+        lvl: 1,
+        createdAt: serverTimestamp()
+      })
       
       isLogin.value = true
       form.nickname = ''
-      if (becameSiteAdmin) {
-        alert('Account created. SITE_ADMIN has been bootstrapped.')
-      } else {
-        alert(t('auth.accountCreated'))
-      }
+      alert(t('auth.accountCreated'))
     }
   } catch (e: any) {
     // Handle Firebase errors

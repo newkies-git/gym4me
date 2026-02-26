@@ -3,17 +3,17 @@
     <div class="modal-content glass details-modal">
       <div class="flex-between">
           <h3>{{ event.title }}</h3>
-          <span v-if="event.targetType === 'CLASS'" class="badge info">CLASS</span>
+          <span v-if="event.targetType === 'CLASS'" class="badge info">{{ t('calendar.classBadge') }}</span>
       </div>
-      <p class="sm-text">Date: {{ event.dateStr }} | Time: {{ event.time }} | Status: {{ event.status }}</p>
+      <p class="sm-text">{{ t('eventDetails.date') }}: {{ event.dateStr }} | {{ t('eventDetails.time') }}: {{ event.time }} | {{ t('eventDetails.status') }}: {{ t(`calendar.status.${event.status.toLowerCase()}`) }}</p>
       
       <div v-if="event.notes" style="margin-top: 1rem; margin-bottom: 2rem;">
-          <strong>Notes:</strong> <p>{{ event.notes }}</p>
+          <strong>{{ t('eventDetails.notes') }}:</strong> <p>{{ event.notes }}</p>
       </div>
 
       <div v-if="event.targetType === 'CLASS' && event.classId" style="margin-bottom: 2rem;">
-          <strong>Class Trainees:</strong>
-          <div v-if="loadingClassInfo" class="sm-text">Loading group info...</div>
+          <strong>{{ t('eventDetails.classTrainees') }}:</strong>
+          <div v-if="loadingClassInfo" class="sm-text">{{ t('eventDetails.loadingGroupInfo') }}</div>
           <div v-else class="trainee-list-mini" style="margin-top: 0.5rem;">
               <span v-for="email in classEmails" :key="email" class="trainee-tag">
                   {{ email }}
@@ -22,26 +22,26 @@
       </div>
 
       <div class="record-section">
-          <h4>Training Log</h4>
+          <h4>{{ t('eventDetails.trainingLog') }}</h4>
           <div v-if="event.records && event.records.length">
               <ul class="exercise-list">
                   <li v-for="(rec, idx) in event.records" :key="idx" class="history-item flex-between" style="flex-direction: row; align-items: center;">
                       <span class="ex-name" style="font-weight: bold;">{{ rec.name }}</span>
-                      <span class="ex-meta" style="color: var(--text-muted); font-size: 0.9rem;">{{ rec.sets }} Sets x {{ rec.reps }} Reps <template v-if="rec.weight">@ {{ rec.weight }}kg</template></span>
+                      <span class="ex-meta" style="color: var(--text-muted); font-size: 0.9rem;">{{ t('search.sets', { n: rec.sets }) }} x {{ t('search.reps', { n: rec.reps }) }} <template v-if="rec.weight">@ {{ rec.weight }}kg</template></span>
                   </li>
               </ul>
           </div>
-          <div v-else class="empty-state">No exercises logged yet.</div>
+          <div v-else class="empty-state">{{ t('eventDetails.noExercises') }}</div>
 
           <!-- Signature Section for PT Sessions -->
           <div v-if="event.type === 'PT'" class="signature-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-              <h4>Trainee Confirmation</h4>
+              <h4>{{ t('eventDetails.traineeConfirmation') }}</h4>
               <div v-if="event.status === 'COMPLETED' && event.signatureUrl">
-                  <p class="sm-text">Confirmed via digital signature:</p>
+                  <p class="sm-text">{{ t('eventDetails.confirmedBySignature') }}</p>
                   <img :src="event.signatureUrl" alt="Confirmation Signature" class="signature-display">
               </div>
               <div v-else-if="event.status !== 'COMPLETED'">
-                  <p class="sm-text">Please sign below to confirm session completion.</p>
+                  <p class="sm-text">{{ t('eventDetails.signToConfirm') }}</p>
                   <SignaturePad v-model="tempSignature" />
               </div>
           </div>
@@ -52,31 +52,31 @@
 
           <!-- Add New Log Section -->
           <div v-if="canAddRecord" class="add-record-form" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-              <h5>+ Add Exercise</h5>
+              <h5>+ {{ t('eventDetails.addRecord') }}</h5>
               <div class="field row" style="display: flex; gap: 1rem;">
                   <div style="flex:2">
-                      <label>Exercise</label>
-                      <input type="text" v-model="newRecordObj.name" placeholder="e.g. Bench Press">
+                      <label>{{ t('eventDetails.exerciseName') }}</label>
+                      <input type="text" v-model="newRecordObj.name" :placeholder="t('eventDetails.exercisePlaceholder')">
                   </div>
                   <div style="flex:1">
-                      <label>Sets</label>
+                      <label>{{ t('eventDetails.sets') }}</label>
                       <input type="number" v-model.number="newRecordObj.sets" min="1">
                   </div>
                   <div style="flex:1">
-                      <label>Reps</label>
+                      <label>{{ t('eventDetails.reps') }}</label>
                       <input type="number" v-model.number="newRecordObj.reps" min="1">
                   </div>
                   <div style="flex:1">
-                      <label>Weight(kg)</label>
+                      <label>{{ t('eventDetails.weight') }}</label>
                       <input type="number" v-model.number="newRecordObj.weight" min="0">
                   </div>
               </div>
-              <button type="button" class="btn btn-primary btn-sm" @click="saveRecord" :disabled="savingRecord">Save Log</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="saveRecord" :disabled="savingRecord">{{ t('eventDetails.saveRecord') }}</button>
           </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" @click="close">Close</button>
+        <button type="button" class="btn btn-ghost" @click="close">{{ t('eventDetails.cancel') }}</button>
         <button 
           v-if="event.type === 'PT' && event.status !== 'COMPLETED' && tempSignature" 
           type="button" 
@@ -84,7 +84,7 @@
           @click="handleSignAndComplete"
           :disabled="completing"
         >
-          {{ completing ? 'Processing...' : 'Sign & Complete' }}
+          {{ completing ? t('common.processing') : t('eventDetails.completeWithSignature') }}
         </button>
       </div>
     </div>
@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import { updateSchedule, completeSession } from '../../services/firebaseService'
 import { arrayUnion, doc, getDoc } from 'firebase/firestore'
@@ -111,6 +112,7 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const savingRecord = ref(false)
 const newRecordObj = ref<ExerciseRecord>({ name: '', sets: 0, reps: 0 })
@@ -137,7 +139,7 @@ const saveRecord = async () => {
         newRecordObj.value = { name: '', sets: 0, reps: 0 };
         emit('updated');
     } catch(e: any) {
-        alert(e.message)
+        alert(t('common.errorWithMessage', { msg: e.message }))
     } finally {
         savingRecord.value = false;
     }
@@ -172,11 +174,11 @@ const handleSignAndComplete = async () => {
     completing.value = true;
     try {
         await completeSession(props.event.id, tempSignature.value, auth.user);
-        alert("Session signed and completed!");
+        alert(t('eventDetails.sessionCompleted'))
         emit('updated');
         close();
     } catch(e: any) {
-        alert(e.message)
+        alert(t('common.errorWithMessage', { msg: e.message }))
     } finally {
         completing.value = false;
     }

@@ -30,7 +30,7 @@
         <p class="sm-text">{{ t('trainerMgt.appointDesc') }}</p>
         
         <div class="field" style="margin-top: 1.5rem;">
-          <input type="email" v-model="searchEmail" placeholder="user@example.com" @keyup.enter="searchUser">
+          <input type="email" v-model="searchEmail" :placeholder="t('trainerMgt.invitePlaceholder')" @keyup.enter="searchUser">
         </div>
         <button class="btn btn-primary" style="width: 100%;" @click="searchUser" :disabled="searching">
           {{ searching ? t('trainerMgt.searching') : t('trainerMgt.searchUser') }}

@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-wrapper container">
     <div class="header">
-      <h2>{{ t('dashboard.hello', { name: auth.user?.nickname || 'Athlete' }) }}</h2>
+      <h2>{{ t('dashboard.hello', { name: auth.user?.nickname || t('dashboard.defaultName') }) }}</h2>
       <p class="subtitle" v-if="auth.isSiteAdmin">{{ t('dashboard.siteAdminDashboard') }}</p>
       <p class="subtitle" v-else-if="auth.isManager">{{ t('dashboard.managerDashboard') }}</p>
       <p class="subtitle" v-else-if="auth.isTrainer">{{ t('dashboard.trainerDashboard') }}</p>
@@ -32,7 +32,7 @@
       
       <StatCard 
         v-if="!auth.isTrainer"
-        :value="myExpirationDate ? formatDate(myExpirationDate) : 'N/A'"
+        :value="myExpirationDate ? formatDate(myExpirationDate) : t('common.na')"
         :label="t('dashboard.ptExpiration')"
         :is-danger="isExpiringSoon(myExpirationDate)"
       />
@@ -100,10 +100,10 @@ const simulatePurchase = async () => {
             role: 'MEMBER',
             updatedAt: serverTimestamp()
         });
-        alert("10 sessions added! Please refresh or wait for sync.");
+        alert(t('dashboard.testPurchaseSuccess'));
         location.reload(); // Quick way to sync for the test
     } catch(e: any) {
-        alert(e.message);
+        alert(t('common.errorWithMessage', { msg: e.message }));
     }
 }
 </script>

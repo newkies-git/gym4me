@@ -1,21 +1,21 @@
 <template>
   <div class="class-manager glass" style="margin-bottom: 2rem;">
     <div class="flex-between" style="margin-bottom: 1.5rem;">
-      <h3>My Classes</h3>
-      <button class="btn btn-primary btn-sm" @click="isCreateModalOpen = true">+ Create Class</button>
+      <h3>{{ t('classMgr.myClasses') }}</h3>
+      <button class="btn btn-primary btn-sm" @click="isCreateModalOpen = true">+ {{ t('classMgr.createClass') }}</button>
     </div>
 
-    <div v-if="loading" class="sm-text">Loading classes...</div>
+    <div v-if="loading" class="sm-text">{{ t('classMgr.loading') }}</div>
     
     <div class="class-grid" v-else>
       <div v-for="cls in classes" :key="cls.id" class="class-card">
         <div class="class-info">
           <h4>{{ cls.name }}</h4>
-          <p class="sm-text">{{ cls.traineeEmails.length }} Trainees enrolled</p>
+          <p class="sm-text">{{ t('classMgr.membersCount', { n: cls.traineeEmails.length }) }}</p>
         </div>
         <div class="class-actions">
-          <button class="btn btn-ghost btn-sm" @click="openInviteModal(cls)">Invite</button>
-          <button class="btn btn-ghost btn-sm" @click="viewClassSchedule(cls)">Schedule</button>
+          <button class="btn btn-ghost btn-sm" @click="openInviteModal(cls)">{{ t('classMgr.invite') }}</button>
+          <button class="btn btn-ghost btn-sm" @click="viewClassSchedule(cls)">{{ t('classMgr.viewCalendar') }}</button>
         </div>
         
         <div class="trainee-list-mini" v-if="cls.traineeEmails.length > 0">
@@ -27,34 +27,34 @@
       </div>
       
       <div v-if="classes.length === 0" class="empty-state">
-        No classes created yet. Create your first group class!
+        {{ t('classMgr.noClasses') }}
       </div>
     </div>
 
     <!-- Create Class Modal -->
-    <BaseModal v-model:isOpen="isCreateModalOpen" title="Create New Class" max-width="400px">
+    <BaseModal v-model:isOpen="isCreateModalOpen" :title="t('classMgr.createClass')" max-width="400px">
       <div class="field">
-        <label>Class Name</label>
-        <input type="text" v-model="newClassName" placeholder="e.g., Morning Yoga, Advanced Lifting">
+        <label>{{ t('classMgr.className') }}</label>
+        <input type="text" v-model="newClassName" :placeholder="t('classMgr.classNamePlaceholder')">
       </div>
       <template #footer>
-        <button class="btn btn-ghost" @click="isCreateModalOpen = false">Cancel</button>
+        <button class="btn btn-ghost" @click="isCreateModalOpen = false">{{ t('common.cancel') }}</button>
         <button class="btn btn-primary" @click="handleCreateClass" :disabled="!newClassName || saving">
-          {{ saving ? 'Creating...' : 'Create' }}
+          {{ saving ? t('classMgr.creating') : t('classMgr.create') }}
         </button>
       </template>
     </BaseModal>
 
     <!-- Invite Trainee Modal -->
-    <BaseModal v-model:isOpen="isInviteModalOpen" :title="'Invite to ' + selectedClass?.name" max-width="400px">
+    <BaseModal v-model:isOpen="isInviteModalOpen" :title="t('classMgr.inviteToClass', { name: selectedClass?.name || '' })" max-width="400px">
       <div class="field">
-        <label>Trainee Email</label>
-        <input type="email" v-model="inviteEmail" placeholder="trainee@example.com" @keyup.enter="handleInvite">
+        <label>{{ t('classMgr.inviteLabel') }}</label>
+        <input type="email" v-model="inviteEmail" :placeholder="t('classMgr.invitePlaceholder')" @keyup.enter="handleInvite">
       </div>
       <template #footer>
-        <button class="btn btn-ghost" @click="isInviteModalOpen = false">Cancel</button>
+        <button class="btn btn-ghost" @click="isInviteModalOpen = false">{{ t('common.cancel') }}</button>
         <button class="btn btn-primary" @click="handleInvite" :disabled="!inviteEmail || inviting">
-          {{ inviting ? 'Inviting...' : 'Invite' }}
+          {{ inviting ? t('classMgr.inviting') : t('classMgr.invite') }}
         </button>
       </template>
     </BaseModal>
@@ -64,6 +64,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useClassStore } from '../../stores/classStore'
 import { useUIStore } from '../../stores/uiStore'
 import BaseModal from '../ui/BaseModal.vue'
@@ -72,6 +73,7 @@ import type { GymClass } from '../../types'
 const classStore = useClassStore()
 const ui = useUIStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = computed(() => classStore.loading)
 const classes = computed(() => classStore.classes)
@@ -96,7 +98,7 @@ const handleCreateClass = async () => {
     await classStore.createNewClass(newClassName.value)
     newClassName.value = ''
     isCreateModalOpen.value = false
-    ui.showToast('Class created successfully!', 'success')
+    ui.showToast(t('classMgr.createSuccess'), 'success')
   } catch (e: any) {
     ui.showToast(e.message, 'error')
   } finally {
@@ -117,7 +119,7 @@ const handleInvite = async () => {
     await classStore.inviteTrainee(selectedClass.value.id, inviteEmail.value.trim())
     inviteEmail.value = ''
     isInviteModalOpen.value = false
-    ui.showToast('Trainee added to class!', 'success')
+    ui.showToast(t('classMgr.inviteSuccess'), 'success')
   } catch (e: any) {
     ui.showToast(e.message, 'error')
   } finally {

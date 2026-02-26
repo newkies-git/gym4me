@@ -1,25 +1,30 @@
 <template>
   <div class="settings-wrapper container">
     <div class="header flex-between">
-      <h2>Account Settings</h2>
-      <button class="btn btn-ghost" @click="router.back()">Back</button>
+      <h2>{{ t('settings.title') }}</h2>
+      <button class="btn btn-ghost" @click="router.back()">{{ t('settings.back') }}</button>
+    </div>
+
+    <div v-if="auth.user?.mustChangePassword" class="glass" style="padding: 1rem 1.25rem; border: 1px solid rgba(245, 158, 11, 0.35); margin-bottom: 1rem;">
+      <strong>{{ t('settings.passwordChangeRequired') }}</strong>
+      <p class="sm-text" style="margin-top: 0.4rem;">{{ t('settings.passwordChangeRequiredDesc') }}</p>
     </div>
 
     <div class="grid-2" style="margin-top: 2rem;">
       <div class="left-panel">
         <!-- Profile Info Section -->
         <div class="info-section glass">
-          <h3>Profile Information</h3>
+          <h3>{{ t('settings.profileInfo') }}</h3>
           <div class="info-group">
-              <label>Email</label>
+              <label>{{ t('settings.email') }}</label>
               <p>{{ auth.user?.email }}</p>
           </div>
           <div class="info-group">
-              <label>Role</label>
+              <label>{{ t('settings.role') }}</label>
               <p>{{ auth.user?.role }}</p>
           </div>
           <div class="info-group" v-if="auth.user?.nickname">
-              <label>Nickname</label>
+              <label>{{ t('settings.nickname') }}</label>
               <p>{{ auth.user?.nickname }}</p>
           </div>
         </div>
@@ -54,36 +59,36 @@
 
         <!-- Danger Zone -->
         <div class="danger-zone glass" style="margin-top: 2rem;">
-          <h3 class="text-danger">Danger Zone</h3>
-          <p class="sm-text">Once you delete your account, there is no going back. Please be certain.</p>
-          <button class="btn btn-danger" style="margin-top: 1.5rem;" @click="showDeleteModal = true">Delete Account</button>
+          <h3 class="text-danger">{{ t('settings.dangerZone') }}</h3>
+          <p class="sm-text">{{ t('settings.dangerDesc') }}</p>
+          <button class="btn btn-danger" style="margin-top: 1.5rem;" @click="showDeleteModal = true">{{ t('settings.deleteAccount') }}</button>
         </div>
       </div>
 
       <!-- Ticket History Section (For Members) -->
       <div v-if="!auth.isTrainer" class="history-section glass">
-        <h3>PT Session History</h3>
-        <div v-if="loadingHistory" class="sm-text">Loading...</div>
+        <h3>{{ t('settings.ptSessionHistory') }}</h3>
+        <div v-if="loadingHistory" class="sm-text">{{ t('settings.loading') }}</div>
         <ul v-else-if="ticketHistory.length > 0" class="history-list">
             <li v-for="log in ticketHistory" :key="log.id" class="history-item flex-between" style="flex-direction: row; align-items: center;">
                 <div class="log-date" style="font-weight: 600; font-size: 0.9rem;">{{ formatDate(log.createdAt) }}</div>
                 <div class="log-details" style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; text-align: right;">
-                    <span class="badge" :class="getBadgeClass(log.action)">{{ log.action }}</span>
-                    <span style="font-size: 0.95rem;">{{ log.amountChanged > 0 ? '+' : '' }}{{ log.amountChanged }} sessions</span>
-                    <span class="sm-text" style="font-size: 0.8rem; color: var(--text-muted);">by: {{ log.trainerEmail }}</span>
+                    <span class="badge" :class="getBadgeClass(log.action)">{{ formatAction(log.action) }}</span>
+                    <span style="font-size: 0.95rem;">{{ t('settings.sessionsCount', { n: `${log.amountChanged > 0 ? '+' : ''}${log.amountChanged}` }) }}</span>
+                    <span class="sm-text" style="font-size: 0.8rem; color: var(--text-muted);">{{ t('settings.byTrainer', { email: log.trainerEmail }) }}</span>
                 </div>
             </li>
         </ul>
-        <div v-else class="empty-state">No PT session history found.</div>
+        <div v-else class="empty-state">{{ t('settings.noHistory') }}</div>
       </div>
     </div>
 
     <!-- Account Deletion Modal -->
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
         <div class="modal-content glass" style="max-width: 450px;">
-            <h3 class="text-danger">Delete Account</h3>
-            <p style="margin-bottom: 1rem;">This action cannot be undone. This will permanently delete your personal workouts, body profiles, and remove your data from our servers.</p>
-            <p style="margin-bottom: 1.5rem;">Please type <strong>{{ deleteConfirmKeyword }}</strong> to confirm.</p>
+            <h3 class="text-danger">{{ t('settings.deleteModalTitle') }}</h3>
+            <p style="margin-bottom: 1rem;">{{ t('settings.deleteModalDesc') }}</p>
+            <p style="margin-bottom: 1.5rem;" v-html="t('settings.deleteConfirmPrompt')"></p>
             
             <div class="field">
                 <input type="text" v-model="deleteConfirmText" :placeholder="deleteConfirmKeyword" style="text-align: center; font-size: 1.1rem;">
@@ -92,9 +97,9 @@
             <p v-if="deleteError" class="error-text" style="margin-bottom: 1.5rem;">{{ deleteError }}</p>
             
             <div class="modal-actions">
-                <button class="btn btn-ghost" @click="showDeleteModal = false" :disabled="isDeleting">Cancel</button>
+                <button class="btn btn-ghost" @click="showDeleteModal = false" :disabled="isDeleting">{{ t('settings.cancel') }}</button>
                 <button class="btn btn-danger" @click="executeDeletion" :disabled="deleteConfirmText !== deleteConfirmKeyword || isDeleting">
-                    {{ isDeleting ? 'Deleting...' : 'Permanently Delete' }}
+                    {{ isDeleting ? t('settings.deleting') : t('settings.permanentlyDelete') }}
                 </button>
             </div>
         </div>
@@ -109,7 +114,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { auth as firebaseAuth, db } from '../firebase/config'
-import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
 
 const auth = useAuthStore()
@@ -170,6 +175,8 @@ const getBadgeClass = (action: string) => {
     return 'warning';
 }
 
+const formatAction = (action: string) => t(`settings.historyAction.${action.toLowerCase()}`)
+
 const handleChangePassword = async () => {
     passwordError.value = ''
     const currentUser = firebaseAuth.currentUser
@@ -198,6 +205,10 @@ const handleChangePassword = async () => {
         const credential = EmailAuthProvider.credential(currentUser.email, passwordForm.value.currentPassword)
         await reauthenticateWithCredential(currentUser, credential)
         await updatePassword(currentUser, passwordForm.value.newPassword)
+        if (auth.user?.uid) {
+            await updateDoc(doc(db, 'users', auth.user.uid), { mustChangePassword: false })
+            if (auth.user) auth.user.mustChangePassword = false
+        }
         passwordForm.value = { currentPassword: '', newPassword: '', confirmNewPassword: '' }
         ui.showToast(t('settings.passwordChangeSuccess'), 'success')
     } catch (e: any) {
@@ -260,17 +271,17 @@ const executeDeletion = async () => {
             await deleteUser(firebaseAuth.currentUser);
         }
 
-        ui.showToast('Account and data deleted successfully.', 'success')
+        ui.showToast(t('settings.deleteSuccess'), 'success')
         await auth.logout();
         router.push('/');
     } catch(e: any) {
         if (e?.code === 'auth/requires-recent-login') {
-            deleteError.value = 'For security, please log in again and retry account deletion.'
+            deleteError.value = t('settings.passwordReloginRequired')
         } else {
-            deleteError.value = e.message || 'An error occurred during deletion.';
+            deleteError.value = e.message || t('settings.deleteFailed', { msg: '' });
         }
         isDeleting.value = false;
-        ui.showToast('Deletion failed: ' + deleteError.value, 'error')
+        ui.showToast(t('settings.deleteFailed', { msg: deleteError.value }), 'error')
     }
 }
 </script>

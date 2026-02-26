@@ -17,7 +17,7 @@
           
           <div class="field">
             <label>{{ t('trainerProfile.photoUrl') }}</label>
-            <input type="url" v-model="form.photoUrl" placeholder="https://...">
+            <input type="url" v-model="form.photoUrl" :placeholder="t('trainerProfile.photoUrlPlaceholder')">
             <div v-if="form.photoUrl" class="img-preview" style="margin-top: 1rem;">
                <img :src="form.photoUrl" :alt="t('trainerProfile.preview')" style="max-width: 100px; border-radius: 50%;">
             </div>

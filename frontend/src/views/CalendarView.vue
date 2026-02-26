@@ -24,10 +24,10 @@
           <div v-for="event in getEventsForDay(day.dateStr)" :key="event.id" class="event-card" :class="[event.type.toLowerCase(), { 'class-event': event.targetType === 'CLASS' }]">
             <div class="event-time" v-if="event.time">{{ event.time }}</div>
             <div class="event-title">
-              <span v-if="event.targetType === 'CLASS'" class="badge-mini">CLASS</span>
+              <span v-if="event.targetType === 'CLASS'" class="badge-mini">{{ t('calendar.classBadge') }}</span>
               {{ event.title }}
             </div>
-            <div class="event-status">{{ event.status }}</div>
+            <div class="event-status">{{ formatStatus(event.status) }}</div>
             <button class="btn btn-sm" style="margin-top:0.5rem; width:100%; border:1px solid currentColor" @click="viewDetails(event)">{{ t('calendar.openDetails') }}</button>
           </div>
         </div>
@@ -152,6 +152,8 @@ const weekDays = computed(() => {
 const getEventsForDay = (dateStr: string) => {
   return events.value.filter(e => e.dateStr === dateStr).sort((a,b) => a.time.localeCompare(b.time))
 }
+
+const formatStatus = (status: string) => t(`calendar.status.${status.toLowerCase()}`)
 </script>
 
 <style scoped>

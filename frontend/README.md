@@ -4,14 +4,16 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
-## SITE_ADMIN bootstrap
+## SITE_ADMIN first-login policy
 
-### 1) Automatic bootstrap on first signup (recommended)
+If both `VITE_SITE_ADMIN_EMAIL` and `VITE_SITE_ADMIN_INITIAL_PASSWORD` are set:
 
-If `VITE_SITE_ADMIN_EMAIL` is set, when that email signs up and no admin has been bootstrapped yet,
-the account is created as `SITE_ADMIN (lvl 100)` once.
+- When that email logs in with the initial password,
+- the account is marked as `SITE_ADMIN (lvl 100)` and `mustChangePassword=true`,
+- then the user is forced to `/settings` to change password.
 
 - `VITE_SITE_ADMIN_EMAIL`
+- `VITE_SITE_ADMIN_INITIAL_PASSWORD`
 
 ### 2) Manual promote script
 
@@ -29,5 +31,6 @@ Set these environment variables before running:
 - `VITE_FIREBASE_STORAGE_BUCKET`
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
-- `VITE_SITE_ADMIN_EMAIL` (optional, for automatic bootstrap only)
+- `VITE_SITE_ADMIN_EMAIL` (optional)
+- `VITE_SITE_ADMIN_INITIAL_PASSWORD` (optional)
 - `SITE_ADMIN_EMAIL`

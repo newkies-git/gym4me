@@ -7,6 +7,7 @@ export interface User {
   gymId?: string;
   remainingSessions?: number;
   expirationDate?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface Gym {

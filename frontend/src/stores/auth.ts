@@ -46,7 +46,8 @@ export const useAuthStore = defineStore('auth', {
                         role: data.role || 'MEMBER',
                         gymId: data.gymId,
                         remainingSessions: data.remainingSessions,
-                        expirationDate: data.expirationDate
+                        expirationDate: data.expirationDate,
+                        mustChangePassword: data.mustChangePassword === true
                     };
                 } else {
                     // Default user profile if doesn't exist in Firestore
