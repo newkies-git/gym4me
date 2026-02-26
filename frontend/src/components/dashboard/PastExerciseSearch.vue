@@ -77,12 +77,12 @@ const repeatExercise = async (record: ExerciseRecord) => {
       let targetDocId = todaySchedule?.id;
       if (!targetDocId) {
           const newDoc = await addSchedule({
-              userEmail: auth.user?.email,
-              trainerEmail: null,
-              date: todayStr,
+              clientEmail: auth.user?.email,
+              dateStr: todayStr,
               time: '18:00',
               title: 'Repeated Workout',
               type: 'PERSONAL',
+              targetType: 'INDIVIDUAL',
               status: 'APPROVED'
           });
           targetDocId = newDoc.id;
