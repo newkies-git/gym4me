@@ -34,7 +34,11 @@ const profileStore = useProfileStore()
 const route = useRoute()
 const router = useRouter()
 
-const clientEmail = computed(() => route.query.client as string | undefined)
+const clientEmail = computed(() => {
+    const requested = route.query.client as string | undefined
+    if (!requested) return undefined
+    return auth.isTrainer || auth.isSiteAdmin ? requested : undefined
+})
 const targetEmail = computed(() => clientEmail.value || auth.user?.email)
 
 const records = computed(() => profileStore.getProfilesByEmail(targetEmail.value || ''))

@@ -14,10 +14,56 @@ import {
     runTransaction,
     type DocumentData
 } from 'firebase/firestore'
-import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym, GymClass } from '../types'
+import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym, GymClass, User } from '../types'
+
+type AccessActor = Pick<User, 'email' | 'lvl' | 'role'>
+
+const chunkByTen = <T>(items: T[]): T[][] => {
+    const chunks: T[][] = []
+    for (let i = 0; i < items.length; i += 10) {
+        chunks.push(items.slice(i, i + 10))
+    }
+    return chunks
+}
+
+const isSiteAdminActor = (actor: AccessActor) => (actor.lvl || 0) >= 100 || actor.role === 'SITE_ADMIN'
+
+const assertCanAccessUserData = async (targetEmail: string, actor: AccessActor) => {
+    if (actor.email === targetEmail || isSiteAdminActor(actor)) return
+
+    const isTrainer = (actor.lvl || 0) >= 10
+    if (!isTrainer) throw new Error('Forbidden')
+
+    const q = query(collection(db, 'users'), where('email', '==', targetEmail))
+    const snap = await getDocs(q)
+    if (snap.empty) throw new Error('Target user not found')
+
+    const targetUser = snap.docs[0].data()
+    if (targetUser.trainerEmail !== actor.email) {
+        throw new Error('Forbidden')
+    }
+}
+
+const assertCanAccessClassData = async (classId: string, actor: AccessActor) => {
+    if (isSiteAdminActor(actor)) return
+
+    const classSnap = await getDoc(doc(db, 'classes', classId))
+    if (!classSnap.exists()) throw new Error('Class not found')
+
+    const classData = classSnap.data()
+    const traineeEmails: string[] = classData.traineeEmails || []
+    const isOwnerTrainer = classData.trainerEmail === actor.email
+    const isMember = traineeEmails.includes(actor.email)
+
+    if (!isOwnerTrainer && !isMember) {
+        throw new Error('Forbidden')
+    }
+}
 
 // Schedules
-export const getSchedules = async (targetEmail: string): Promise<CalendarEvent[]> => {
+export const getSchedules = async (targetEmail: string, actor: AccessActor): Promise<CalendarEvent[]> => {
+    await assertCanAccessUserData(targetEmail, actor)
+
     // 1. 개인 일정 (Individual)
     const qIndividual = query(
         collection(db, 'schedules'),
@@ -40,15 +86,18 @@ export const getSchedules = async (targetEmail: string): Promise<CalendarEvent[]
     const classSnap = await getDocs(qClasses)
     const classIds = classSnap.docs.map(d => d.id)
 
-    let classSchedules: CalendarEvent[] = []
+    const classSchedules: CalendarEvent[] = []
     if (classIds.length > 0) {
-        // ClassId가 소속된 목록에 있는 일정들 조회
-        const qClassSchedules = query(
-            collection(db, 'schedules'),
-            where('classId', 'in', classIds.slice(0, 10)) // Firestore 'in' limitation: 10
-        )
-        const classSchedSnap = await getDocs(qClassSchedules)
-        classSchedules = classSchedSnap.docs.map(docSnap => mapSnapshotToEvent(docSnap))
+        // Firestore 'in' limitation: 10
+        const classIdChunks = chunkByTen(classIds)
+        for (const classIdChunk of classIdChunks) {
+            const qClassSchedules = query(
+                collection(db, 'schedules'),
+                where('classId', 'in', classIdChunk)
+            )
+            const classSchedSnap = await getDocs(qClassSchedules)
+            classSchedules.push(...classSchedSnap.docs.map(docSnap => mapSnapshotToEvent(docSnap)))
+        }
     }
 
     const [indivSnap, persSnap] = await Promise.all([getDocs(qIndividual), getDocs(qPersonal)])
@@ -63,7 +112,9 @@ export const getSchedules = async (targetEmail: string): Promise<CalendarEvent[]
     return unique
 }
 
-export const getSchedulesByClass = async (classId: string): Promise<CalendarEvent[]> => {
+export const getSchedulesByClass = async (classId: string, actor: AccessActor): Promise<CalendarEvent[]> => {
+    await assertCanAccessClassData(classId, actor)
+
     const q = query(
         collection(db, 'schedules'),
         where('classId', '==', classId)
@@ -213,11 +264,14 @@ export const updateTrainerRole = async (uid: string, role: string, lvl: number, 
     return await updateDoc(doc(db, 'users', uid), updates)
 }
 
-export const completeSession = async (eventId: string, signatureUrl: string) => {
+export const completeSession = async (eventId: string, signatureUrl: string, actor: AccessActor) => {
     const eventRef = doc(db, 'schedules', eventId)
     const eventSnap = await getDoc(eventRef)
     if (!eventSnap.exists()) throw new Error("Event not found")
     const eventData = eventSnap.data() as CalendarEvent
+    if (!isSiteAdminActor(actor) && actor.email !== eventData.trainerEmail) {
+        throw new Error('Forbidden')
+    }
 
     // Determine target emails for deduction
     const emailsToDeduct: string[] = []
@@ -235,11 +289,14 @@ export const completeSession = async (eventId: string, signatureUrl: string) => 
     // Resolve UIDs for those emails (outside transaction)
     const uidsToDeduct: string[] = []
     if (emailsToDeduct.length > 0) {
-        const usersQ = query(collection(db, 'users'), where('email', 'in', emailsToDeduct.slice(0, 10)))
-        const usersSnap = await getDocs(usersQ)
-        usersSnap.docs.forEach(d => {
-            uidsToDeduct.push(d.id)
-        })
+        const emailChunks = chunkByTen(emailsToDeduct)
+        for (const emailChunk of emailChunks) {
+            const usersQ = query(collection(db, 'users'), where('email', 'in', emailChunk))
+            const usersSnap = await getDocs(usersQ)
+            usersSnap.docs.forEach(d => {
+                uidsToDeduct.push(d.id)
+            })
+        }
     }
 
     await runTransaction(db, async (transaction) => {
@@ -333,7 +390,9 @@ export const getProfileHistory = async (email: string): Promise<ProfileHistory[]
 }
 
 // Body Profiles
-export const getBodyProfiles = async (targetEmail: string): Promise<BodyRecord[]> => {
+export const getBodyProfiles = async (targetEmail: string, actor: AccessActor): Promise<BodyRecord[]> => {
+    await assertCanAccessUserData(targetEmail, actor)
+
     const q = query(collection(db, 'bodyProfiles'), where('userEmail', '==', targetEmail))
     const snapshot = await getDocs(q)
     const loaded = snapshot.docs.map(docSnap => ({
@@ -344,7 +403,9 @@ export const getBodyProfiles = async (targetEmail: string): Promise<BodyRecord[]
     return loaded
 }
 
-export const addBodyProfile = async (targetEmail: string, data: Partial<BodyRecord>) => {
+export const addBodyProfile = async (targetEmail: string, data: Partial<BodyRecord>, actor: AccessActor) => {
+    await assertCanAccessUserData(targetEmail, actor)
+
     return await addDoc(collection(db, 'bodyProfiles'), {
         userEmail: targetEmail,
         date: data.date,
@@ -354,4 +415,3 @@ export const addBodyProfile = async (targetEmail: string, data: Partial<BodyReco
         createdAt: serverTimestamp()
     })
 }
-

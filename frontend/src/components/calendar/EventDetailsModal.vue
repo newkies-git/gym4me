@@ -168,10 +168,10 @@ watch(() => props.event, async (newEv) => {
 }, { immediate: true })
 
 const handleSignAndComplete = async () => {
-    if(!props.event || !tempSignature.value) return;
+    if(!props.event || !tempSignature.value || !auth.user) return;
     completing.value = true;
     try {
-        await completeSession(props.event.id, tempSignature.value);
+        await completeSession(props.event.id, tempSignature.value, auth.user);
         alert("Session signed and completed!");
         emit('updated');
         close();

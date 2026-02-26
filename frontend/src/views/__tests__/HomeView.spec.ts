@@ -13,7 +13,7 @@ describe('HomeView.vue', () => {
         })
 
         expect(wrapper.text()).toContain('Welcome to')
-        expect(wrapper.text()).toContain('SQLite BBS')
-        expect(wrapper.text()).toContain('Explore the Board')
+        expect(wrapper.text()).toContain('gym4me')
+        expect(wrapper.text()).toContain('Transform Your Training')
     })
 })

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getBodyProfiles, addBodyProfile } from '../services/firebaseService'
 import type { BodyRecord } from '../types'
+import { useAuthStore } from './auth'
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -10,7 +11,9 @@ export const useProfileStore = defineStore('profile', {
     }),
     actions: {
         async fetchProfiles(targetEmail: string, force = false) {
+            const auth = useAuthStore()
             if (!targetEmail) return;
+            if (!auth.user) return;
 
             const last = this.lastFetch[targetEmail] || 0;
             // Cache for 5 minutes
@@ -20,7 +23,7 @@ export const useProfileStore = defineStore('profile', {
 
             this.loading = true;
             try {
-                const results = await getBodyProfiles(targetEmail);
+                const results = await getBodyProfiles(targetEmail, auth.user);
                 // Sort ascending by date for chart
                 results.sort((a, b) => a.date.localeCompare(b.date));
                 this.profiles[targetEmail] = results;
@@ -32,7 +35,10 @@ export const useProfileStore = defineStore('profile', {
             }
         },
         async saveProfile(targetEmail: string, data: Partial<BodyRecord>) {
-            await addBodyProfile(targetEmail, data);
+            const auth = useAuthStore()
+            if (!auth.user) return;
+
+            await addBodyProfile(targetEmail, data, auth.user);
             // Invalidate cache to force fresh fetch or update locally
             await this.fetchProfiles(targetEmail, true);
         },

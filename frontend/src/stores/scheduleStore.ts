@@ -11,7 +11,9 @@ export const useScheduleStore = defineStore('schedule', {
     }),
     actions: {
         async fetchSchedules(targetEmail: string, force = false) {
+            const auth = useAuthStore()
             if (!targetEmail) return;
+            if (!auth.user) return;
 
             const last = this.lastFetch[targetEmail] || 0;
             if (!force && this.schedules[targetEmail] && (Date.now() - last < 300000)) {
@@ -20,7 +22,7 @@ export const useScheduleStore = defineStore('schedule', {
 
             this.loading = true;
             try {
-                const results = await getSchedules(targetEmail);
+                const results = await getSchedules(targetEmail, auth.user);
                 this.schedules[targetEmail] = results;
                 this.lastFetch[targetEmail] = Date.now();
             } catch (e) {
@@ -30,7 +32,9 @@ export const useScheduleStore = defineStore('schedule', {
             }
         },
         async fetchClassSchedules(classId: string, force = false) {
+            const auth = useAuthStore()
             if (!classId) return;
+            if (!auth.user) return;
 
             const last = this.lastFetch[classId] || 0;
             if (!force && this.schedules[classId] && (Date.now() - last < 300000)) {
@@ -39,7 +43,7 @@ export const useScheduleStore = defineStore('schedule', {
 
             this.loading = true;
             try {
-                const results = await getSchedulesByClass(classId);
+                const results = await getSchedulesByClass(classId, auth.user);
                 this.schedules[classId] = results;
                 this.lastFetch[classId] = Date.now();
             } catch (e) {

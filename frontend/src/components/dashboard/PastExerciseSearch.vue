@@ -44,7 +44,7 @@ const searchPastExercises = async () => {
   searchResults.value = [];
   
   try {
-      const schedules = await getSchedules(auth.user.email)
+      const schedules = await getSchedules(auth.user.email, auth.user)
       
       const term = searchExerciseQuery.value.toLowerCase()
       schedules.forEach(schedule => {
@@ -71,7 +71,7 @@ const searchPastExercises = async () => {
 const repeatExercise = async (record: ExerciseRecord) => {
   const todayStr = new Date().toISOString().split('T')[0];
   try {
-      const schedules = await getSchedules(auth.user!.email)
+      const schedules = await getSchedules(auth.user!.email, auth.user!)
       const todaySchedule = schedules.find(s => s.dateStr === todayStr)
       
       let targetDocId = todaySchedule?.id;

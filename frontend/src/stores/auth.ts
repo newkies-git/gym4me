@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', {
     getters: {
         isAuthenticated: (state) => !!state.user,
         userLvl: (state) => state.user?.lvl || 0,
-        isSiteAdmin: (state) => state.user?.email === 'rladbxor@gmail.com' || (state.user?.lvl || 0) >= 100,
+        isSiteAdmin: (state) => (state.user?.lvl || 0) >= 100 || state.user?.role === 'SITE_ADMIN',
         isManager: (state) => (state.user?.lvl || 0) >= 20,
         isTrainer: (state) => (state.user?.lvl || 0) >= 10,
         isMember: (state) => (state.user?.lvl || 0) >= 5 || (state.user?.remainingSessions || 0) > 0,
@@ -44,6 +44,7 @@ export const useAuthStore = defineStore('auth', {
                         nickname: data.nickname,
                         lvl: data.lvl || 1,
                         role: data.role || 'MEMBER',
+                        gymId: data.gymId,
                         remainingSessions: data.remainingSessions,
                         expirationDate: data.expirationDate
                     };

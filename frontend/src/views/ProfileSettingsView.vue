@@ -79,9 +79,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
-import { db } from '../firebase/config'
+import { auth as firebaseAuth, db } from '../firebase/config'
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore'
-import emailjs from '@emailjs/browser'
+import { deleteUser } from 'firebase/auth'
 
 const auth = useAuthStore()
 const ui = useUIStore()
@@ -135,26 +135,51 @@ const executeDeletion = async () => {
     const userUid = auth.user.uid;
     
     try {
-        const scheduleQ = query(collection(db, 'schedules'), where('userEmail', '==', userEmail));
-        const scheduleSnap = await getDocs(scheduleQ);
-        const scheduleDeletes = scheduleSnap.docs.map(d => deleteDoc(d.ref));
-        
+        const scheduleOwnerQ = query(collection(db, 'schedules'), where('userEmail', '==', userEmail));
+        const scheduleClientQ = query(collection(db, 'schedules'), where('clientEmail', '==', userEmail));
         const profileQ = query(collection(db, 'bodyProfiles'), where('userEmail', '==', userEmail));
-        const profileSnap = await getDocs(profileQ);
-        const profileDeletes = profileSnap.docs.map(d => deleteDoc(d.ref));
-        
-        const ticketQ = query(collection(db, 'ticketHistory'), where('clientEmail', '==', userEmail));
-        const ticketSnap = await getDocs(ticketQ);
-        const ticketDeletes = ticketSnap.docs.map(d => deleteDoc(d.ref));
-        
-        await Promise.all([...scheduleDeletes, ...profileDeletes, ...ticketDeletes]);
+        const ticketClientQ = query(collection(db, 'ticketHistory'), where('clientEmail', '==', userEmail));
+        const ticketTrainerQ = query(collection(db, 'ticketHistory'), where('trainerEmail', '==', userEmail));
+
+        const [scheduleOwnerSnap, scheduleClientSnap, profileSnap, ticketClientSnap, ticketTrainerSnap] = await Promise.all([
+            getDocs(scheduleOwnerQ),
+            getDocs(scheduleClientQ),
+            getDocs(profileQ),
+            getDocs(ticketClientQ),
+            getDocs(ticketTrainerQ)
+        ])
+
+        const deleteMap = new Map<string, ReturnType<typeof deleteDoc>>()
+        const enqueueDeletes = (docs: Array<{ ref: any }>) => {
+            docs.forEach((d) => {
+                if (!deleteMap.has(d.ref.path)) {
+                    deleteMap.set(d.ref.path, deleteDoc(d.ref))
+                }
+            })
+        }
+
+        enqueueDeletes(scheduleOwnerSnap.docs)
+        enqueueDeletes(scheduleClientSnap.docs)
+        enqueueDeletes(profileSnap.docs)
+        enqueueDeletes(ticketClientSnap.docs)
+        enqueueDeletes(ticketTrainerSnap.docs)
+
+        await Promise.all(deleteMap.values());
         await deleteDoc(doc(db, 'users', userUid));
-        
+
+        if (firebaseAuth.currentUser) {
+            await deleteUser(firebaseAuth.currentUser);
+        }
+
         ui.showToast('Account and data deleted successfully.', 'success')
         await auth.logout();
         router.push('/');
     } catch(e: any) {
-        deleteError.value = e.message || 'An error occurred during deletion.';
+        if (e?.code === 'auth/requires-recent-login') {
+            deleteError.value = 'For security, please log in again and retry account deletion.'
+        } else {
+            deleteError.value = e.message || 'An error occurred during deletion.';
+        }
         isDeleting.value = false;
         ui.showToast('Deletion failed: ' + deleteError.value, 'error')
     }
