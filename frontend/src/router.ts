@@ -39,9 +39,23 @@ const router = createRouter({
             meta: { requiresAuth: true, requiresManager: true }
         },
         {
+            path: '/admin',
+            component: () => import('./layouts/AdminLayout.vue'),
+            meta: { requiresAuth: true, requiresSiteAdmin: true },
+            children: [
+                {
+                    path: '',
+                    redirect: '/admin/managers'
+                },
+                {
+                    path: 'managers',
+                    component: () => import('./views/ManagerManagement.vue')
+                }
+            ]
+        },
+        {
             path: '/manage-managers',
-            component: () => import('./views/ManagerManagement.vue'),
-            meta: { requiresAuth: true, requiresSiteAdmin: true }
+            redirect: '/admin/managers'
         },
         {
             path: '/trainer-profile',

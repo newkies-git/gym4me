@@ -13,7 +13,7 @@
             <router-link v-if="auth.isTrainer" to="/trainer-profile" class="btn btn-ghost">{{ t('nav.trainerBio') }}</router-link>
             <router-link v-if="auth.isManager" to="/manage-trainers" class="btn btn-ghost">{{ t('nav.trainerMgt') }}</router-link>
             <router-link v-if="auth.isManager" to="/manage-gym" class="btn btn-ghost">{{ t('nav.gymMgt') }}</router-link>
-            <router-link v-if="auth.isSiteAdmin" to="/manage-managers" class="btn btn-ghost">{{ t('nav.managerMgt') }}</router-link>
+            <router-link v-if="auth.isSiteAdmin" to="/admin/managers" class="btn btn-ghost">{{ t('nav.managerMgt') }}</router-link>
             
             <router-link to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</router-link>
             <router-link to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</router-link>
