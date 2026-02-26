@@ -1,8 +1,8 @@
 <template>
   <div class="profile-wrapper container">
     <div class="header flex-between">
-      <h2>Body Profile: {{ clientEmail || 'My Stats' }}</h2>
-      <button class="btn btn-ghost" @click="router.back()">Back</button>
+      <h2>{{ t('body.title') }}: {{ clientEmail || t('body.myStats') }}</h2>
+      <button class="btn btn-ghost" @click="router.back()">{{ t('body.back') }}</button>
     </div>
 
     <div class="content-grid grid-2" style="margin-top: 2rem;">
@@ -11,7 +11,7 @@
       <div class="side-panel">
           <ProfileForm v-if="auth.isMember || auth.isTrainer" :saving="saving" @save="saveRecord" />
           <div v-else class="glass" style="padding: 1.5rem; text-align: center;">
-            <p class="sm-text">Observer Mode: Read-only access to body records.</p>
+            <p class="sm-text">{{ t('body.observerReadonly') }}</p>
           </div>
           <ProfileHistory :records="records" />
       </div>
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useProfileStore } from '../stores/profileStore'
 
@@ -33,6 +34,7 @@ const auth = useAuthStore()
 const profileStore = useProfileStore()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const clientEmail = computed(() => {
     const requested = route.query.client as string | undefined

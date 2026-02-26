@@ -2,14 +2,14 @@
   <section class="admin-shell container">
     <header class="admin-header glass">
       <div>
-        <p class="admin-eyebrow">Site Admin</p>
-        <h2>Administration</h2>
+        <p class="admin-eyebrow">{{ t('admin.eyebrow') }}</p>
+        <h2>{{ t('admin.title') }}</h2>
       </div>
-      <button class="btn btn-ghost" @click="router.push('/dashboard')">Back to Dashboard</button>
+      <button class="btn btn-ghost" @click="router.push('/dashboard')">{{ t('admin.backToDashboard') }}</button>
     </header>
 
     <nav class="admin-nav">
-      <router-link to="/admin/managers" class="btn btn-ghost">Manager Management</router-link>
+      <router-link to="/admin/managers" class="btn btn-ghost">{{ t('admin.managerManagement') }}</router-link>
     </nav>
 
     <div class="admin-content">
@@ -20,8 +20,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 </script>
 
 <style scoped>

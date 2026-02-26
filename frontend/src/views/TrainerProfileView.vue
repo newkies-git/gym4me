@@ -1,69 +1,70 @@
 <template>
   <div class="profile-wrapper container">
     <div class="header flex-between">
-      <h2>My Trainer Profile</h2>
-      <button class="btn btn-ghost" @click="router.back()">Back</button>
+      <h2>{{ t('trainerProfile.title') }}</h2>
+      <button class="btn btn-ghost" @click="router.back()">{{ t('trainerProfile.back') }}</button>
     </div>
 
     <div class="grid-2" style="margin-top: 2rem;">
       <!-- Edit Section -->
       <div class="edit-section glass">
-        <h3>Edit Profile</h3>
+        <h3>{{ t('trainerProfile.editProfile') }}</h3>
         <form @submit.prevent="saveProfile">
           <div class="field">
-            <label>Nickname</label>
+            <label>{{ t('trainerProfile.nickname') }}</label>
             <input type="text" v-model="form.nickname" required>
           </div>
           
           <div class="field">
-            <label>Profile Image URL</label>
+            <label>{{ t('trainerProfile.photoUrl') }}</label>
             <input type="url" v-model="form.photoUrl" placeholder="https://...">
             <div v-if="form.photoUrl" class="img-preview" style="margin-top: 1rem;">
-               <img :src="form.photoUrl" alt="Preview" style="max-width: 100px; border-radius: 50%;">
+               <img :src="form.photoUrl" :alt="t('trainerProfile.preview')" style="max-width: 100px; border-radius: 50%;">
             </div>
           </div>
 
           <div class="field">
-            <label>Specialties (Comma separated)</label>
-            <input type="text" v-model="specialtiesStr" placeholder="Weight Loss, Strength, HIIT">
+            <label>{{ t('trainerProfile.specialties') }}</label>
+            <input type="text" v-model="specialtiesStr" :placeholder="t('trainerProfile.specialtiesPlaceholder')">
           </div>
 
           <div class="field">
-            <label>Bio / Introduction</label>
+            <label>{{ t('trainerProfile.bio') }}</label>
             <textarea v-model="form.bio" rows="4"></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="saving">
-            {{ saving ? 'Saving...' : 'Update Profile' }}
+            {{ saving ? t('trainerProfile.saving') : t('trainerProfile.updateProfile') }}
           </button>
         </form>
       </div>
 
       <!-- History Section -->
       <div class="history-section glass">
-        <h3>Modification History</h3>
-        <div v-if="loadingHistory" class="sm-text">Loading...</div>
+        <h3>{{ t('trainerProfile.modificationHistory') }}</h3>
+        <div v-if="loadingHistory" class="sm-text">{{ t('common.loading') }}</div>
         <ul v-else class="history-list">
           <li v-for="log in history" :key="log.id" class="history-item">
             <div class="log-date" style="font-weight: 600; font-size: 0.9rem;">{{ formatDate(log.updatedAt) }}</div>
             <div class="log-diff sm-text" style="color: var(--text-muted); margin-top: 0.2rem;">
                <div v-for="(val, key) in log.after" :key="key">
                  <template v-if="isChanged(log.before, log.after, key)">
-                    Modified <strong>{{ key }}</strong>
+                    {{ t('trainerProfile.modified') }} <strong>{{ key }}</strong>
                  </template>
                </div>
             </div>
           </li>
         </ul>
-        <div v-if="!loadingHistory && history.length === 0" class="empty-state">No history records found.</div>
+        <div v-if="!loadingHistory && history.length === 0" class="empty-state">{{ t('trainerProfile.noHistoryFound') }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { getTrainerProfile, updateTrainerProfile, getProfileHistory } from '../services/firebaseService'
@@ -72,6 +73,7 @@ import type { TrainerProfile, ProfileHistory } from '../types'
 const auth = useAuthStore()
 const ui = useUIStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const form = ref<Partial<TrainerProfile>>({
   nickname: auth.user?.nickname || '',
@@ -98,7 +100,7 @@ onMounted(async () => {
       specialtiesStr.value = (profile.specialties || []).join(', ')
     }
   } catch (e: any) {
-    ui.showToast('Failed to load profile: ' + e.message, 'error')
+    ui.showToast(t('trainerProfile.loadFailed') + ': ' + e.message, 'error')
   }
 
   fetchHistory()
@@ -125,11 +127,11 @@ async function saveProfile() {
   saving.value = true
   try {
     await updateTrainerProfile(auth.user.email, form.value, originalProfile.value || {})
-    ui.showToast('Profile updated successfully!', 'success')
+    ui.showToast(t('trainerProfile.updateSuccess'), 'success')
     originalProfile.value = { ...form.value } as TrainerProfile
     fetchHistory()
   } catch (e: any) {
-    ui.showToast('Failed to save: ' + e.message, 'error')
+    ui.showToast(t('trainerProfile.saveFailed') + ': ' + e.message, 'error')
   } finally {
     saving.value = false
   }

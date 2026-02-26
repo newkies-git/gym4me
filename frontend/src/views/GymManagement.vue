@@ -1,22 +1,22 @@
 <template>
   <div class="container gym-mgt-wrapper">
     <div class="header">
-      <h2>Gym Management</h2>
-      <p class="sm-text">Manage your gym information and trainers.</p>
+      <h2>{{ t('gymMgt.title') }}</h2>
+      <p class="sm-text">{{ t('gymMgt.subtitle') }}</p>
     </div>
 
-    <div v-if="loading" class="glass" style="padding: 2rem; margin-top: 2rem;">Loading gym info...</div>
+    <div v-if="loading" class="glass" style="padding: 2rem; margin-top: 2rem;">{{ t('gymMgt.loadingInfo') }}</div>
     <div v-else-if="!gym" class="glass" style="padding: 2rem; margin-top: 2rem;">
-      <p>No gym assigned yet.</p>
+      <p>{{ t('gymMgt.noGymAssigned') }}</p>
       <div class="field" style="margin-top: 1rem;">
-        <label>Gym Name</label>
+        <label>{{ t('gymMgt.nameLabel') }}</label>
         <input v-model="newGym.name" type="text" placeholder="Power Gym" />
       </div>
       <div class="field">
-        <label>Location</label>
+        <label>{{ t('gymMgt.locationLabel') }}</label>
         <input v-model="newGym.location" type="text" placeholder="Seoul, Gangnam" />
       </div>
-      <button class="btn btn-primary" style="margin-top: 1rem;" @click="handleCreateGym">Create My Gym</button>
+      <button class="btn btn-primary" style="margin-top: 1rem;" @click="handleCreateGym">{{ t('gymMgt.createMyGym') }}</button>
     </div>
 
     <div v-else class="glass" style="padding: 2rem; margin-top: 2rem;">
@@ -24,7 +24,7 @@
       <p class="sm-text">{{ gym.location }}</p>
       
       <div style="margin-top: 2rem;">
-        <router-link to="/manage-trainers" class="btn btn-secondary">Hire & Manage Trainers</router-link>
+        <router-link to="/manage-trainers" class="btn btn-secondary">{{ t('gymMgt.hireManageTrainers') }}</router-link>
       </div>
     </div>
   </div>
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { getGyms, createGym } from '../services/firebaseService'
@@ -39,6 +40,7 @@ import type { Gym } from '../types'
 
 const auth = useAuthStore()
 const ui = useUIStore()
+const { t } = useI18n()
 
 const loading = ref(true)
 const gym = ref<Gym | null>(null)
@@ -55,7 +57,7 @@ async function fetchGym() {
     const gyms = await getGyms()
     gym.value = gyms.find(g => g.id === auth.user?.gymId) || null
   } catch (e: any) {
-    ui.showToast('Failed to fetch gym: ' + e.message, 'error')
+    ui.showToast(t('gymMgt.loadError') + ': ' + e.message, 'error')
   } finally {
     loading.value = false
   }
@@ -70,11 +72,11 @@ async function handleCreateGym() {
       location: newGym.location,
       managerEmail: auth.user?.email || ''
     })
-    ui.showToast('Gym created successfully!', 'success')
+    ui.showToast(t('gymMgt.createSuccess'), 'success')
     // Re-fetch to update local state (manager will have gymId now)
     location.reload()
   } catch (e: any) {
-    ui.showToast('Failed to create gym: ' + e.message, 'error')
+    ui.showToast(t('gymMgt.createError') + ': ' + e.message, 'error')
   } finally {
     loading.value = false
   }

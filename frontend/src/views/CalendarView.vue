@@ -5,12 +5,12 @@
       <div class="actions">
         <!-- Trainer Action -->
         <button v-if="auth.isTrainer && (clientEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
-          Assign {{ classId ? 'Class' : 'PT' }} Session
+          {{ classId ? t('calendar.assignClassSession') : t('calendar.assignPTSession') }}
         </button>
         <!-- Member Action (Only for Members or Trainers) -->
-        <button v-if="auth.isMember || auth.isTrainer" class="btn btn-ghost" @click="showModal('PERSONAL')">Log Personal Workout</button>
+        <button v-if="auth.isMember || auth.isTrainer" class="btn btn-ghost" @click="showModal('PERSONAL')">{{ t('calendar.logPersonalWorkout') }}</button>
         <!-- Back to Dashboard -->
-        <button class="btn btn-ghost" @click="router.push('/dashboard')">Back</button>
+        <button class="btn btn-ghost" @click="router.push('/dashboard')">{{ t('calendar.back') }}</button>
       </div>
     </div>
     
@@ -28,7 +28,7 @@
               {{ event.title }}
             </div>
             <div class="event-status">{{ event.status }}</div>
-            <button class="btn btn-sm" style="margin-top:0.5rem; width:100%; border:1px solid currentColor" @click="viewDetails(event)">Open Details</button>
+            <button class="btn btn-sm" style="margin-top:0.5rem; width:100%; border:1px solid currentColor" @click="viewDetails(event)">{{ t('calendar.openDetails') }}</button>
           </div>
         </div>
       </div>
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useScheduleStore } from '../stores/scheduleStore'
 import type { CalendarEvent } from '../types'
@@ -63,6 +64,7 @@ const auth = useAuthStore()
 const scheduleStore = useScheduleStore()
 const route = useRoute()
 const router = useRouter()
+const { t, tm } = useI18n()
 
 const clientEmail = computed(() => {
     const requested = route.query.client as string | undefined
@@ -77,9 +79,9 @@ const classId = computed(() => {
 })
 
 const headerTitle = computed(() => {
-    if (classId.value) return 'Class Training Schedule'
-    if (clientEmail.value) return `Schedule for ${clientEmail.value}`
-    return 'My Training Schedule'
+    if (classId.value) return t('calendar.classSchedule')
+    if (clientEmail.value) return t('calendar.scheduleFor', { email: clientEmail.value })
+    return t('calendar.mySchedule')
 })
 
 const isAddModalOpen = ref(false)
@@ -130,7 +132,7 @@ currentWeekStart.setDate(today.getDate() - today.getDay());
 
 const weekDays = computed(() => {
     const days = [];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = tm('calendar.dayNames') as string[]
     
     for(let i=0; i<7; i++) {
         const d = new Date(currentWeekStart);
