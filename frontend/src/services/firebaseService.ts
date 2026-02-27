@@ -250,12 +250,15 @@ export const updateGym = async (id: string, updates: Partial<Gym>) => {
 
 // Trainer Management (Manager Actions)
 export const getTrainers = async (gymId?: string): Promise<any[]> => {
-    let q = query(collection(db, 'users'), where('lvl', '>=', 10))
-    if (gymId) {
-        q = query(collection(db, 'users'), where('lvl', '>=', 10), where('gymId', '==', gymId))
-    }
+    // Avoid composite-index requirement by querying a single field and filtering locally.
+    const q = gymId
+        ? query(collection(db, 'users'), where('gymId', '==', gymId))
+        : query(collection(db, 'users'), where('role', '==', 'TRAINER'))
+
     const snapshot = await getDocs(q)
-    return snapshot.docs.map(d => ({ uid: d.id, ...d.data() }))
+    return snapshot.docs
+        .map(d => ({ uid: d.id, ...d.data() }))
+        .filter((u: any) => (u.role === 'TRAINER') || (u.lvl || 0) >= 10)
 }
 
 export const updateTrainerRole = async (uid: string, role: string, lvl: number, gymId?: string) => {
