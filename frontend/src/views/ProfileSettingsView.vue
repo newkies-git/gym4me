@@ -287,10 +287,33 @@ const executeDeletion = async () => {
 </script>
 
 <style scoped>
-.settings-wrapper { padding: 1rem 0; }
-.header { margin-bottom: 2rem; }
+.settings-wrapper {
+  padding: 0.5rem 0 1.5rem;
+}
 
-.info-section, .history-section, .password-section, .danger-zone { padding: 2rem; }
+.header {
+  margin-bottom: 1.35rem;
+  gap: 0.8rem;
+}
+
+.header h2 {
+  font-size: clamp(1.6rem, 2vw, 2rem);
+}
+
+.grid-2 {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.9fr);
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.info-section, .history-section, .password-section, .danger-zone {
+  padding: 1.65rem;
+}
 h3 { margin-bottom: 1.5rem; }
 
 .info-group { margin-bottom: 1.25rem; }
@@ -304,7 +327,10 @@ h3 { margin-bottom: 1.5rem; }
 .badge.warning { background: #f59e0b; }
 .empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
 
-.danger-zone { border: 1px solid rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.05); }
+.danger-zone {
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  background: rgba(244, 63, 94, 0.045);
+}
 .text-danger { color: #f43f5e !important; }
 
 .sm-text { font-size: 0.85rem; color: var(--text-muted); }
@@ -317,4 +343,10 @@ h3 { margin-bottom: 1.5rem; }
 }
 .modal-content { padding: 2.5rem; width: 90%; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+
+@media (max-width: 1080px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

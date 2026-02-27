@@ -72,8 +72,11 @@ const logout = () => {
 }
 
 .nav-content {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0.75rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.55rem 0;
 }
 
 .logo {
@@ -82,11 +85,40 @@ const logout = () => {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-.nav-links { display: flex; gap: 1rem; align-items: center; }
+.nav-links {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.nav-links::-webkit-scrollbar {
+  height: 6px;
+}
+
+.nav-links::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+}
+
+.nav-links .btn {
+  flex: 0 0 auto;
+  min-height: 42px;
+  white-space: nowrap;
+}
 
 .user-info {
-  display: flex; gap: 0.75rem; align-items: center;
-  margin-left: 1rem; padding-left: 1rem; border-left: 1px solid var(--border);
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-left: 0.55rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 
 .sm-text { font-size: 0.85rem; color: var(--text-muted); }
@@ -118,6 +150,26 @@ const logout = () => {
 }
 
 @media (max-width: 768px) {
-  .nav-links { display: none; } /* Mobile menu could be added here later */
+  .nav-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7rem;
+  }
+
+  .nav-links {
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+  }
+
+  .logo {
+    align-self: center;
+  }
+
+  .user-info {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    margin-top: 0.2rem;
+  }
 }
 </style>
