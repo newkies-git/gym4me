@@ -34,9 +34,17 @@ const router = createRouter({
             meta: { requiresAuth: true, requiresManager: true }
         },
         {
+            path: '/manager/trainers',
+            redirect: '/manage-trainers'
+        },
+        {
             path: '/manage-gym',
             component: () => import('./views/GymManagement.vue'),
             meta: { requiresAuth: true, requiresManager: true }
+        },
+        {
+            path: '/manager/gym',
+            redirect: '/manage-gym'
         },
         {
             path: '/admin',

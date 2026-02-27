@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { getSchedules, addSchedule, updateSchedule, getSchedulesByClass } from '../services/firebaseService'
 import type { CalendarEvent } from '../types'
 import { useAuthStore } from './auth'
+import { useUIStore } from './uiStore'
+import { extractErrorMessage } from '../utils/error'
 
 export const useScheduleStore = defineStore('schedule', {
     state: () => ({
@@ -25,8 +27,9 @@ export const useScheduleStore = defineStore('schedule', {
                 const results = await getSchedules(targetEmail, auth.user);
                 this.schedules[targetEmail] = results;
                 this.lastFetch[targetEmail] = Date.now();
-            } catch (e) {
-                console.error("Failed to fetch schedules for", targetEmail, e);
+            } catch (e: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(e, `Failed to fetch schedules for ${targetEmail}`), 'error')
             } finally {
                 this.loading = false;
             }
@@ -46,8 +49,9 @@ export const useScheduleStore = defineStore('schedule', {
                 const results = await getSchedulesByClass(classId, auth.user);
                 this.schedules[classId] = results;
                 this.lastFetch[classId] = Date.now();
-            } catch (e) {
-                console.error("Failed to fetch schedules for class", classId, e);
+            } catch (e: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(e, `Failed to fetch schedules for class ${classId}`), 'error')
             } finally {
                 this.loading = false;
             }

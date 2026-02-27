@@ -84,6 +84,14 @@ export default {
         openDetails: '상세 보기',
         dayNames: ['일', '월', '화', '수', '목', '금', '토'],
     },
+    notification: {
+        scheduleCreatedTitle: '일정 등록',
+        scheduleCreatedBody: '{title} 일정이 {date}에 등록되었습니다.',
+        sessionApprovedTitle: '세션 승인',
+        sessionApprovedBody: '{title} 일정이 승인되었습니다.',
+        sessionCompletedTitle: '세션 완료',
+        sessionCompletedBody: '{title} 일정이 완료되었습니다.',
+    },
 
     // ── Profile Settings ─────────────────────────────────────────────
     settings: {
@@ -93,9 +101,15 @@ export default {
         email: '이메일',
         role: '역할',
         nickname: '닉네임',
+        profileImage: '프로필 이미지 URL',
+        profileImagePlaceholder: 'https://...',
+        saveProfile: '프로필 저장',
+        profileSaveSuccess: '프로필 정보가 저장되었습니다.',
+        profileSaveFailed: '프로필 저장 실패',
         ptSessionHistory: 'PT 세션 기록',
         loading: '로딩 중...',
         noHistory: 'PT 세션 기록이 없습니다.',
+        historyLoadFailed: '세션 이력을 불러오지 못했습니다.',
         byTrainer: '담당: {email}',
         sessionsCount: '{n}회',
         historyAction: {
@@ -134,6 +148,7 @@ export default {
         deleting: '삭제 중...',
         deleteSuccess: '계정 및 데이터가 성공적으로 삭제되었습니다.',
         deleteFailed: '삭제 실패: {msg}',
+        deleteNotifyFailed: '관리자 알림 전송에 실패했습니다.',
     },
 
     // ── Body Profile ──────────────────────────────────────────────────
@@ -365,6 +380,10 @@ export default {
         createSuccess: '클래스가 생성되었습니다.',
         inviteSuccess: '회원이 클래스에 추가되었습니다.',
         members: '멤버',
+        noMembers: '등록된 멤버가 없습니다.',
+        removeMember: '회원 제거',
+        confirmRemoveMember: '{email} 회원을 클래스에서 제거하시겠습니까?',
+        removeMemberSuccess: '클래스 회원이 제거되었습니다.',
         viewCalendar: '캘린더',
         deleteClass: '삭제',
         confirmDelete: '정말로 이 클래스를 삭제하시겠습니까?',
@@ -395,6 +414,8 @@ export default {
         notesPlaceholder: '컨디션, 목표 부위 등을 기록하세요.',
         save: '저장',
         saving: '저장 중...',
+        saveSuccess: '일정이 저장되었습니다.',
+        saveFailed: '일정 저장 실패',
         cancel: '취소',
     },
 
@@ -423,6 +444,8 @@ export default {
         completeWithSignature: '서명으로 완료',
         cancel: '닫기',
         approve: '승인',
+        approveSuccess: '세션이 승인되었습니다.',
+        approveFailed: '세션 승인 실패',
         markComplete: '완료 처리',
         cancelSession: '세션 취소',
         records: '운동 기록',
@@ -433,6 +456,12 @@ export default {
         reps: '회',
         weight: '무게 (kg)',
         saveRecord: '기록 저장',
+        recordSaveFailed: '운동 기록 저장 실패',
+        classLoadFailed: '클래스 정보를 불러오지 못했습니다.',
+        completeFailed: '세션 완료 처리 실패',
+        applyToClassMembers: '클래스 참여자에게 일괄 적용',
+        bulkApplySuccess: '클래스 참여자에게 운동 기록을 적용했습니다.',
+        bulkApplyFailed: '일괄 적용 실패',
     },
 
     // ── Profile Form / Chart / History ────────────────────────────────

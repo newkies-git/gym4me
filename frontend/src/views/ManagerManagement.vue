@@ -115,7 +115,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from '../components/ui/BaseModal.vue'
-import { assignManagerFromTrainer, deleteManagerCompletely, demoteManagerToTrainer, getManagerCandidates, getManagers, setManagerDeletedFlag, type ManagerType, updateManagerInfo } from '../services/firebaseService'
+import { assignManagerFromTrainerWithAudit, deleteManagerCompletelyWithAudit, demoteManagerToTrainerWithAudit, getManagerCandidates, getManagers, setManagerDeletedFlagWithAudit, type ManagerType, updateManagerInfoWithAudit } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 
@@ -187,7 +187,13 @@ async function assignManager() {
 
   saving.value = true
   try {
-    await assignManagerFromTrainer(targetTrainer.uid, gymId, selectedManagerType.value)
+    await assignManagerFromTrainerWithAudit(targetTrainer.uid, gymId, selectedManagerType.value, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_ASSIGN',
+      targetUid: targetTrainer.uid,
+      targetEmail: targetTrainer.email,
+      metadata: { gymId, managerType: selectedManagerType.value }
+    })
     ui.showToast(t('managerMgt.assignSuccess', { email }), 'success')
     if (selectedManagerType.value === 'PRIMARY') {
       ui.showToast(t('managerMgt.primaryUniqueHint'), 'info')
@@ -215,10 +221,19 @@ async function saveManagerEdit() {
   if (!editingManager.value) return
   savingEdit.value = true
   try {
-    await updateManagerInfo(editingManager.value.uid, {
+    await updateManagerInfoWithAudit(editingManager.value.uid, {
       nickname: editForm.value.nickname.trim(),
       gymId: editForm.value.gymId.trim(),
       managerType: editForm.value.managerType
+    }, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_UPDATE',
+      targetUid: editingManager.value.uid,
+      targetEmail: editingManager.value.email,
+      metadata: {
+        gymId: editForm.value.gymId.trim(),
+        managerType: editForm.value.managerType
+      }
     })
     ui.showToast(t('managerMgt.editSuccess'), 'success')
     editModalOpen.value = false
@@ -233,7 +248,12 @@ async function saveManagerEdit() {
 async function demoteManager(manager: any) {
   if (!confirm(t('managerMgt.confirmDemote', { email: manager.email }))) return
   try {
-    await demoteManagerToTrainer(manager.uid)
+    await demoteManagerToTrainerWithAudit(manager.uid, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_DEMOTE',
+      targetUid: manager.uid,
+      targetEmail: manager.email
+    })
     ui.showToast(t('managerMgt.demoteSuccess'), 'success')
     await refreshAll()
   } catch (e: any) {
@@ -244,7 +264,12 @@ async function demoteManager(manager: any) {
 async function softDeleteManager(manager: any) {
   if (!confirm(t('managerMgt.confirmFlagDelete', { email: manager.email }))) return
   try {
-    await setManagerDeletedFlag(manager.uid, true)
+    await setManagerDeletedFlagWithAudit(manager.uid, true, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_FLAG_DELETE',
+      targetUid: manager.uid,
+      targetEmail: manager.email
+    })
     ui.showToast(t('managerMgt.flagDeleteSuccess'), 'warning')
     await refreshAll()
   } catch (e: any) {
@@ -254,7 +279,12 @@ async function softDeleteManager(manager: any) {
 
 async function restoreManager(manager: any) {
   try {
-    await setManagerDeletedFlag(manager.uid, false)
+    await setManagerDeletedFlagWithAudit(manager.uid, false, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_RESTORE',
+      targetUid: manager.uid,
+      targetEmail: manager.email
+    })
     ui.showToast(t('managerMgt.restoreSuccess'), 'success')
     await refreshAll()
   } catch (e: any) {
@@ -265,7 +295,12 @@ async function restoreManager(manager: any) {
 async function hardDeleteManager(manager: any) {
   if (!confirm(t('managerMgt.confirmHardDelete', { email: manager.email }))) return
   try {
-    await deleteManagerCompletely(manager.uid)
+    await deleteManagerCompletelyWithAudit(manager.uid, {
+      actorEmail: auth.user?.email || '',
+      action: 'MANAGER_HARD_DELETE',
+      targetUid: manager.uid,
+      targetEmail: manager.email
+    })
     ui.showToast(t('managerMgt.hardDeleteSuccess'), 'error')
     await refreshAll()
   } catch (e: any) {

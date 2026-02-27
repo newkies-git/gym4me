@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
-import { createClass, getClassesByTrainer, addTraineeToClass } from '../services/firebaseService'
+import { createClass, getClassesByTrainer, addTraineeToClass, removeTraineeFromClass } from '../services/firebaseService'
 import type { GymClass } from '../types'
 import { useAuthStore } from './auth'
+import { useUIStore } from './uiStore'
+import { extractErrorMessage } from '../utils/error'
 
 export const useClassStore = defineStore('class', {
     state: () => ({
@@ -16,8 +18,9 @@ export const useClassStore = defineStore('class', {
             this.loading = true
             try {
                 this.classes = await getClassesByTrainer(auth.user.email)
-            } catch (e) {
-                console.error("Failed to fetch classes", e)
+            } catch (e: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(e, 'Failed to fetch classes'), 'error')
             } finally {
                 this.loading = false
             }
@@ -38,6 +41,10 @@ export const useClassStore = defineStore('class', {
         },
         async inviteTrainee(classId: string, traineeEmail: string) {
             await addTraineeToClass(classId, traineeEmail)
+            await this.fetchClasses()
+        },
+        async removeTrainee(classId: string, traineeEmail: string) {
+            await removeTraineeFromClass(classId, traineeEmail)
             await this.fetchClasses()
         }
     }

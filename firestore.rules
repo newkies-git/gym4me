@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSiteAdmin() {
+      return isSignedIn() && (userDoc().role == 'SITE_ADMIN' || userDoc().lvl >= 100);
+    }
+
+    function isManager() {
+      return isSignedIn() && userDoc().lvl >= 20;
+    }
+
+    function isTrainer() {
+      return isSignedIn() && userDoc().lvl >= 10;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isOwner(userId) || isSiteAdmin() || isManager();
+      allow delete: if isOwner(userId) || isSiteAdmin();
+    }
+
+    match /adminAuditLogs/{docId} {
+      allow read: if isSiteAdmin();
+      allow create: if isSiteAdmin() || isManager();
+      allow update, delete: if false;
+    }
+
+    match /ticketHistory/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isTrainer() || isSiteAdmin();
+      allow update, delete: if isSiteAdmin();
+    }
+
+    match /classes/{classId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isTrainer() || isManager() || isSiteAdmin();
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if isSignedIn();
+      allow create, update: if isTrainer() || isSiteAdmin();
+      allow delete: if isSiteAdmin();
+    }
+
+    match /workoutLogs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isTrainer() || isSiteAdmin();
+      allow update, delete: if isSiteAdmin();
+    }
+
+    match /gyms/{gymId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isManager() || isSiteAdmin();
+    }
+
+    match /{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}
+

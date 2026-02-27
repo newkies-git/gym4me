@@ -2,6 +2,7 @@ export interface User {
   uid: string;
   email: string;
   nickname?: string;
+  profileImageUrl?: string;
   lvl: number;
   role: string;
   gymId?: string;

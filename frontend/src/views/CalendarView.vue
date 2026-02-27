@@ -204,4 +204,18 @@ const formatStatus = (status: string) => t(`calendar.status.${status.toLowerCase
 .event-title { font-weight: 600; margin-bottom: 0.2rem; display: flex; align-items: center; }
 .event-status { font-size: 0.7rem; opacity: 0.8; }
 .btn-sm { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.1); }
+
+@media (max-width: 1024px) {
+  .calendar-wrapper { padding: 1.2rem 0.4rem; }
+  .header { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+  .actions { flex-wrap: wrap; gap: 0.6rem; }
+  .calendar-grid { grid-template-columns: repeat(2, 1fr); }
+  .day-col { min-height: 280px; }
+}
+
+@media (max-width: 640px) {
+  .calendar-grid { grid-template-columns: 1fr; }
+  .day-header { padding: 0.7rem; }
+  .day-num { font-size: 1.1rem; }
+}
 </style>

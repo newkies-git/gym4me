@@ -15,6 +15,9 @@
         <!-- Profile Info Section -->
         <div class="info-section glass">
           <h3>{{ t('settings.profileInfo') }}</h3>
+          <div class="avatar-wrap" v-if="profileForm.profileImageUrl">
+            <img :src="profileForm.profileImageUrl" :alt="t('settings.profileImage')" class="avatar-preview" />
+          </div>
           <div class="info-group">
               <label>{{ t('settings.email') }}</label>
               <p>{{ auth.user?.email }}</p>
@@ -27,6 +30,17 @@
               <label>{{ t('settings.nickname') }}</label>
               <p>{{ auth.user?.nickname }}</p>
           </div>
+          <div class="field" style="margin-top: 0.75rem;">
+            <label>{{ t('settings.nickname') }}</label>
+            <input v-model="profileForm.nickname" type="text" />
+          </div>
+          <div class="field">
+            <label>{{ t('settings.profileImage') }}</label>
+            <input v-model="profileForm.profileImageUrl" type="url" :placeholder="t('settings.profileImagePlaceholder')" />
+          </div>
+          <button class="btn btn-primary btn-sm" @click="saveProfile" :disabled="savingProfile">
+            {{ savingProfile ? t('common.processing') : t('settings.saveProfile') }}
+          </button>
         </div>
 
         <div class="password-section glass" style="margin-top: 2rem;">
@@ -69,16 +83,21 @@
       <div v-if="!auth.isTrainer" class="history-section glass">
         <h3>{{ t('settings.ptSessionHistory') }}</h3>
         <div v-if="loadingHistory" class="sm-text">{{ t('settings.loading') }}</div>
-        <ul v-else-if="ticketHistory.length > 0" class="history-list">
-            <li v-for="log in ticketHistory" :key="log.id" class="history-item flex-between" style="flex-direction: row; align-items: center;">
-                <div class="log-date" style="font-weight: 600; font-size: 0.9rem;">{{ formatDate(log.createdAt) }}</div>
-                <div class="log-details" style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; text-align: right;">
-                    <span class="badge" :class="getBadgeClass(log.action)">{{ formatAction(log.action) }}</span>
-                    <span style="font-size: 0.95rem;">{{ t('settings.sessionsCount', { n: `${log.amountChanged > 0 ? '+' : ''}${log.amountChanged}` }) }}</span>
-                    <span class="sm-text" style="font-size: 0.8rem; color: var(--text-muted);">{{ t('settings.byTrainer', { email: log.trainerEmail }) }}</span>
-                </div>
-            </li>
-        </ul>
+        <div v-else-if="historyGroups.length > 0" class="history-list">
+            <div v-for="group in historyGroups" :key="group.date" class="history-group">
+              <h4 class="history-date">{{ group.date }}</h4>
+              <ul>
+                <li v-for="log in group.items" :key="log.id" class="history-item flex-between" style="flex-direction: row; align-items: center;">
+                    <div class="log-date" style="font-weight: 600; font-size: 0.9rem;">{{ formatDate(log.createdAt) }}</div>
+                    <div class="log-details" style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; text-align: right;">
+                        <span class="badge" :class="getBadgeClass(log.action)">{{ formatAction(log.action) }}</span>
+                        <span style="font-size: 0.95rem;">{{ t('settings.sessionsCount', { n: `${log.amountChanged > 0 ? '+' : ''}${log.amountChanged}` }) }}</span>
+                        <span class="sm-text" style="font-size: 0.8rem; color: var(--text-muted);">{{ t('settings.byTrainer', { email: log.trainerEmail }) }}</span>
+                    </div>
+                </li>
+              </ul>
+            </div>
+        </div>
         <div v-else class="empty-state">{{ t('settings.noHistory') }}</div>
       </div>
     </div>
@@ -116,6 +135,8 @@ import { useUIStore } from '../stores/uiStore'
 import { auth as firebaseAuth, db } from '../firebase/config'
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth'
+import emailjs from '@emailjs/browser'
+import { extractErrorMessage } from '../utils/error'
 
 const auth = useAuthStore()
 const ui = useUIStore()
@@ -131,6 +152,12 @@ const deleteError = ref('')
 const deleteConfirmKeyword = t('settings.deleteConfirmKeyword')
 const changingPassword = ref(false)
 const passwordError = ref('')
+const savingProfile = ref(false)
+
+const profileForm = ref({
+    nickname: auth.user?.nickname || '',
+    profileImageUrl: (auth.user as any)?.profileImageUrl || ''
+})
 
 const passwordForm = ref({
     currentPassword: '',
@@ -141,6 +168,16 @@ const passwordForm = ref({
 const canChangePassword = computed(() =>
     !!firebaseAuth.currentUser?.providerData.some((provider) => provider.providerId === 'password')
 )
+const historyGroups = computed(() => {
+    const bucket = new Map<string, any[]>()
+    ticketHistory.value.forEach((log) => {
+        const dateKey = log.createdAt?.toDate?.()?.toLocaleDateString() || '-'
+        const prev = bucket.get(dateKey) || []
+        prev.push(log)
+        bucket.set(dateKey, prev)
+    })
+    return Array.from(bucket.entries()).map(([date, items]) => ({ date, items }))
+})
 
 onMounted(() => {
     if (!auth.isTrainer) {
@@ -160,8 +197,8 @@ const loadTicketHistory = async () => {
         let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         logs.sort((a: any, b: any) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0))
         ticketHistory.value = logs;
-    } catch(e) {
-        console.error("Failed to load history", e)
+    } catch(e: unknown) {
+        ui.showToast(extractErrorMessage(e, t('settings.historyLoadFailed')), 'error')
     } finally {
         loadingHistory.value = false;
     }
@@ -176,6 +213,26 @@ const getBadgeClass = (action: string) => {
 }
 
 const formatAction = (action: string) => t(`settings.historyAction.${action.toLowerCase()}`)
+
+const saveProfile = async () => {
+    if (!auth.user?.uid) return
+    savingProfile.value = true
+    try {
+        await updateDoc(doc(db, 'users', auth.user.uid), {
+            nickname: profileForm.value.nickname.trim(),
+            profileImageUrl: profileForm.value.profileImageUrl.trim() || null
+        })
+        if (auth.user) {
+            auth.user.nickname = profileForm.value.nickname.trim()
+            ;(auth.user as any).profileImageUrl = profileForm.value.profileImageUrl.trim() || undefined
+        }
+        ui.showToast(t('settings.profileSaveSuccess'), 'success')
+    } catch (e: unknown) {
+        ui.showToast(extractErrorMessage(e, t('settings.profileSaveFailed')), 'error')
+    } finally {
+        savingProfile.value = false
+    }
+}
 
 const handleChangePassword = async () => {
     passwordError.value = ''
@@ -271,14 +328,31 @@ const executeDeletion = async () => {
             await deleteUser(firebaseAuth.currentUser);
         }
 
+        const templateParams = {
+            user_email: userEmail,
+            action: 'ACCOUNT_DELETE',
+            requested_at: new Date().toISOString()
+        }
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+        const templateId = import.meta.env.VITE_EMAILJS_DELETE_TEMPLATE_ID
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        if (serviceId && templateId && publicKey) {
+            try {
+                await emailjs.send(serviceId, templateId, templateParams, { publicKey })
+            } catch {
+                ui.showToast(t('settings.deleteNotifyFailed'), 'warning')
+            }
+        }
+
         ui.showToast(t('settings.deleteSuccess'), 'success')
         await auth.logout();
         router.push('/');
-    } catch(e: any) {
-        if (e?.code === 'auth/requires-recent-login') {
+    } catch(e: unknown) {
+        const err = e as any
+        if (err?.code === 'auth/requires-recent-login') {
             deleteError.value = t('settings.passwordReloginRequired')
         } else {
-            deleteError.value = e.message || t('settings.deleteFailed', { msg: '' });
+            deleteError.value = extractErrorMessage(e, t('settings.deleteFailed', { msg: '' }))
         }
         isDeleting.value = false;
         ui.showToast(t('settings.deleteFailed', { msg: deleteError.value }), 'error')
@@ -321,6 +395,13 @@ h3 { margin-bottom: 1.5rem; }
 .info-group p { font-size: 1.05rem; }
 
 .history-list { max-height: 500px; overflow-y: auto; }
+.history-group { margin-bottom: 1rem; }
+.history-group ul { list-style: none; padding: 0; margin: 0; }
+.history-date {
+  margin: 0.25rem 0 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
 .badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem; color: white; display: inline-block; font-weight: 600; }
 .badge.success { background: #10b981; }
 .badge.danger { background: #f43f5e; }
@@ -334,6 +415,14 @@ h3 { margin-bottom: 1.5rem; }
 .text-danger { color: #f43f5e !important; }
 
 .sm-text { font-size: 0.85rem; color: var(--text-muted); }
+.avatar-wrap { margin-bottom: 0.8rem; }
+.avatar-preview {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
 
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;

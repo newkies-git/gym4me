@@ -15,6 +15,7 @@
         </div>
         <div class="class-actions">
           <button class="btn btn-ghost btn-sm" @click="openInviteModal(cls)">{{ t('classMgr.invite') }}</button>
+          <button class="btn btn-ghost btn-sm" @click="openMembersModal(cls)">{{ t('classMgr.members') }}</button>
           <button class="btn btn-ghost btn-sm" @click="viewClassSchedule(cls)">{{ t('classMgr.viewCalendar') }}</button>
         </div>
         
@@ -58,6 +59,19 @@
         </button>
       </template>
     </BaseModal>
+
+    <BaseModal v-model:isOpen="isMembersModalOpen" :title="t('classMgr.members')" max-width="460px">
+      <div v-if="selectedClass?.traineeEmails?.length" class="member-list">
+        <div v-for="email in selectedClass.traineeEmails" :key="email" class="member-row">
+          <div>
+            <strong>{{ email.split('@')[0] }}</strong>
+            <div class="sm-text">{{ email }}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" @click="removeMember(email)">{{ t('classMgr.removeMember') }}</button>
+        </div>
+      </div>
+      <div v-else class="sm-text">{{ t('classMgr.noMembers') }}</div>
+    </BaseModal>
   </div>
 </template>
 
@@ -86,6 +100,7 @@ const isInviteModalOpen = ref(false)
 const selectedClass = ref<GymClass | null>(null)
 const inviteEmail = ref('')
 const inviting = ref(false)
+const isMembersModalOpen = ref(false)
 
 onMounted(() => {
   classStore.fetchClasses()
@@ -130,6 +145,23 @@ const handleInvite = async () => {
 const viewClassSchedule = (cls: GymClass) => {
   router.push(`/calendar?classId=${cls.id}`)
 }
+
+const openMembersModal = (cls: GymClass) => {
+  selectedClass.value = cls
+  isMembersModalOpen.value = true
+}
+
+const removeMember = async (email: string) => {
+  if (!selectedClass.value) return
+  if (!confirm(t('classMgr.confirmRemoveMember', { email }))) return
+  try {
+    await classStore.removeTrainee(selectedClass.value.id, email)
+    selectedClass.value = classStore.classes.find((cls) => cls.id === selectedClass.value?.id) || null
+    ui.showToast(t('classMgr.removeMemberSuccess'), 'success')
+  } catch (e: any) {
+    ui.showToast(e.message, 'error')
+  }
+}
 </script>
 
 <style scoped>
@@ -163,4 +195,14 @@ const viewClassSchedule = (cls: GymClass) => {
 .field input { width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 0.5rem; color: white; outline: none; }
 .sm-text { font-size: 0.8rem; color: var(--text-muted); }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+.member-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.member-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
 </style>

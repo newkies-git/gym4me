@@ -45,6 +45,9 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import { addSchedule } from '../../services/firebaseService'
 import { DEFAULT_SCHEDULE_TIME } from '../../constants/schedule'
+import { useUIStore } from '../../stores/uiStore'
+import { extractErrorMessage } from '../../utils/error'
+import { notifyScheduleEvent } from '../../utils/notification'
 
 const props = defineProps<{
   isOpen: boolean;
@@ -59,6 +62,7 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const ui = useUIStore()
 const { t } = useI18n()
 
 const saving = ref(false)
@@ -109,10 +113,15 @@ const save = async () => {
       }
       
       await addSchedule(scheduleData);
+      await notifyScheduleEvent(
+        t('notification.scheduleCreatedTitle'),
+        t('notification.scheduleCreatedBody', { title: form.value.title, date: form.value.date })
+      )
+      ui.showToast(t('scheduleModal.saveSuccess'), 'success')
       emit('saved');
       close();
-  } catch(e: any) {
-      alert(t('common.errorWithMessage', { msg: e.message }))
+  } catch(e: unknown) {
+      ui.showToast(extractErrorMessage(e, t('scheduleModal.saveFailed')), 'error')
   } finally {
       saving.value = false;
   }
@@ -131,4 +140,15 @@ const save = async () => {
 .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
 .danger { color: #f43f5e; }
 .sm-text { font-size: 0.8rem; color: var(--text-muted); }
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1rem;
+    width: 94%;
+  }
+  .field.row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+}
 </style>

@@ -72,11 +72,30 @@
                   </div>
               </div>
               <button type="button" class="btn btn-primary btn-sm" @click="saveRecord" :disabled="savingRecord">{{ t('eventDetails.saveRecord') }}</button>
+              <button
+                v-if="event.targetType === 'CLASS' && event.type === 'PT' && event.classId && event.records?.length"
+                type="button"
+                class="btn btn-ghost btn-sm"
+                style="margin-left: 0.5rem;"
+                @click="applyLogsToClass"
+                :disabled="applyingBulkLogs"
+              >
+                {{ applyingBulkLogs ? t('common.processing') : t('eventDetails.applyToClassMembers') }}
+              </button>
           </div>
       </div>
 
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" @click="close">{{ t('eventDetails.cancel') }}</button>
+        <button
+          v-if="event.type === 'PT' && event.status === 'PENDING' && auth.isTrainer"
+          type="button"
+          class="btn btn-ghost"
+          @click="approveSession"
+          :disabled="approving"
+        >
+          {{ approving ? t('common.processing') : t('eventDetails.approve') }}
+        </button>
         <button 
           v-if="event.type === 'PT' && event.status !== 'COMPLETED' && tempSignature" 
           type="button" 
@@ -95,11 +114,14 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
-import { updateSchedule, completeSession } from '../../services/firebaseService'
+import { appendClassWorkoutLog, updateSchedule, completeSession } from '../../services/firebaseService'
 import { arrayUnion, doc, getDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import SignaturePad from '../ui/SignaturePad.vue'
 import type { CalendarEvent, ExerciseRecord } from '../../types'
+import { useUIStore } from '../../stores/uiStore'
+import { extractErrorMessage } from '../../utils/error'
+import { notifyScheduleEvent } from '../../utils/notification'
 
 const props = defineProps<{
   isOpen: boolean;
@@ -112,10 +134,13 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const ui = useUIStore()
 const { t } = useI18n()
 
 const savingRecord = ref(false)
 const newRecordObj = ref<ExerciseRecord>({ name: '', sets: 0, reps: 0 })
+const applyingBulkLogs = ref(false)
+const approving = ref(false)
 
 const canAddRecord = computed(() => {
     if(!props.event) return false;
@@ -138,8 +163,8 @@ const saveRecord = async () => {
         
         newRecordObj.value = { name: '', sets: 0, reps: 0 };
         emit('updated');
-    } catch(e: any) {
-        alert(t('common.errorWithMessage', { msg: e.message }))
+    } catch(e: unknown) {
+        ui.showToast(extractErrorMessage(e, t('eventDetails.recordSaveFailed')), 'error')
     } finally {
         savingRecord.value = false;
     }
@@ -160,7 +185,7 @@ watch(() => props.event, async (newEv) => {
                 classEmails.value = snap.data().traineeEmails || []
             }
         } catch (e) {
-            console.error("Failed to fetch class info", e)
+            ui.showToast(t('eventDetails.classLoadFailed'), 'error')
         } finally {
             loadingClassInfo.value = false
         }
@@ -174,14 +199,49 @@ const handleSignAndComplete = async () => {
     completing.value = true;
     try {
         await completeSession(props.event.id, tempSignature.value, auth.user);
-        alert(t('eventDetails.sessionCompleted'))
+        ui.showToast(t('eventDetails.sessionCompleted'), 'success')
+        await notifyScheduleEvent(
+          t('notification.sessionCompletedTitle'),
+          t('notification.sessionCompletedBody', { title: props.event.title })
+        )
         emit('updated');
         close();
-    } catch(e: any) {
-        alert(t('common.errorWithMessage', { msg: e.message }))
+    } catch(e: unknown) {
+        ui.showToast(extractErrorMessage(e, t('eventDetails.completeFailed')), 'error')
     } finally {
         completing.value = false;
     }
+}
+
+const approveSession = async () => {
+  if (!props.event) return
+  approving.value = true
+  try {
+    await updateSchedule(props.event.id, { status: 'APPROVED' })
+    await notifyScheduleEvent(
+      t('notification.sessionApprovedTitle'),
+      t('notification.sessionApprovedBody', { title: props.event.title })
+    )
+    ui.showToast(t('eventDetails.approveSuccess'), 'success')
+    emit('updated')
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('eventDetails.approveFailed')), 'error')
+  } finally {
+    approving.value = false
+  }
+}
+
+const applyLogsToClass = async () => {
+  if (!props.event || !props.event.records || props.event.records.length === 0) return
+  applyingBulkLogs.value = true
+  try {
+    await appendClassWorkoutLog(props.event, props.event.records)
+    ui.showToast(t('eventDetails.bulkApplySuccess'), 'success')
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('eventDetails.bulkApplyFailed')), 'error')
+  } finally {
+    applyingBulkLogs.value = false
+  }
 }
 </script>
 
@@ -216,4 +276,18 @@ const handleSignAndComplete = async () => {
   border-radius: 1rem;
 }
 .badge.info { background: var(--primary); color: white; }
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1rem;
+    width: 94%;
+  }
+  .details-modal {
+    max-height: 94vh;
+  }
+  .field.row {
+    flex-direction: column !important;
+    gap: 0.6rem !important;
+  }
+}
 </style>

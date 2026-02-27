@@ -22,6 +22,13 @@ import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProf
 type AccessActor = Pick<User, 'email' | 'lvl' | 'role'>
 export type ManagerType = 'PRIMARY' | 'VICE'
 type AppUser = Record<string, any> & { uid: string }
+type AuditPayload = {
+    actorEmail: string
+    action: string
+    targetUid?: string
+    targetEmail?: string
+    metadata?: Record<string, any>
+}
 
 const chunkByTen = <T>(items: T[]): T[][] => {
     const chunks: T[][] = []
@@ -53,6 +60,18 @@ const demotePrimaryManagersToViceInGym = async (
 }
 
 const isSiteAdminActor = (actor: AccessActor) => (actor.lvl || 0) >= 100 || actor.role === 'SITE_ADMIN'
+
+const writeAuditLog = async (payload: AuditPayload) => {
+    if (!payload.actorEmail) return
+    await addDoc(collection(db, 'adminAuditLogs'), {
+        actorEmail: payload.actorEmail,
+        action: payload.action,
+        targetUid: payload.targetUid || null,
+        targetEmail: payload.targetEmail || null,
+        metadata: payload.metadata || {},
+        createdAt: serverTimestamp()
+    })
+}
 
 const assertCanAccessUserData = async (targetEmail: string, actor: AccessActor) => {
     if (actor.email === targetEmail || isSiteAdminActor(actor)) return
@@ -210,6 +229,19 @@ export const addTraineeToClass = async (classId: string, traineeEmail: string) =
     })
 }
 
+export const removeTraineeFromClass = async (classId: string, traineeEmail: string) => {
+    const classRef = doc(db, 'classes', classId)
+    const classSnap = await getDoc(classRef)
+    if (!classSnap.exists()) throw new Error('Class not found')
+
+    const traineeEmails = classSnap.data().traineeEmails || []
+    if (!traineeEmails.includes(traineeEmail)) return
+
+    return await updateDoc(classRef, {
+        traineeEmails: traineeEmails.filter((email: string) => email !== traineeEmail)
+    })
+}
+
 // Clients (Existing)
 export const getClientsByTrainer = async (trainerEmail: string): Promise<ClientInfo[]> => {
     // ... (logic remains similar but we can also fetch from classes if needed)
@@ -287,10 +319,11 @@ export const getTrainers = async (gymId?: string, includeDeleted = false): Promi
     return loaded.filter((u: any) => u.deletedFlag !== true)
 }
 
-export const updateTrainerRole = async (uid: string, role: string, lvl: number, gymId?: string) => {
+export const updateTrainerRole = async (uid: string, role: string, lvl: number, gymId?: string, audit?: AuditPayload) => {
     const updates: any = { role, lvl }
     if (gymId) updates.gymId = gymId
-    return await updateDoc(doc(db, 'users', uid), updates)
+    await updateDoc(doc(db, 'users', uid), updates)
+    if (audit) await writeAuditLog(audit)
 }
 
 export const updateTrainerInfo = async (uid: string, updates: { nickname?: string; gymId?: string }) => {
@@ -304,8 +337,18 @@ export const setTrainerDeletedFlag = async (uid: string, deleted: boolean) => {
     })
 }
 
+export const setTrainerDeletedFlagWithAudit = async (uid: string, deleted: boolean, audit: AuditPayload) => {
+    await setTrainerDeletedFlag(uid, deleted)
+    await writeAuditLog(audit)
+}
+
 export const deleteTrainerCompletely = async (uid: string) => {
     return await deleteDoc(doc(db, 'users', uid))
+}
+
+export const deleteTrainerCompletelyWithAudit = async (uid: string, audit: AuditPayload) => {
+    await deleteTrainerCompletely(uid)
+    await writeAuditLog(audit)
 }
 
 // Manager Management (Site Admin Actions)
@@ -355,6 +398,11 @@ export const assignManagerFromTrainer = async (uid: string, gymId: string, manag
     })
 }
 
+export const assignManagerFromTrainerWithAudit = async (uid: string, gymId: string, managerType: ManagerType, audit: AuditPayload) => {
+    await assignManagerFromTrainer(uid, gymId, managerType)
+    await writeAuditLog(audit)
+}
+
 export const updateManagerInfo = async (uid: string, updates: { nickname?: string; gymId?: string; managerType?: ManagerType }) => {
     const managerRef = doc(db, 'users', uid)
     await runTransaction(db, async (transaction) => {
@@ -382,6 +430,15 @@ export const updateManagerInfo = async (uid: string, updates: { nickname?: strin
     })
 }
 
+export const updateManagerInfoWithAudit = async (
+    uid: string,
+    updates: { nickname?: string; gymId?: string; managerType?: ManagerType },
+    audit: AuditPayload
+) => {
+    await updateManagerInfo(uid, updates)
+    await writeAuditLog(audit)
+}
+
 export const setManagerDeletedFlag = async (uid: string, deleted: boolean) => {
     return await updateDoc(doc(db, 'users', uid), {
         deletedFlag: deleted,
@@ -390,8 +447,18 @@ export const setManagerDeletedFlag = async (uid: string, deleted: boolean) => {
     })
 }
 
+export const setManagerDeletedFlagWithAudit = async (uid: string, deleted: boolean, audit: AuditPayload) => {
+    await setManagerDeletedFlag(uid, deleted)
+    await writeAuditLog(audit)
+}
+
 export const deleteManagerCompletely = async (uid: string) => {
     return await deleteDoc(doc(db, 'users', uid))
+}
+
+export const deleteManagerCompletelyWithAudit = async (uid: string, audit: AuditPayload) => {
+    await deleteManagerCompletely(uid)
+    await writeAuditLog(audit)
 }
 
 export const demoteManagerToTrainer = async (uid: string) => {
@@ -401,6 +468,35 @@ export const demoteManagerToTrainer = async (uid: string) => {
         managerType: null,
         updatedAt: serverTimestamp()
     })
+}
+
+export const demoteManagerToTrainerWithAudit = async (uid: string, audit: AuditPayload) => {
+    await demoteManagerToTrainer(uid)
+    await writeAuditLog(audit)
+}
+
+export const appendClassWorkoutLog = async (event: CalendarEvent, records: ExerciseRecord[]) => {
+    if (!event.classId) throw new Error('Class event is required')
+
+    const classSnap = await getDoc(doc(db, 'classes', event.classId))
+    if (!classSnap.exists()) throw new Error('Class not found')
+
+    const traineeEmails: string[] = classSnap.data().traineeEmails || []
+    if (traineeEmails.length === 0) return
+
+    const jobs = traineeEmails.map((email) =>
+        addDoc(collection(db, 'workoutLogs'), {
+            userEmail: email,
+            classId: event.classId,
+            scheduleId: event.id,
+            title: event.title,
+            date: event.dateStr,
+            records,
+            source: 'CLASS_BULK',
+            createdAt: serverTimestamp()
+        })
+    )
+    await Promise.all(jobs)
 }
 
 export const completeSession = async (eventId: string, signatureUrl: string, actor: AccessActor) => {

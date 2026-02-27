@@ -42,6 +42,7 @@ export const useAuthStore = defineStore('auth', {
                         uid: firebaseUser.uid,
                         email: firebaseUser.email || '',
                         nickname: data.nickname,
+                        profileImageUrl: data.profileImageUrl,
                         lvl: data.lvl || 1,
                         role: data.role || 'MEMBER',
                         gymId: data.gymId,

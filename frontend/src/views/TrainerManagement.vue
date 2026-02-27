@@ -96,7 +96,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BaseModal from '../components/ui/BaseModal.vue'
-import { getTrainers, searchUserByEmail, updateTrainerRole, updateTrainerInfo, setTrainerDeletedFlag, deleteTrainerCompletely } from '../services/firebaseService'
+import { getTrainers, searchUserByEmail, updateTrainerRole, updateTrainerInfo, setTrainerDeletedFlagWithAudit, deleteTrainerCompletelyWithAudit } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 
@@ -161,7 +161,13 @@ async function promoteUser() {
   try {
     // If site admin is promoting, they might not have a gymId, but site admin promoteToManager is separate.
     // Managers promote trainers to THEIR gym.
-    await updateTrainerRole(foundUser.value.id, 'TRAINER', 10, auth.user?.gymId)
+    await updateTrainerRole(foundUser.value.id, 'TRAINER', 10, auth.user?.gymId, {
+      actorEmail: auth.user?.email || '',
+      action: 'TRAINER_PROMOTE',
+      targetUid: foundUser.value.id,
+      targetEmail: foundUser.value.data.email,
+      metadata: { gymId: auth.user?.gymId || null }
+    })
     ui.showToast(t('trainerMgt.promoteSuccess'), 'success')
     foundUser.value = null
     searchEmail.value = ''
@@ -204,7 +210,12 @@ async function saveTrainerEdit() {
 async function softDeleteTrainer(trainer: any) {
   if (!confirm(t('trainerMgt.confirmFlagDelete', { email: trainer.email }))) return
   try {
-    await setTrainerDeletedFlag(trainer.uid, true)
+    await setTrainerDeletedFlagWithAudit(trainer.uid, true, {
+      actorEmail: auth.user?.email || '',
+      action: 'TRAINER_FLAG_DELETE',
+      targetUid: trainer.uid,
+      targetEmail: trainer.email
+    })
     ui.showToast(t('trainerMgt.flagDeleteSuccess'), 'warning')
     await fetchTrainers()
   } catch (e: any) {
@@ -214,7 +225,12 @@ async function softDeleteTrainer(trainer: any) {
 
 async function restoreTrainer(trainer: any) {
   try {
-    await setTrainerDeletedFlag(trainer.uid, false)
+    await setTrainerDeletedFlagWithAudit(trainer.uid, false, {
+      actorEmail: auth.user?.email || '',
+      action: 'TRAINER_RESTORE',
+      targetUid: trainer.uid,
+      targetEmail: trainer.email
+    })
     ui.showToast(t('trainerMgt.restoreSuccess'), 'success')
     await fetchTrainers()
   } catch (e: any) {
@@ -225,7 +241,12 @@ async function restoreTrainer(trainer: any) {
 async function hardDeleteTrainer(trainer: any) {
   if (!confirm(t('trainerMgt.confirmHardDelete', { email: trainer.email }))) return
   try {
-    await deleteTrainerCompletely(trainer.uid)
+    await deleteTrainerCompletelyWithAudit(trainer.uid, {
+      actorEmail: auth.user?.email || '',
+      action: 'TRAINER_HARD_DELETE',
+      targetUid: trainer.uid,
+      targetEmail: trainer.email
+    })
     ui.showToast(t('trainerMgt.hardDeleteSuccess'), 'error')
     await fetchTrainers()
   } catch (e: any) {

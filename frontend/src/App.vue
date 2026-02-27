@@ -11,14 +11,15 @@
             
             <!-- Specific Roles -->
             <router-link v-if="auth.isTrainer" to="/trainer-profile" class="btn btn-ghost">{{ t('nav.trainerBio') }}</router-link>
-            <router-link v-if="auth.isManager" to="/manage-trainers" class="btn btn-ghost">{{ t('nav.trainerMgt') }}</router-link>
-            <router-link v-if="auth.isManager" to="/manage-gym" class="btn btn-ghost">{{ t('nav.gymMgt') }}</router-link>
+            <router-link v-if="auth.isManager" to="/manager/trainers" class="btn btn-ghost">{{ t('nav.trainerMgt') }}</router-link>
+            <router-link v-if="auth.isManager" to="/manager/gym" class="btn btn-ghost">{{ t('nav.gymMgt') }}</router-link>
             <router-link v-if="auth.isSiteAdmin" to="/admin/managers" class="btn btn-ghost">{{ t('nav.managerMgt') }}</router-link>
             
             <router-link to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</router-link>
             <router-link to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</router-link>
             
             <div class="user-info">
+              <img v-if="(auth.user as any)?.profileImageUrl" :src="(auth.user as any)?.profileImageUrl" class="avatar-mini" alt="avatar" />
               <span class="sm-text">{{ auth.user?.nickname || auth.user?.email }}</span>
               <button @click="logout" class="btn btn-ghost btn-sm">{{ t('nav.logout') }}</button>
             </div>
@@ -122,6 +123,13 @@ const logout = () => {
 }
 
 .sm-text { font-size: 0.85rem; color: var(--text-muted); }
+.avatar-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
 
 /* Global Toasts Styling */
 .toast-container {

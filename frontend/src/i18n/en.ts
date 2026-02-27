@@ -84,6 +84,14 @@ export default {
         openDetails: 'Open Details',
         dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     },
+    notification: {
+        scheduleCreatedTitle: 'Schedule Created',
+        scheduleCreatedBody: '{title} was scheduled for {date}.',
+        sessionApprovedTitle: 'Session Approved',
+        sessionApprovedBody: '{title} has been approved.',
+        sessionCompletedTitle: 'Session Completed',
+        sessionCompletedBody: '{title} has been completed.',
+    },
 
     // ── Profile Settings ─────────────────────────────────────────────
     settings: {
@@ -93,9 +101,15 @@ export default {
         email: 'Email',
         role: 'Role',
         nickname: 'Nickname',
+        profileImage: 'Profile Image URL',
+        profileImagePlaceholder: 'https://...',
+        saveProfile: 'Save Profile',
+        profileSaveSuccess: 'Profile saved successfully.',
+        profileSaveFailed: 'Failed to save profile.',
         ptSessionHistory: 'PT Session History',
         loading: 'Loading...',
         noHistory: 'No PT session history found.',
+        historyLoadFailed: 'Failed to load session history.',
         byTrainer: 'by: {email}',
         sessionsCount: '{n} sessions',
         historyAction: {
@@ -134,6 +148,7 @@ export default {
         deleting: 'Deleting...',
         deleteSuccess: 'Account and data deleted successfully.',
         deleteFailed: 'Deletion failed: {msg}',
+        deleteNotifyFailed: 'Failed to send admin notification email.',
     },
 
     // ── Body Profile ──────────────────────────────────────────────────
@@ -365,6 +380,10 @@ export default {
         createSuccess: 'Class created successfully.',
         inviteSuccess: 'Trainee added to class.',
         members: 'Members',
+        noMembers: 'No members enrolled yet.',
+        removeMember: 'Remove Member',
+        confirmRemoveMember: 'Remove {email} from this class?',
+        removeMemberSuccess: 'Member removed from class.',
         viewCalendar: 'Calendar',
         deleteClass: 'Delete',
         confirmDelete: 'Are you sure you want to delete this class?',
@@ -395,6 +414,8 @@ export default {
         notesPlaceholder: 'Condition, target areas, etc.',
         save: 'Save',
         saving: 'Saving...',
+        saveSuccess: 'Schedule saved successfully.',
+        saveFailed: 'Failed to save schedule.',
         cancel: 'Cancel',
     },
 
@@ -423,6 +444,8 @@ export default {
         completeWithSignature: 'Complete with Signature',
         cancel: 'Close',
         approve: 'Approve',
+        approveSuccess: 'Session approved.',
+        approveFailed: 'Failed to approve session.',
         markComplete: 'Mark Complete',
         cancelSession: 'Cancel Session',
         records: 'Exercise Records',
@@ -433,6 +456,12 @@ export default {
         reps: 'Reps',
         weight: 'Weight (kg)',
         saveRecord: 'Save Record',
+        recordSaveFailed: 'Failed to save workout record.',
+        classLoadFailed: 'Failed to load class information.',
+        completeFailed: 'Failed to complete session.',
+        applyToClassMembers: 'Apply to Class Members',
+        bulkApplySuccess: 'Applied workout records to class members.',
+        bulkApplyFailed: 'Failed to apply records in bulk.',
     },
 
     // ── Profile Form / Chart / History ────────────────────────────────
