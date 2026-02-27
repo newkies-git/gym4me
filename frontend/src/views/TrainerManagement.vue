@@ -8,20 +8,47 @@
     <div class="grid-2" style="margin-top: 2rem;">
       <!-- Trainer List Section -->
       <div class="list-section glass">
-        <h3>{{ t('trainerMgt.currentTrainers') }}</h3>
+        <div class="flex-between" style="margin-bottom: 1rem;">
+          <h3 style="margin: 0;">{{ t('trainerMgt.currentTrainers') }}</h3>
+          <button class="btn btn-ghost btn-sm" @click="showDeleted = !showDeleted">
+            {{ showDeleted ? t('trainerMgt.hideDeleted') : t('trainerMgt.showDeleted') }}
+          </button>
+        </div>
         <div v-if="loading" class="sm-text">{{ t('trainerMgt.loading') }}</div>
         <ul v-else class="history-list">
-          <li v-for="trainer in trainers" :key="trainer.uid" class="history-item flex-between" style="flex-direction: row; align-items: center;">
+          <li v-for="trainer in visibleTrainers" :key="trainer.uid" class="history-item flex-between" style="flex-direction: row; align-items: center;">
             <div>
               <div style="font-weight: 600;">{{ trainer.nickname || t('trainerMgt.noNickname') }}</div>
               <div class="sm-text">{{ trainer.email }}</div>
+              <div class="sm-text" v-if="trainer.gymId">{{ t('trainerMgt.gymInfo', { gymId: trainer.gymId }) }}</div>
             </div>
             <div class="actions">
-               <button class="btn btn-ghost btn-sm" @click="demoteUser(trainer)">{{ t('trainerMgt.demoteToMember') }}</button>
+              <button class="btn btn-ghost btn-sm" @click="openEditModal(trainer)">{{ t('trainerMgt.editTrainer') }}</button>
+              <button
+                v-if="!trainer.deletedFlag"
+                class="btn btn-ghost btn-sm"
+                @click="softDeleteTrainer(trainer)"
+              >
+                {{ t('trainerMgt.flagDelete') }}
+              </button>
+              <button
+                v-else
+                class="btn btn-ghost btn-sm"
+                @click="restoreTrainer(trainer)"
+              >
+                {{ t('trainerMgt.restoreTrainer') }}
+              </button>
+              <button
+                v-if="trainer.deletedFlag"
+                class="btn btn-danger btn-sm"
+                @click="hardDeleteTrainer(trainer)"
+              >
+                {{ t('trainerMgt.hardDelete') }}
+              </button>
             </div>
           </li>
         </ul>
-        <div v-if="!loading && trainers.length === 0" class="empty-state">{{ t('trainerMgt.noTrainers') }}</div>
+        <div v-if="!loading && visibleTrainers.length === 0" class="empty-state">{{ t('trainerMgt.noTrainers') }}</div>
       </div>
 
       <!-- Add Trainer Section -->
@@ -46,14 +73,30 @@
         <p v-else-if="searchPerformed && !foundUser" class="error-text" style="margin-top: 1rem;">{{ t('trainerMgt.userNotFound') }}</p>
       </div>
     </div>
+
+    <BaseModal v-model:isOpen="editModalOpen" :title="t('trainerMgt.editTrainer')" max-width="460px">
+      <div class="field">
+        <label>{{ t('trainerMgt.nicknameLabel') }}</label>
+        <input v-model="editForm.nickname" type="text" :placeholder="t('trainerMgt.nicknamePlaceholder')" />
+      </div>
+      <div class="field" v-if="auth.isSiteAdmin">
+        <label>{{ t('trainerMgt.gymIdLabel') }}</label>
+        <input v-model="editForm.gymId" type="text" :placeholder="t('trainerMgt.gymIdPlaceholder')" />
+      </div>
+      <template #footer>
+        <button class="btn btn-ghost" @click="editModalOpen = false">{{ t('common.cancel') }}</button>
+        <button class="btn btn-primary" @click="saveTrainerEdit" :disabled="savingEdit">{{ t('common.save') }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { getTrainers, searchUserByEmail, updateTrainerRole } from '../services/firebaseService'
+import BaseModal from '../components/ui/BaseModal.vue'
+import { getTrainers, searchUserByEmail, updateTrainerRole, updateTrainerInfo, setTrainerDeletedFlag, deleteTrainerCompletely } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 
@@ -69,13 +112,24 @@ const searchEmail = ref('')
 const searching = ref(false)
 const foundUser = ref<any>(null)
 const searchPerformed = ref(false)
+const showDeleted = ref(false)
+
+const editModalOpen = ref(false)
+const savingEdit = ref(false)
+const editingTrainer = ref<any>(null)
+const editForm = ref({
+  nickname: '',
+  gymId: ''
+})
+
+const visibleTrainers = computed(() => trainers.value.filter((tItem) => showDeleted.value ? tItem.deletedFlag : !tItem.deletedFlag))
 
 onMounted(fetchTrainers)
 
 async function fetchTrainers() {
   loading.value = true
   try {
-    trainers.value = await getTrainers(auth.user?.gymId)
+    trainers.value = await getTrainers(auth.user?.gymId, true)
   } catch (e: any) {
     ui.showToast(t('trainerMgt.fetchFailed') + ': ' + e.message, 'error')
   } finally {
@@ -118,14 +172,64 @@ async function promoteUser() {
   }
 }
 
-async function demoteUser(trainer: any) {
-  if (!confirm(t('trainerMgt.confirmDemoteToMember', { email: trainer.email }))) return
+function openEditModal(trainer: any) {
+  editingTrainer.value = trainer
+  editForm.value = {
+    nickname: trainer.nickname || '',
+    gymId: trainer.gymId || ''
+  }
+  editModalOpen.value = true
+}
+
+async function saveTrainerEdit() {
+  if (!editingTrainer.value) return
+  savingEdit.value = true
   try {
-    await updateTrainerRole(trainer.uid, 'MEMBER', 5)
-    ui.showToast(t('trainerMgt.demoteSuccess'), 'info')
-    fetchTrainers()
+    const updates: { nickname?: string; gymId?: string } = {}
+    updates.nickname = editForm.value.nickname.trim()
+    if (auth.isSiteAdmin) {
+      updates.gymId = editForm.value.gymId.trim() || undefined
+    }
+    await updateTrainerInfo(editingTrainer.value.uid, updates)
+    ui.showToast(t('trainerMgt.editSuccess'), 'success')
+    editModalOpen.value = false
+    await fetchTrainers()
   } catch (e: any) {
-    ui.showToast(t('trainerMgt.demoteFailed') + ': ' + e.message, 'error')
+    ui.showToast(t('trainerMgt.editFailed') + ': ' + e.message, 'error')
+  } finally {
+    savingEdit.value = false
+  }
+}
+
+async function softDeleteTrainer(trainer: any) {
+  if (!confirm(t('trainerMgt.confirmFlagDelete', { email: trainer.email }))) return
+  try {
+    await setTrainerDeletedFlag(trainer.uid, true)
+    ui.showToast(t('trainerMgt.flagDeleteSuccess'), 'warning')
+    await fetchTrainers()
+  } catch (e: any) {
+    ui.showToast(t('trainerMgt.flagDeleteFailed') + ': ' + e.message, 'error')
+  }
+}
+
+async function restoreTrainer(trainer: any) {
+  try {
+    await setTrainerDeletedFlag(trainer.uid, false)
+    ui.showToast(t('trainerMgt.restoreSuccess'), 'success')
+    await fetchTrainers()
+  } catch (e: any) {
+    ui.showToast(t('trainerMgt.restoreFailed') + ': ' + e.message, 'error')
+  }
+}
+
+async function hardDeleteTrainer(trainer: any) {
+  if (!confirm(t('trainerMgt.confirmHardDelete', { email: trainer.email }))) return
+  try {
+    await deleteTrainerCompletely(trainer.uid)
+    ui.showToast(t('trainerMgt.hardDeleteSuccess'), 'error')
+    await fetchTrainers()
+  } catch (e: any) {
+    ui.showToast(t('trainerMgt.hardDeleteFailed') + ': ' + e.message, 'error')
   }
 }
 </script>

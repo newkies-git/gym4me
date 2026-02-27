@@ -9,6 +9,7 @@ import {
     addDoc,
     setDoc,
     getDoc,
+    deleteDoc,
     serverTimestamp,
     orderBy,
     runTransaction,
@@ -17,6 +18,7 @@ import {
 import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym, GymClass, User } from '../types'
 
 type AccessActor = Pick<User, 'email' | 'lvl' | 'role'>
+export type ManagerType = 'PRIMARY' | 'VICE'
 
 const chunkByTen = <T>(items: T[]): T[][] => {
     const chunks: T[][] = []
@@ -249,22 +251,160 @@ export const updateGym = async (id: string, updates: Partial<Gym>) => {
 }
 
 // Trainer Management (Manager Actions)
-export const getTrainers = async (gymId?: string): Promise<any[]> => {
+export const getTrainers = async (gymId?: string, includeDeleted = false): Promise<any[]> => {
     // Avoid composite-index requirement by querying a single field and filtering locally.
     const q = gymId
         ? query(collection(db, 'users'), where('gymId', '==', gymId))
         : query(collection(db, 'users'), where('role', '==', 'TRAINER'))
 
     const snapshot = await getDocs(q)
-    return snapshot.docs
+    const loaded = snapshot.docs
         .map(d => ({ uid: d.id, ...d.data() }))
         .filter((u: any) => (u.role === 'TRAINER') || (u.lvl || 0) >= 10)
+    if (includeDeleted) return loaded
+    return loaded.filter((u: any) => u.deletedFlag !== true)
 }
 
 export const updateTrainerRole = async (uid: string, role: string, lvl: number, gymId?: string) => {
     const updates: any = { role, lvl }
     if (gymId) updates.gymId = gymId
     return await updateDoc(doc(db, 'users', uid), updates)
+}
+
+export const updateTrainerInfo = async (uid: string, updates: { nickname?: string; gymId?: string }) => {
+    return await updateDoc(doc(db, 'users', uid), updates)
+}
+
+export const setTrainerDeletedFlag = async (uid: string, deleted: boolean) => {
+    return await updateDoc(doc(db, 'users', uid), {
+        deletedFlag: deleted,
+        deletedAt: deleted ? serverTimestamp() : null
+    })
+}
+
+export const deleteTrainerCompletely = async (uid: string) => {
+    return await deleteDoc(doc(db, 'users', uid))
+}
+
+// Manager Management (Site Admin Actions)
+export const getManagers = async (gymId?: string, includeDeleted = false): Promise<any[]> => {
+    const q = gymId
+        ? query(collection(db, 'users'), where('gymId', '==', gymId))
+        : query(collection(db, 'users'), where('role', '==', 'MANAGER'))
+
+    const snapshot = await getDocs(q)
+    const loaded = snapshot.docs
+        .map(d => ({ uid: d.id, ...d.data() }))
+        .filter((u: any) => u.role === 'MANAGER')
+
+    const gymFiltered = gymId ? loaded.filter((u: any) => u.gymId === gymId) : loaded
+    if (includeDeleted) return gymFiltered
+    return gymFiltered.filter((u: any) => u.deletedFlag !== true)
+}
+
+export const getManagerCandidates = async (gymId: string): Promise<any[]> => {
+    const q = query(collection(db, 'users'), where('gymId', '==', gymId))
+    const snapshot = await getDocs(q)
+    return snapshot.docs
+        .map(d => ({ uid: d.id, ...d.data() }))
+        .filter((u: any) => ((u.role === 'TRAINER') || (u.role === 'MANAGER') || (u.lvl || 0) >= 10) && u.deletedFlag !== true)
+}
+
+export const assignManagerFromTrainer = async (uid: string, gymId: string, managerType: ManagerType) => {
+    const targetRef = doc(db, 'users', uid)
+    await runTransaction(db, async (transaction) => {
+        const targetSnap = await transaction.get(targetRef)
+        if (!targetSnap.exists()) throw new Error('Trainer not found')
+
+        const target = targetSnap.data() as any
+        const isTrainerOrHigher = target.role === 'TRAINER' || target.role === 'MANAGER' || (target.lvl || 0) >= 10
+        if (!isTrainerOrHigher) throw new Error('Target user is not trainer-level')
+        if (target.deletedFlag === true) throw new Error('Deleted user cannot be assigned')
+
+        if (managerType === 'PRIMARY') {
+            const sameGymSnap = await getDocs(query(collection(db, 'users'), where('gymId', '==', gymId)))
+            sameGymSnap.docs.forEach((snap) => {
+                if (snap.id === uid) return
+                const data = snap.data() as any
+                const isPrimaryManager = data.role === 'MANAGER' && data.managerType === 'PRIMARY' && data.deletedFlag !== true
+                if (isPrimaryManager) {
+                    transaction.update(doc(db, 'users', snap.id), {
+                        managerType: 'VICE',
+                        updatedAt: serverTimestamp()
+                    })
+                }
+            })
+        }
+
+        transaction.update(targetRef, {
+            role: 'MANAGER',
+            lvl: 20,
+            gymId,
+            managerType,
+            deletedFlag: false,
+            deletedAt: null,
+            updatedAt: serverTimestamp()
+        })
+    })
+}
+
+export const updateManagerInfo = async (uid: string, updates: { nickname?: string; gymId?: string; managerType?: ManagerType }) => {
+    const managerRef = doc(db, 'users', uid)
+    await runTransaction(db, async (transaction) => {
+        const managerSnap = await transaction.get(managerRef)
+        if (!managerSnap.exists()) throw new Error('Manager not found')
+        const manager = managerSnap.data() as any
+        if (manager.role !== 'MANAGER') throw new Error('Target user is not manager')
+
+        const nextGymId = updates.gymId ?? manager.gymId
+        const nextManagerType = updates.managerType ?? manager.managerType ?? 'VICE'
+        if (!nextGymId) throw new Error('Gym is required')
+
+        if (nextManagerType === 'PRIMARY') {
+            const sameGymSnap = await getDocs(query(collection(db, 'users'), where('gymId', '==', nextGymId)))
+            sameGymSnap.docs.forEach((snap) => {
+                if (snap.id === uid) return
+                const data = snap.data() as any
+                const isPrimaryManager = data.role === 'MANAGER' && data.managerType === 'PRIMARY' && data.deletedFlag !== true
+                if (isPrimaryManager) {
+                    transaction.update(doc(db, 'users', snap.id), {
+                        managerType: 'VICE',
+                        updatedAt: serverTimestamp()
+                    })
+                }
+            })
+        }
+
+        const payload: any = {
+            managerType: nextManagerType,
+            gymId: nextGymId,
+            updatedAt: serverTimestamp()
+        }
+        if (updates.nickname !== undefined) payload.nickname = updates.nickname
+
+        transaction.update(managerRef, payload)
+    })
+}
+
+export const setManagerDeletedFlag = async (uid: string, deleted: boolean) => {
+    return await updateDoc(doc(db, 'users', uid), {
+        deletedFlag: deleted,
+        deletedAt: deleted ? serverTimestamp() : null,
+        updatedAt: serverTimestamp()
+    })
+}
+
+export const deleteManagerCompletely = async (uid: string) => {
+    return await deleteDoc(doc(db, 'users', uid))
+}
+
+export const demoteManagerToTrainer = async (uid: string) => {
+    return await updateDoc(doc(db, 'users', uid), {
+        role: 'TRAINER',
+        lvl: 10,
+        managerType: null,
+        updatedAt: serverTimestamp()
+    })
 }
 
 export const completeSession = async (eventId: string, signatureUrl: string, actor: AccessActor) => {
@@ -353,10 +493,9 @@ export const promoteToManager = async (email: string) => {
     const q = query(collection(db, 'users'), where('email', '==', email))
     const snap = await getDocs(q)
     if (snap.empty) throw new Error("User not found")
-    return await updateDoc(doc(db, 'users', snap.docs[0].id), {
-        role: 'MANAGER',
-        lvl: 20
-    })
+    const user = snap.docs[0].data() as any
+    if (!user.gymId) throw new Error('Gym is required for manager assignment')
+    return await assignManagerFromTrainer(snap.docs[0].id, user.gymId, 'VICE')
 }
 
 // Trainer Profiles
