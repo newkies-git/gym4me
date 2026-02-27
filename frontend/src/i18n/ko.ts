@@ -33,7 +33,7 @@ export default {
         login: '로그인',
         signup: '회원가입',
         email: '이메일',
-        emailPlaceholder: 'name@example.com',
+        emailPlaceholder: 'name(at)example.com',
         password: '비밀번호',
         nickname: '닉네임 / 이름',
         nicknamePlaceholder: '표시될 이름을 입력하세요',

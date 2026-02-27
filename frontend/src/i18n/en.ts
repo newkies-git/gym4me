@@ -33,7 +33,7 @@ export default {
         login: 'Login',
         signup: 'Sign Up',
         email: 'Email',
-        emailPlaceholder: 'name@example.com',
+        emailPlaceholder: 'name(at)example.com',
         password: 'Password',
         nickname: 'Nickname / Name',
         nicknamePlaceholder: 'Your display name',

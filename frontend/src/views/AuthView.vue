@@ -76,7 +76,11 @@ const handleSubmit = async () => {
     if (isLogin.value) {
       // Firebase Login
       const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password)
-      await markInitialSiteAdminIfNeeded(userCredential.user.uid, form.email, form.password)
+      try {
+        await markInitialSiteAdminIfNeeded(userCredential.user.uid, form.email, form.password)
+      } catch (bootstrapError) {
+        console.warn('SITE_ADMIN bootstrap update failed after login:', bootstrapError)
+      }
       router.push('/')
     } else {
       // Firebase Signup
@@ -84,13 +88,17 @@ const handleSubmit = async () => {
       const user = userCredential.user
 
       // All new users start as OBSERVER.
-      await setDoc(doc(db, 'users', user.uid), {
-        email: form.email,
-        nickname: form.nickname,
-        role: 'OBSERVER',
-        lvl: 1,
-        createdAt: serverTimestamp()
-      })
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          email: form.email,
+          nickname: form.nickname,
+          role: 'OBSERVER',
+          lvl: 1,
+          createdAt: serverTimestamp()
+        })
+      } catch (profileInitError) {
+        console.warn('User profile initialization failed after signup:', profileInitError)
+      }
       
       isLogin.value = true
       form.nickname = ''
