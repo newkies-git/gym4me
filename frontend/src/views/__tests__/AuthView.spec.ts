@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { nextTick } from 'vue'
+import { mount, flushPromises } from '@vue/test-utils'
 import i18n from '../../i18n'
 
 const pushMock = vi.fn()
@@ -32,6 +31,7 @@ vi.mock('firebase/firestore', () => ({
 
 describe('AuthView.vue', () => {
   beforeEach(() => {
+    vi.resetModules()
     i18n.global.locale.value = 'en'
     pushMock.mockReset()
     signInMock.mockReset()
@@ -58,6 +58,7 @@ describe('AuthView.vue', () => {
     await wrapper.find('input[type="email"]').setValue('member@test.com')
     await wrapper.find('input[type="password"]').setValue('pw123456')
     await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
 
     expect(signInMock).toHaveBeenCalled()
     expect(pushMock).toHaveBeenCalledWith('/')
@@ -75,7 +76,7 @@ describe('AuthView.vue', () => {
     await wrapper.find('input[type="email"]').setValue('admin@test.com')
     await wrapper.find('input[type="password"]').setValue('init-pass')
     await wrapper.find('form').trigger('submit.prevent')
-    await nextTick()
+    await flushPromises()
 
     expect(signInMock).toHaveBeenCalled()
     expect(setDocMock).toHaveBeenCalled()
@@ -96,10 +97,30 @@ describe('AuthView.vue', () => {
     await wrapper.find('input[type="password"]').setValue('pw123456')
     await wrapper.find('input[type="text"]').setValue('newbie')
     await wrapper.find('form').trigger('submit.prevent')
-    await nextTick()
+    await flushPromises()
 
     expect(createUserMock).toHaveBeenCalled()
     expect(setDocMock).toHaveBeenCalled()
     expect(wrapper.find('.error-text').exists()).toBe(false)
+  })
+
+  it('bootstraps site admin account on first login when user does not exist', async () => {
+    vi.stubEnv('VITE_SITE_ADMIN_EMAIL', 'admin@test.com')
+    vi.stubEnv('VITE_SITE_ADMIN_INITIAL_PASSWORD', 'init-pass')
+    signInMock.mockRejectedValue({ code: 'auth/user-not-found' })
+    createUserMock.mockResolvedValue({ user: { uid: 'new-admin' } })
+
+    const { default: AuthView } = await import('../AuthView.vue')
+    const wrapper = mount(AuthView, { global: { plugins: [i18n] } })
+
+    await wrapper.find('input[type="email"]').setValue('admin@test.com')
+    await wrapper.find('input[type="password"]').setValue('init-pass')
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(signInMock).toHaveBeenCalled()
+    expect(createUserMock).toHaveBeenCalled()
+    expect(setDocMock).toHaveBeenCalled()
+    expect(pushMock).toHaveBeenCalledWith('/')
   })
 })

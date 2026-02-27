@@ -52,11 +52,16 @@ const form = reactive({
 const configuredSiteAdminEmail = (import.meta.env.VITE_SITE_ADMIN_EMAIL || '').trim().toLowerCase()
 const configuredSiteAdminInitialPassword = import.meta.env.VITE_SITE_ADMIN_INITIAL_PASSWORD || ''
 
-const markInitialSiteAdminIfNeeded = async (uid: string, email: string, password: string) => {
+const isInitialSiteAdminCredential = (email: string, password: string) => {
   const normalizedEmail = email.trim().toLowerCase()
-  const isBootstrapTarget = configuredSiteAdminEmail && configuredSiteAdminEmail === normalizedEmail
-  const isInitialPassword = configuredSiteAdminInitialPassword && configuredSiteAdminInitialPassword === password
-  if (!isBootstrapTarget || !isInitialPassword) return false
+  return !!configuredSiteAdminEmail &&
+    !!configuredSiteAdminInitialPassword &&
+    normalizedEmail === configuredSiteAdminEmail &&
+    password === configuredSiteAdminInitialPassword
+}
+
+const markInitialSiteAdminIfNeeded = async (uid: string, email: string, password: string) => {
+  if (!isInitialSiteAdminCredential(email, password)) return false
 
   const userRef = doc(db, 'users', uid)
   await setDoc(userRef, {
@@ -69,13 +74,40 @@ const markInitialSiteAdminIfNeeded = async (uid: string, email: string, password
   return true
 }
 
+const signInOrBootstrapInitialSiteAdmin = async (email: string, password: string) => {
+  try {
+    return await signInWithEmailAndPassword(auth, email, password)
+  } catch (signInError: any) {
+    if (!isInitialSiteAdminCredential(email, password)) throw signInError
+
+    const canTryBootstrap = signInError?.code === 'auth/user-not-found' || signInError?.code === 'auth/invalid-credential'
+    if (!canTryBootstrap) throw signInError
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email,
+        role: 'SITE_ADMIN',
+        lvl: 100,
+        mustChangePassword: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true })
+      return userCredential
+    } catch (createError: any) {
+      if (createError?.code === 'auth/email-already-in-use') throw signInError
+      throw createError
+    }
+  }
+}
+
 const handleSubmit = async () => {
   loading.value = true
   error.value = ''
   try {
     if (isLogin.value) {
       // Firebase Login
-      const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password)
+      const userCredential = await signInOrBootstrapInitialSiteAdmin(form.email, form.password)
       try {
         await markInitialSiteAdminIfNeeded(userCredential.user.uid, form.email, form.password)
       } catch (bootstrapError) {
