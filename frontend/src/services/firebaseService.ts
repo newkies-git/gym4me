@@ -182,6 +182,7 @@ const mapSnapshotToEvent = (docSnap: any): CalendarEvent => {
         classId: data.classId,
         trainerEmail: data.trainerEmail,
         notes: data.notes,
+        rejectionReason: data.rejectionReason,
         mediaUrl: data.mediaUrl,
         signatureUrl: data.signatureUrl,
         completedAt: data.completedAt,
@@ -262,6 +263,18 @@ export const assignTrainerToClient = async (clientId: string, trainerEmail: stri
 
 export const updateClientSession = async (clientId: string, updates: Pick<ClientInfo, "remainingSessions" | "expirationDate">) => {
     return await updateDoc(doc(db, 'users', clientId), updates)
+}
+
+export const getGymMembers = async (gymId: string): Promise<ClientInfo[]> => {
+    const q = query(collection(db, 'users'), where('gymId', '==', gymId), where('lvl', '==', 5))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(docSnap => ({
+        uid: docSnap.id,
+        email: docSnap.data().email,
+        nickname: docSnap.data().nickname,
+        remainingSessions: docSnap.data().remainingSessions,
+        expirationDate: docSnap.data().expirationDate
+    }))
 }
 
 export const logTicketHistory = async (historyData: Partial<DocumentData>) => {

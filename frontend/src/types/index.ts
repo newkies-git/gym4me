@@ -50,11 +50,12 @@ export interface CalendarEvent {
   time: string;
   type: 'PT' | 'PERSONAL';
   targetType: 'INDIVIDUAL' | 'CLASS';
-  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
   clientEmail?: string; // INDIVIDUAL 인 경우
   classId?: string;     // CLASS 인 경우
   trainerEmail?: string;
   notes?: string;
+  rejectionReason?: string;
   mediaUrl?: string;
   signatureUrl?: string;
   completedAt?: any;
@@ -76,6 +77,8 @@ export interface TrainerProfile {
   bio?: string;
   specialties?: string[];
   photoUrl?: string;
+  awards?: string[];
+  career?: string[];
   updatedAt: any;
 }
 
@@ -85,4 +88,17 @@ export interface ProfileHistory {
   before: Partial<TrainerProfile>;
   after: Partial<TrainerProfile>;
   updatedAt: any;
+}
+
+export interface ToolUsage {
+  id: string;
+  title: string;
+  description: string;
+  mediaUrl: string; // Video or image
+  mediaType: 'VIDEO' | 'IMAGE';
+  category: string; // e.g., 'Chest', 'Legs'
+  trainerEmail: string;
+  isPrivate: boolean;
+  targetTraineeEmail?: string; // If private, only this trainee and the trainer can see
+  createdAt: any;
 }

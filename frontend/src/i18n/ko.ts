@@ -7,10 +7,13 @@ export default {
         trainerMgt: '트레이너 관리',
         gymMgt: '헬스장 관리',
         managerMgt: '매니저 관리',
+        toolUsage: '기구 사용법',
+        gymMember: '지점 회원 관리',
         profile: '프로필',
         settings: '설정',
         loginSignup: '로그인 / 회원가입',
         logout: '로그아웃',
+        menuFlag: '메뉴 열기',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -74,12 +77,18 @@ export default {
         assignPTSession: 'PT 세션 배정',
         logPersonalWorkout: '개인 운동 기록',
         classBadge: '클래스',
+        prevWeek: '이전 주',
+        nextWeek: '다음 주',
         status: {
             pending: '승인 대기',
             approved: '승인됨',
             completed: '완료',
             cancelled: '취소됨',
+            rejected: '거절됨',
         },
+        rejectionReason: '거절 사유',
+        reject: '거절',
+        enterRejectionReason: '거절 사유를 입력하세요...',
         back: '뒤로',
         openDetails: '상세 보기',
         dayNames: ['일', '월', '화', '수', '목', '금', '토'],
@@ -185,6 +194,10 @@ export default {
         bioPlaceholder: '운동 철학, 전문 분야 등을 작성하세요...',
         specialties: '전문 분야 (쉼표로 구분)',
         specialtiesPlaceholder: '예: 무게 훈련, 재활, HIIT',
+        awards: '수상 경력 (쉼표로 구분)',
+        awardsPlaceholder: '예: 2023 머슬마니아 1위, 생활스포츠지도사 2급',
+        career: '상세 경력 (쉼표로 구분)',
+        careerPlaceholder: '예: OO짐 5년 근무, XX대학교 체육학과 졸업',
         photoUrl: '프로필 사진 URL',
         photoUrlPlaceholder: 'https://...',
         preview: '미리보기',
@@ -474,6 +487,34 @@ export default {
         noHistory: '수정 이력이 없습니다.',
         before: '이전',
         after: '이후',
+    },
+
+    // ── Gym Member Management ───────────────────────────────────────
+    gymMember: {
+        title: '지점 회원 관리',
+        subtitle: '지점 전체 회원의 이용권 현황을 관리합니다.',
+        searchPlaceholder: '이름 또는 이메일로 검색...',
+        nickname: '닉네임',
+        email: '이메일',
+        remainingSessions: '잔여 PT',
+        expirationDate: '만료일',
+        actions: '관리',
+    },
+
+    // ── Tool Usage ──────────────────────────────────────────────────
+    toolUsage: {
+        title: '운동기구 사용법',
+        subtitle: '기구 가이드와 개인 운동 영상을 확인하세요.',
+        addTool: '가이드 추가',
+        noTools: '검색된 운동 가이드가 없습니다.',
+        titleLabel: '제목',
+        titlePlaceholder: '예: 레그 프레스 사용법',
+        categoryLabel: '카테고리',
+        mediaUrlLabel: '미디어 URL',
+        mediaTypeLabel: '미디어 유형',
+        descriptionLabel: '설명',
+        makePrivate: '비공개 설정 (특정 회원용)',
+        targetTraineeLabel: '대상 회원 이메일',
     },
 
     // ── Common ───────────────────────────────────────────────────────

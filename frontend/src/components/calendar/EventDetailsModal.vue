@@ -85,19 +85,43 @@
           </div>
       </div>
 
+      <div v-if="event.status === 'REJECTED' && event.rejectionReason" class="rejection-box glass" style="margin-top: 1rem; border-left: 4px solid var(--accent); padding: 1rem;">
+          <strong style="color: var(--accent);">{{ t('calendar.rejectionReason') }}:</strong>
+          <p>{{ event.rejectionReason }}</p>
+      </div>
+
+      <!-- Rejection Input (Trainer Only, Pending Only) -->
+      <div v-if="isRejecting" class="rejection-input-area" style="margin-top: 1.5rem;">
+          <label class="sm-text">{{ t('calendar.rejectionReason') }}</label>
+          <textarea v-model="rejectionReasonInput" :placeholder="t('calendar.enterRejectionReason')" class="glass-input" rows="2" style="width:100%; margin-top:0.5rem;"></textarea>
+          <div class="flex-end" style="gap: 0.5rem; margin-top: 0.5rem;">
+              <button class="btn btn-ghost btn-sm" @click="isRejecting = false">{{ t('common.cancel') }}</button>
+              <button class="btn btn-danger btn-sm" @click="handleReject" :disabled="!rejectionReasonInput.trim() || rejecting">{{ rejecting ? t('common.processing') : t('calendar.reject') }}</button>
+          </div>
+      </div>
+
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" @click="close">{{ t('eventDetails.cancel') }}</button>
-        <button
-          v-if="event.type === 'PT' && event.status === 'PENDING' && auth.isTrainer"
-          type="button"
-          class="btn btn-ghost"
-          @click="approveSession"
-          :disabled="approving"
-        >
-          {{ approving ? t('common.processing') : t('eventDetails.approve') }}
-        </button>
+        <template v-if="event.type === 'PT' && event.status === 'PENDING' && auth.isTrainer && !isRejecting">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              style="color: var(--accent);"
+              @click="isRejecting = true"
+            >
+              {{ t('calendar.reject') }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              @click="approveSession"
+              :disabled="approving"
+            >
+              {{ approving ? t('common.processing') : t('eventDetails.approve') }}
+            </button>
+        </template>
         <button 
-          v-if="event.type === 'PT' && event.status !== 'COMPLETED' && tempSignature" 
+          v-if="event.type === 'PT' && event.status !== 'COMPLETED' && event.status !== 'REJECTED' && tempSignature" 
           type="button" 
           class="btn btn-primary" 
           @click="handleSignAndComplete"
@@ -141,6 +165,9 @@ const savingRecord = ref(false)
 const newRecordObj = ref<ExerciseRecord>({ name: '', sets: 0, reps: 0 })
 const applyingBulkLogs = ref(false)
 const approving = ref(false)
+const rejecting = ref(false)
+const isRejecting = ref(false)
+const rejectionReasonInput = ref('')
 
 const canAddRecord = computed(() => {
     if(!props.event) return false;
@@ -228,6 +255,24 @@ const approveSession = async () => {
     ui.showToast(extractErrorMessage(e, t('eventDetails.approveFailed')), 'error')
   } finally {
     approving.value = false
+  }
+}
+
+const handleReject = async () => {
+  if (!props.event || !rejectionReasonInput.value.trim()) return
+  rejecting.value = true
+  try {
+    await updateSchedule(props.event.id, { 
+      status: 'REJECTED',
+      rejectionReason: rejectionReasonInput.value.trim()
+    })
+    ui.showToast(t('calendar.rejected'), 'info')
+    emit('updated')
+    close()
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('common.errorWithMessage', { msg: '' })), 'error')
+  } finally {
+    rejecting.value = false
   }
 }
 

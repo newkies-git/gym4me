@@ -29,6 +29,16 @@
           </div>
 
           <div class="field">
+            <label>{{ t('trainerProfile.awards') }}</label>
+            <input type="text" v-model="awardsStr" :placeholder="t('trainerProfile.awardsPlaceholder')">
+          </div>
+
+          <div class="field">
+            <label>{{ t('trainerProfile.career') }}</label>
+            <input type="text" v-model="careerStr" :placeholder="t('trainerProfile.careerPlaceholder')">
+          </div>
+
+          <div class="field">
             <label>{{ t('trainerProfile.bio') }}</label>
             <textarea v-model="form.bio" rows="4"></textarea>
           </div>
@@ -79,10 +89,14 @@ const form = ref<Partial<TrainerProfile>>({
   nickname: auth.user?.nickname || '',
   bio: '',
   specialties: [],
-  photoUrl: ''
+  photoUrl: '',
+  awards: [],
+  career: []
 })
 
 const specialtiesStr = ref('')
+const awardsStr = ref('')
+const careerStr = ref('')
 const originalProfile = ref<TrainerProfile | null>(null)
 const saving = ref(false)
 const history = ref<ProfileHistory[]>([])
@@ -98,6 +112,8 @@ onMounted(async () => {
       originalProfile.value = profile
       form.value = { ...profile }
       specialtiesStr.value = (profile.specialties || []).join(', ')
+      awardsStr.value = (profile.awards || []).join(', ')
+      careerStr.value = (profile.career || []).join(', ')
     }
   } catch (e: any) {
     ui.showToast(t('trainerProfile.loadFailed') + ': ' + e.message, 'error')
@@ -120,6 +136,14 @@ async function fetchHistory() {
 
 watch(specialtiesStr, (val) => {
   form.value.specialties = val.split(',').map(s => s.trim()).filter(s => s !== '')
+})
+
+watch(awardsStr, (val) => {
+  form.value.awards = val.split(',').map(s => s.trim()).filter(s => s !== '')
+})
+
+watch(careerStr, (val) => {
+  form.value.career = val.split(',').map(s => s.trim()).filter(s => s !== '')
 })
 
 async function saveProfile() {

@@ -167,42 +167,47 @@ const formatStatus = (status: string) => t(`calendar.status.${status.toLowerCase
   background: var(--border);
   border-radius: 1rem;
   overflow: hidden;
+  border-top: 1px solid var(--border);
 }
-.day-col { background: var(--bg); min-height: 400px; display: flex; flex-direction: column; }
-.day-header { padding: 1rem; text-align: center; border-bottom: 1px solid var(--border); }
+.day-col { background: var(--bg); min-height: 300px; display: flex; flex-direction: column; }
+.day-header { padding: 0.75rem; text-align: center; border-bottom: 1px solid var(--border); }
 .day-header.today { background: rgba(99, 102, 241, 0.1); color: var(--primary); font-weight: bold; }
-.day-name { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
-.day-num { font-size: 1.5rem; }
-.events { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; overflow-y: auto; }
+.day-name { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+.day-num { font-size: 1.25rem; line-height: 1.2; }
+.events { padding: 0.3rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; overflow-y: auto; }
 .event-card { 
   padding: 0.5rem; 
   border-radius: 0.5rem; 
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   backdrop-filter: blur(10px);
+  position: relative;
+  transition: transform 0.2s;
 }
-.event-card.pt { background: rgba(192, 132, 252, 0.2); border-left: 3px solid #c084fc; }
-.event-card.personal { background: rgba(99, 102, 241, 0.2); border-left: 3px solid #6366f1; }
+.event-card:hover { transform: translateY(-2px); }
+.event-card.pt { background: rgba(192, 132, 252, 0.15); border-left: 3px solid #c084fc; }
+.event-card.personal { background: rgba(99, 102, 241, 0.15); border-left: 3px solid #6366f1; }
+.event-card.rejected { opacity: 0.6; background: rgba(244, 63, 94, 0.1); border-left: 3px solid #f43f5e; text-decoration: line-through; }
+.event-card.completed { border-left-color: #10b981; }
+
 .event-card.class-event { 
     background: repeating-linear-gradient(
         45deg,
-        rgba(192, 132, 252, 0.1),
+        rgba(192, 132, 252, 0.05),
+        rgba(192, 132, 252, 0.05) 10px,
         rgba(192, 132, 252, 0.1) 10px,
-        rgba(192, 132, 252, 0.2) 10px,
-        rgba(192, 132, 252, 0.2) 20px
+        rgba(192, 132, 252, 0.1) 20px
     );
-    border-left: 3px solid #c084fc;
 }
 .badge-mini {
-    font-size: 0.6rem;
-    padding: 0.1rem 0.3rem;
+    font-size: 0.55rem;
+    padding: 0.1rem 0.25rem;
     background: #c084fc;
     color: white;
     border-radius: 4px;
-    margin-right: 0.4rem;
-    vertical-align: middle;
+    margin-right: 0.3rem;
 }
-.event-title { font-weight: 600; margin-bottom: 0.2rem; display: flex; align-items: center; }
-.event-status { font-size: 0.7rem; opacity: 0.8; }
+.event-title { font-weight: 600; margin-bottom: 0.1rem; display: flex; align-items: center; }
+.event-status { font-size: 0.65rem; opacity: 0.7; }
 .btn-sm { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.1); }
 
 @media (max-width: 1024px) {

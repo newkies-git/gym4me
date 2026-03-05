@@ -11,6 +11,7 @@ export default {
         settings: 'Settings',
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',
+        menuFlag: 'Open Menu',
     },
 
     // ── Home ─────────────────────────────────────────────────────────

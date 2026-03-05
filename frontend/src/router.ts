@@ -69,6 +69,16 @@ const router = createRouter({
             path: '/trainer-profile',
             component: () => import('./views/TrainerProfileView.vue'),
             meta: { requiresAuth: true, requiresTrainer: true }
+        },
+        {
+            path: '/tool-usage',
+            component: () => import('./views/ToolUsageView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/gym/members',
+            component: () => import('./views/GymMemberView.vue'),
+            meta: { requiresAuth: true, requiresManager: true }
         }
     ]
 })
