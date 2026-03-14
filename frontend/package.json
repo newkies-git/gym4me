@@ -35,5 +35,8 @@
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.18",
     "vue-tsc": "latest"
+  },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3"
   }
 }

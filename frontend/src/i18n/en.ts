@@ -1,17 +1,17 @@
 export default {
     // ── Nav ──────────────────────────────────────────────────────────
     nav: {
-        dashboard: 'Dashboard',
+        menuFlag: 'Menu Toggle',
+        home: 'Home',
         calendar: 'Calendar',
-        trainerBio: 'Trainer Bio',
-        trainerMgt: 'Trainer MGT',
+        trainerBio: 'My Bio',
+        trainerMgt: 'Trainer Mgt',
         gymMgt: 'Gym MGT',
         managerMgt: 'Manager MGT',
         profile: 'Profile',
         settings: 'Settings',
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',
-        menuFlag: 'Open Menu',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -206,6 +206,9 @@ export default {
     // ── Trainer Management ────────────────────────────────────────────
     trainerMgt: {
         title: 'Trainer Management',
+        filterByGymId: 'Filter by Gym ID',
+        assignGymIdLabel: 'Assign Gym ID',
+        assignGymIdPlaceholder: 'Enter gym document ID',
         back: 'Back',
         appointTitle: 'Appoint New Trainer',
         appointDesc: 'Search for a user by email to upgrade their role to Trainer.',
@@ -280,6 +283,26 @@ export default {
         loadError: 'Failed to load gym information.',
         saveSuccess: 'Gym information saved.',
         noGym: 'No gym information linked.',
+        editGym: 'Edit Gym',
+        deleteGym: 'Delete Gym',
+        confirmDelete: 'Are you sure you want to delete this gym?',
+        deleteSuccess: 'Gym deleted successfully.',
+        deleteError: 'Failed to delete gym',
+        allGyms: 'All Gyms',
+        addGym: 'Add Gym',
+        phoneLabel: 'Phone Number',
+        phonePlaceholder: '123-456-7890',
+        openDateLabel: 'Opening Date',
+        notesLabel: 'Notes',
+        notesPlaceholder: 'Enter any additional notes...',
+        managerLabel: 'Manager Email (assign now or later)',
+        managerPlaceholder: 'manager@example.com',
+        trainerCount: 'Trainers: {n}',
+        memberCount: 'Members: {n}',
+        managerAssigned: 'Manager: {email}',
+        noManager: 'No Manager Assigned',
+        trainerList: 'Trainer List',
+        emptyTrainers: 'No trainers found.',
     },
 
     // ── Manager Management ────────────────────────────────────────────
@@ -496,5 +519,6 @@ export default {
         title: 'Administration',
         backToDashboard: 'Back to Dashboard',
         managerManagement: 'Manager Management',
+        trainerManagement: 'Trainer Management',
     },
 }

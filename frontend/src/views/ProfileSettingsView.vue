@@ -1,6 +1,6 @@
 <template>
   <div class="settings-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <h2>{{ t('settings.title') }}</h2>
       <button class="btn btn-ghost" @click="router.back()">{{ t('settings.back') }}</button>
     </div>
@@ -18,13 +18,13 @@
           <div class="avatar-wrap" v-if="profileForm.profileImageUrl">
             <img :src="profileForm.profileImageUrl" :alt="t('settings.profileImage')" class="avatar-preview" />
           </div>
-          <div class="info-group">
-              <label>{{ t('settings.email') }}</label>
-              <p>{{ auth.user?.email }}</p>
+          <div style="flex: 1; text-align: left;">
+            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">{{ t('settings.role') }}</p>
+            <p style="margin: 0; font-weight: 600;">{{ formatRole(auth.user?.role) }}</p>
           </div>
-          <div class="info-group">
-              <label>{{ t('settings.role') }}</label>
-              <p>{{ auth.user?.role }}</p>
+          <div style="flex: 1; text-align: left;">
+            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">{{ t('settings.level') }}</p>
+            <p style="margin: 0; font-weight: 600;">Lv. {{ auth.user?.lvl }}</p>
           </div>
           <div class="info-group" v-if="auth.user?.nickname">
               <label>{{ t('settings.nickname') }}</label>
@@ -151,8 +151,20 @@ const isDeleting = ref(false)
 const deleteError = ref('')
 const deleteConfirmKeyword = t('settings.deleteConfirmKeyword')
 const changingPassword = ref(false)
+const isSubmitting = ref(false)
 const passwordError = ref('')
 const savingProfile = ref(false)
+
+const formatRole = (roleStr: string | undefined) => {
+  if (!roleStr) return ''
+  switch(roleStr) {
+    case 'MEMBER': return t('role.member')
+    case 'TRAINER': return t('role.trainer')
+    case 'MANAGER': return t('role.manager')
+    case 'SITE_ADMIN': return t('role.siteAdmin')
+    default: return roleStr
+  }
+}
 
 const profileForm = ref({
     nickname: auth.user?.nickname || '',
@@ -362,7 +374,7 @@ const executeDeletion = async () => {
 
 <style scoped>
 .settings-wrapper {
-  padding: 0.5rem 0 1.5rem;
+  padding: 6rem 1rem 2rem 1rem;
 }
 
 .header {
@@ -374,68 +386,15 @@ const executeDeletion = async () => {
   font-size: clamp(1.6rem, 2vw, 2rem);
 }
 
-.grid-2 {
-  align-items: start;
-  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.9fr);
-}
-
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.info-section, .history-section, .password-section, .danger-zone {
-  padding: 1.65rem;
-}
-h3 { margin-bottom: 1.5rem; }
-
-.info-group { margin-bottom: 1.25rem; }
-.info-group label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.25rem; }
-.info-group p { font-size: 1.05rem; }
-
-.history-list { max-height: 500px; overflow-y: auto; }
-.history-group { margin-bottom: 1rem; }
-.history-group ul { list-style: none; padding: 0; margin: 0; }
-.history-date {
-  margin: 0.25rem 0 0.6rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-.badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem; color: white; display: inline-block; font-weight: 600; }
-.badge.success { background: #10b981; }
-.badge.danger { background: #f43f5e; }
-.badge.warning { background: #f59e0b; }
-.empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
-
-.danger-zone {
-  border: 1px solid rgba(244, 63, 94, 0.2);
-  background: rgba(244, 63, 94, 0.045);
-}
-.text-danger { color: #f43f5e !important; }
-
-.sm-text { font-size: 0.85rem; color: var(--text-muted); }
-.avatar-wrap { margin-bottom: 0.8rem; }
-.avatar-preview {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-
-.modal-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 1000; backdrop-filter: blur(5px);
-}
-.modal-content { padding: 2.5rem; width: 90%; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
-
-@media (max-width: 1080px) {
+@media (min-width: 768px) {
   .grid-2 {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1080px) {
+  .grid-2 {
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.9fr);
   }
 }
 </style>

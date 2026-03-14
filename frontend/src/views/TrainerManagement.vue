@@ -1,6 +1,6 @@
 <template>
   <div class="management-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <h2>{{ t('trainerMgt.title') }}</h2>
       <button class="btn btn-ghost" @click="router.back()">{{ t('trainerMgt.back') }}</button>
     </div>
@@ -10,9 +10,15 @@
       <div class="list-section glass">
         <div class="flex-between" style="margin-bottom: 1rem;">
           <h3 style="margin: 0;">{{ t('trainerMgt.currentTrainers') }}</h3>
-          <button class="btn btn-ghost btn-sm" @click="showDeleted = !showDeleted">
-            {{ showDeleted ? t('trainerMgt.hideDeleted') : t('trainerMgt.showDeleted') }}
-          </button>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div v-if="auth.isSiteAdmin" style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" v-model="filterGymId" :placeholder="t('trainerMgt.filterByGymId')" class="field" style="margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" @keyup.enter="fetchTrainers" />
+              <button class="btn btn-primary btn-sm" @click="fetchTrainers">{{ t('search.searchBtn') }}</button>
+            </div>
+            <button class="btn btn-ghost btn-sm" @click="showDeleted = !showDeleted">
+              {{ showDeleted ? t('trainerMgt.hideDeleted') : t('trainerMgt.showDeleted') }}
+            </button>
+          </div>
         </div>
         <div v-if="loading" class="sm-text">{{ t('trainerMgt.loading') }}</div>
         <ul v-else class="history-list">
@@ -66,6 +72,12 @@
         <div v-if="foundUser" class="found-user-card" style="margin-top: 2rem; padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem;">
           <p><strong>{{ t('trainerMgt.found') }}</strong> {{ foundUser.data.nickname || foundUser.data.email }}</p>
           <p class="sm-text">{{ t('trainerMgt.currentLevel', { lvl: foundUser.data.lvl }) }}</p>
+          
+          <div v-if="auth.isSiteAdmin" class="field" style="margin-top: 1rem;">
+            <label>{{ t('trainerMgt.assignGymIdLabel') }}</label>
+            <input type="text" v-model="assignGymId" :placeholder="t('trainerMgt.assignGymIdPlaceholder')" />
+          </div>
+
           <button class="btn btn-primary btn-sm" style="margin-top: 1rem; width: 100%;" @click="promoteUser">
             {{ t('trainerMgt.appointAsTrainer') }}
           </button>
@@ -113,6 +125,8 @@ const searching = ref(false)
 const foundUser = ref<any>(null)
 const searchPerformed = ref(false)
 const showDeleted = ref(false)
+const filterGymId = ref('')
+const assignGymId = ref('')
 
 const editModalOpen = ref(false)
 const savingEdit = ref(false)
@@ -129,7 +143,8 @@ onMounted(fetchTrainers)
 async function fetchTrainers() {
   loading.value = true
   try {
-    trainers.value = await getTrainers(auth.user?.gymId, true)
+    const queryGymId = auth.isSiteAdmin ? filterGymId.value.trim() || undefined : auth.user?.gymId
+    trainers.value = await getTrainers(queryGymId, true)
   } catch (e: any) {
     ui.showToast(t('trainerMgt.fetchFailed') + ': ' + e.message, 'error')
   } finally {
@@ -154,23 +169,30 @@ async function searchUser() {
 
 async function promoteUser() {
   if (!foundUser.value) return
-  if (!auth.user?.gymId && !auth.isSiteAdmin) {
+  
+  let targetGymId = auth.user?.gymId
+  if (auth.isSiteAdmin) {
+    targetGymId = assignGymId.value.trim()
+  }
+
+  if (!targetGymId && !auth.isSiteAdmin) {
     ui.showToast(t('trainerMgt.gymRequired'), 'warning')
     return
   }
   try {
     // If site admin is promoting, they might not have a gymId, but site admin promoteToManager is separate.
     // Managers promote trainers to THEIR gym.
-    await updateTrainerRole(foundUser.value.id, 'TRAINER', 10, auth.user?.gymId, {
+    await updateTrainerRole(foundUser.value.id, 'TRAINER', 10, targetGymId, {
       actorEmail: auth.user?.email || '',
       action: 'TRAINER_PROMOTE',
       targetUid: foundUser.value.id,
       targetEmail: foundUser.value.data.email,
-      metadata: { gymId: auth.user?.gymId || null }
+      metadata: { gymId: targetGymId || null }
     })
     ui.showToast(t('trainerMgt.promoteSuccess'), 'success')
     foundUser.value = null
     searchEmail.value = ''
+    assignGymId.value = ''
     searchPerformed.value = false
     fetchTrainers()
   } catch (e: any) {
@@ -256,11 +278,17 @@ async function hardDeleteTrainer(trainer: any) {
 </script>
 
 <style scoped>
-.management-wrapper { padding: 1rem 0; }
+.management-wrapper { padding: 6rem 1rem 2rem 1rem; }
 .header { margin-bottom: 2rem; }
-.list-section, .add-section { padding: 2rem; }
+.list-section, .add-section { padding: 1.5rem; }
 h3 { margin-bottom: 1.5rem; }
 .sm-text { font-size: 0.85rem; color: var(--text-muted); }
 .empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
-.history-item { padding: 1rem; }
+.history-item { padding: 1rem; flex-direction: column; align-items: stretch; gap: 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+@media (min-width: 641px) {
+  .history-item { flex-direction: row; justify-content: space-between; align-items: center; }
+  .list-section, .add-section { padding: 2rem; }
+}
 </style>

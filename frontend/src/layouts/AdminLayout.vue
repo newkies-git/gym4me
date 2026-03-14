@@ -1,6 +1,6 @@
 <template>
   <section class="admin-shell container">
-    <header class="admin-header glass">
+    <header class="admin-header glass page-header">
       <div>
         <p class="admin-eyebrow">{{ t('admin.eyebrow') }}</p>
         <h2>{{ t('admin.title') }}</h2>
@@ -10,6 +10,7 @@
 
     <nav class="admin-nav">
       <router-link to="/admin/managers" class="btn btn-ghost">{{ t('admin.managerManagement') }}</router-link>
+      <router-link to="/manage-trainers" class="btn btn-ghost">{{ t('admin.trainerManagement') }}</router-link>
     </nav>
 
     <div class="admin-content">
@@ -27,7 +28,7 @@ const { t } = useI18n()
 </script>
 
 <style scoped>
-.admin-shell { padding: 2rem 0; }
+.admin-shell { padding: 6rem 1rem 2rem 1rem; }
 
 .admin-header {
   display: flex;

@@ -1,6 +1,6 @@
 <template>
   <div class="tool-usage-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <div>
         <h2>{{ t('toolUsage.title') }}</h2>
         <p class="sm-text">{{ t('toolUsage.subtitle') }}</p>
@@ -163,12 +163,19 @@ const handleSave = async () => {
 </script>
 
 <style scoped>
-.tool-usage-wrapper { padding: 1.5rem 0; }
+.tool-usage-wrapper { padding: 6rem 1rem 2rem 1rem; }
 .tool-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
 }
+
+@media (min-width: 641px) {
+  .tool-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
 .tool-card {
     display: flex;
     flex-direction: column;
@@ -200,15 +207,15 @@ const handleSave = async () => {
 .tool-footer { border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.2rem; }
 
 .badge-btn {
-    padding: 0.4rem 1rem; border-radius: 2rem; background: rgba(255,255,255,0.05);
+    padding: 0.4rem 1rem; border-radius: 2rem; background: var(--bg-dark);
     border: 1px solid var(--border); color: var(--text-muted); transition: 0.2s; white-space: nowrap;
 }
-.badge-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.badge-btn.active { background: var(--primary); border-color: var(--primary); }
 
 .field { margin-bottom: 1.25rem; }
 .field label { display: block; margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.85rem; }
 .field input, .field textarea, .field select {
-    width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border); border-radius: 0.5rem; color: white;
+    width: 100%; padding: 0.75rem; background: #fafafa;
+    border: 1px solid var(--border); border-radius: 0.5rem; color: var(--text-main);
 }
 </style>

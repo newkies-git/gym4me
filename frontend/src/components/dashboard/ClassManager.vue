@@ -172,7 +172,7 @@ const removeMember = async (email: string) => {
   gap: 1.5rem;
 }
 .class-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
@@ -192,7 +192,7 @@ const removeMember = async (email: string) => {
 .empty-state { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem 0; font-style: italic; }
 .field { margin-bottom: 1.5rem; }
 .field label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
-.field input { width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 0.5rem; color: white; outline: none; }
+.field input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; }
 .sm-text { font-size: 0.8rem; color: var(--text-muted); }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
 .member-list { display: flex; flex-direction: column; gap: 0.75rem; }

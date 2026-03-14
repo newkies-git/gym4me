@@ -1,6 +1,6 @@
 <template>
   <div class="management-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <div>
         <h2>{{ t('managerMgt.pageTitle') }}</h2>
         <p class="sm-text">{{ t('managerMgt.ruleSummary') }}</p>
@@ -310,22 +310,36 @@ async function hardDeleteManager(manager: any) {
 </script>
 
 <style scoped>
-.management-wrapper { padding: 1rem 0; }
+.management-wrapper { padding: 6rem 1rem 2rem 1rem; }
 .header { margin-bottom: 1rem; }
 .sm-text { font-size: 0.85rem; color: var(--text-muted); margin: 0.35rem 0 0; }
 .gym-filter {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  align-items: end;
 }
 .list-section, .add-section { padding: 1.5rem; }
 .manager-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
 }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+@media (min-width: 641px) {
+  .gym-filter {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+  }
+  .manager-item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 .badge {
   display: inline-block;
   margin-left: 0.5rem;
@@ -352,9 +366,6 @@ async function hardDeleteManager(manager: any) {
   padding: 0.7rem 0.8rem;
   cursor: pointer;
 }
-.candidate-btn:hover { background: rgba(255, 255, 255, 0.04); }
+.candidate-btn:hover { background: rgba(0, 0, 0, 0.04); }
 .empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
-@media (max-width: 900px) {
-  .gym-filter { grid-template-columns: 1fr; }
-}
 </style>

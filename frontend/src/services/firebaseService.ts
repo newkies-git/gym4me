@@ -319,6 +319,10 @@ export const updateGym = async (id: string, updates: Partial<Gym>) => {
     return await updateDoc(doc(db, 'gyms', id), updates)
 }
 
+export const deleteGym = async (id: string) => {
+    return await deleteDoc(doc(db, 'gyms', id))
+}
+
 // Trainer Management (Manager Actions)
 export const getTrainers = async (gymId?: string, includeDeleted = false): Promise<any[]> => {
     // Avoid composite-index requirement by querying a single field and filtering locally.

@@ -1,6 +1,6 @@
 <template>
   <div class="profile-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <h2>{{ t('body.title') }}: {{ clientEmail || t('body.myStats') }}</h2>
       <button class="btn btn-ghost" @click="router.back()">{{ t('body.back') }}</button>
     </div>
@@ -75,7 +75,7 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
 </script>
 
 <style scoped>
-.profile-wrapper { padding: 1rem 0; }
+.profile-wrapper { padding: 6rem 1rem 2rem 1rem; }
 .side-panel {
   display: flex;
   flex-direction: column;

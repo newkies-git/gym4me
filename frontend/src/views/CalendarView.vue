@@ -1,6 +1,6 @@
 <template>
   <div class="calendar-wrapper container">
-    <div class="header">
+    <div class="header page-header">
       <h2>{{ headerTitle }}</h2>
       <div class="actions">
         <!-- Trainer Action -->
@@ -157,23 +157,24 @@ const formatStatus = (status: string) => t(`calendar.status.${status.toLowerCase
 </script>
 
 <style scoped>
-.calendar-wrapper { padding: 3rem 2rem; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.actions { display: flex; gap: 1rem; }
+/* Mobile First Layout Default */
+.calendar-wrapper { padding: 1.2rem 0.4rem; }
+.header { display: flex; flex-direction: column; align-items: stretch; gap: 0.8rem; margin-bottom: 2rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .calendar-grid { 
   display: grid; 
-  grid-template-columns: repeat(7, 1fr); 
+  grid-template-columns: 1fr; 
   gap: 1px; 
   background: var(--border);
   border-radius: 1rem;
   overflow: hidden;
   border-top: 1px solid var(--border);
 }
-.day-col { background: var(--bg); min-height: 300px; display: flex; flex-direction: column; }
-.day-header { padding: 0.75rem; text-align: center; border-bottom: 1px solid var(--border); }
+.day-col { background: var(--bg); min-height: 200px; display: flex; flex-direction: column; }
+.day-header { padding: 0.7rem; text-align: center; border-bottom: 1px solid var(--border); }
 .day-header.today { background: rgba(99, 102, 241, 0.1); color: var(--primary); font-weight: bold; }
 .day-name { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
-.day-num { font-size: 1.25rem; line-height: 1.2; }
+.day-num { font-size: 1.1rem; line-height: 1.2; }
 .events { padding: 0.3rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; overflow-y: auto; }
 .event-card { 
   padding: 0.5rem; 
@@ -210,17 +211,18 @@ const formatStatus = (status: string) => t(`calendar.status.${status.toLowerCase
 .event-status { font-size: 0.65rem; opacity: 0.7; }
 .btn-sm { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(0,0,0,0.1); }
 
-@media (max-width: 1024px) {
-  .calendar-wrapper { padding: 1.2rem 0.4rem; }
-  .header { flex-direction: column; align-items: stretch; gap: 0.8rem; }
-  .actions { flex-wrap: wrap; gap: 0.6rem; }
+@media (min-width: 641px) {
   .calendar-grid { grid-template-columns: repeat(2, 1fr); }
   .day-col { min-height: 280px; }
 }
 
-@media (max-width: 640px) {
-  .calendar-grid { grid-template-columns: 1fr; }
-  .day-header { padding: 0.7rem; }
-  .day-num { font-size: 1.1rem; }
+@media (min-width: 1025px) {
+  .calendar-wrapper { padding: 3rem 2rem; }
+  .header { flex-direction: row; justify-content: space-between; align-items: center; }
+  .actions { flex-wrap: nowrap; gap: 1rem; }
+  .calendar-grid { grid-template-columns: repeat(7, 1fr); }
+  .day-col { min-height: 300px; }
+  .day-header { padding: 0.75rem; }
+  .day-num { font-size: 1.25rem; }
 }
 </style>

@@ -149,32 +149,33 @@ const saveSessionUpdates = async () => {
 .trainer-section { padding: 2rem; border-radius: 1rem; }
 .trainer-section h3 { margin-bottom: 1.5rem; }
 
-.add-client-form { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.add-client-form { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
 .add-client-form input {
   flex: 1;
   padding: 0.75rem;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  color: white;
-  outline: none;
 }
 .error { color: var(--accent); font-size: 0.9rem; margin-bottom: 1rem; }
 
 .client-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .client-item { 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0.5rem; 
+  display: flex; flex-direction: column; align-items: stretch; gap: 1rem;
+  padding: 1rem; background: var(--bg-card); border-radius: 0.5rem; 
+  border: 1px solid var(--border);
 }
 .client-info { display: flex; flex-direction: column; }
 .sm-text { font-size: 0.8rem; color: var(--text-muted); }
 .empty-state { color: var(--text-muted); font-style: italic; padding: 1rem 0; }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-.client-actions { display: flex; gap: 0.5rem; }
+.client-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 1rem; color: white; margin-left: 0.5rem; }
-.badge.danger { background: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.5); }
+.badge.danger { background: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.2); }
+
+@media (min-width: 641px) {
+  .add-client-form { flex-direction: row; }
+  .client-item { flex-direction: row; justify-content: space-between; align-items: center; }
+  .client-actions { flex-wrap: nowrap; }
+}
 
 .field { margin-bottom: 1.5rem; }
 .field label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
-.field input { width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 0.5rem; color: white; outline: none; }
 </style>

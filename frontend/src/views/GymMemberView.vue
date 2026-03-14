@@ -1,6 +1,6 @@
 <template>
   <div class="gym-member-wrapper container">
-    <div class="header">
+    <div class="header page-header">
       <h2>{{ t('gymMember.title') }}</h2>
       <p class="sm-text">{{ t('gymMember.subtitle') }}</p>
     </div>
@@ -118,7 +118,9 @@ const viewDetails = (member: ClientInfo) => {
 </script>
 
 <style scoped>
-.gym-member-wrapper { padding: 1.5rem 0; }
+.gym-member-wrapper { 
+  padding: 6rem 1rem 2rem 1rem; 
+}
 .member-table-container { overflow-x: auto; }
 .member-table { width: 100%; border-collapse: collapse; text-align: left; }
 .member-table th, .member-table td { padding: 1rem; border-bottom: 1px solid var(--border); }

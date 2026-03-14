@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-wrapper container">
-    <div class="header">
+    <div class="header page-header">
       <h2>{{ t('dashboard.hello', { name: auth.user?.nickname || t('dashboard.defaultName') }) }}</h2>
       <p class="subtitle" v-if="auth.isSiteAdmin">{{ t('dashboard.siteAdminDashboard') }}</p>
       <p class="subtitle" v-else-if="auth.isManager">{{ t('dashboard.managerDashboard') }}</p>
@@ -10,83 +10,33 @@
     </div>
 
     <!-- Observer Warning -->
-    <div v-if="auth.isObserver && !auth.isMember && !auth.isTrainer" class="glass alert-banner" style="margin-top: 1rem;">
+    <div v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSiteAdmin && !auth.isManager" class="glass alert-banner" style="margin-top: 1rem;">
       <p v-html="t('dashboard.observerMsg')"></p>
       <button class="btn btn-primary" @click="simulatePurchase" style="margin-top: 1rem;">{{ t('dashboard.buyTestSessions') }}</button>
     </div>
 
-    <!-- Trainer Specific Section: Client & Class Management -->
-    <div v-if="auth.isTrainer">
-      <ClientManager />
-      <ClassManager />
-    </div>
+    <!-- Dynamic Role-Based View -->
+    <SiteAdminHome v-if="auth.isSiteAdmin" />
+    <ManagerHome v-else-if="auth.isManager" />
+    <TrainerHome v-else-if="auth.isTrainer" />
+    <MemberHome v-else-if="auth.isMember" />
 
-    <!-- General Stats -->
-    <div class="stats-grid" style="margin-top: 2rem;">
-      <StatCard 
-        v-if="!auth.isTrainer"
-        :value="myRemainingSessions"
-        :label="t('dashboard.remainingSessions')"
-        :is-danger="(myRemainingSessions || 0) <= 5"
-      />
-      
-      <StatCard 
-        v-if="!auth.isTrainer"
-        :value="myExpirationDate ? formatDate(myExpirationDate) : t('common.na')"
-        :label="t('dashboard.ptExpiration')"
-        :is-danger="isExpiringSoon(myExpirationDate)"
-      />
-      
-      <StatCard 
-        value="4"
-        :label="t('dashboard.upcomingSessions')"
-      />
-    </div>
-
-    <div class="content-grid grid-2" style="margin-top: 2rem;">
-      <!-- Search Past Exercises -->
-      <PastExerciseSearch />
-
-      <div class="quick-actions glass">
-        <h3>{{ t('dashboard.quickActions') }}</h3>
-        <div class="action-buttons">
-          <router-link to="/calendar" class="btn btn-primary">{{ t('dashboard.viewCalendar') }}</router-link>
-          <router-link to="/profile" class="btn btn-ghost">{{ t('dashboard.myBodyProfile') }}</router-link>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
-import ClientManager from '../components/dashboard/ClientManager.vue'
-import ClassManager from '../components/dashboard/ClassManager.vue'
-import PastExerciseSearch from '../components/dashboard/PastExerciseSearch.vue'
-import StatCard from '../components/ui/StatCard.vue'
+
+import SiteAdminHome from '../components/home/SiteAdminHome.vue'
+import ManagerHome from '../components/home/ManagerHome.vue'
+import TrainerHome from '../components/dashboard/TrainerHome.vue'
+import MemberHome from '../components/dashboard/MemberHome.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
 
-const myRemainingSessions = computed(() => auth.user?.remainingSessions || 0)
-const myExpirationDate = computed(() => auth.user?.expirationDate || '')
-
-const formatDate = (dateStr: string) => {
-    if(!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString();
-}
-
-const isExpiringSoon = (dateStr?: string) => {
-    if (!dateStr) return false;
-    const expDate = new Date(dateStr);
-    const inTwoWeeks = new Date();
-    inTwoWeeks.setDate(inTwoWeeks.getDate() + 14);
-    return expDate < inTwoWeeks && expDate >= new Date();
-}
-
+// Simulate Purchase logic (can remove later)
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
@@ -101,7 +51,7 @@ const simulatePurchase = async () => {
             updatedAt: serverTimestamp()
         });
         alert(t('dashboard.testPurchaseSuccess'));
-        location.reload(); // Quick way to sync for the test
+        location.reload(); 
     } catch(e: any) {
         alert(t('common.errorWithMessage', { msg: e.message }));
     }
@@ -109,25 +59,9 @@ const simulatePurchase = async () => {
 </script>
 
 <style scoped>
-.dashboard-wrapper { padding: 1rem 0; }
+.dashboard-wrapper { 
+  padding: 6rem 1rem 2rem 1rem; 
+}
 .header { margin-bottom: 2rem; }
 .subtitle { color: var(--text-muted); font-size: 1.1rem; }
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.quick-actions {
-  padding: 2rem;
-}
-
-h3 { margin-bottom: 1.5rem; font-size: 1.2rem; }
-
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
 </style>

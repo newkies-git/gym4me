@@ -1,6 +1,6 @@
 <template>
   <div class="profile-wrapper container">
-    <div class="header flex-between">
+    <div class="header page-header flex-between">
       <h2>{{ t('trainerProfile.title') }}</h2>
       <button class="btn btn-ghost" @click="router.back()">{{ t('trainerProfile.back') }}</button>
     </div>
