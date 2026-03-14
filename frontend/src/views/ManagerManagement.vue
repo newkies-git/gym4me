@@ -1,11 +1,9 @@
 <template>
   <div class="management-wrapper container">
-    <div class="header page-header flex-between">
-      <div>
-        <h2>{{ t('managerMgt.pageTitle') }}</h2>
-        <p class="sm-text">{{ t('managerMgt.ruleSummary') }}</p>
-      </div>
-    </div>
+    <PageHeader
+      :title="t('managerMgt.pageTitle')"
+      :subtitle="t('managerMgt.ruleSummary')"
+    />
 
     <div class="field gym-filter">
       <label>{{ t('managerMgt.gymIdLabel') }}</label>
@@ -114,6 +112,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import { assignManagerFromTrainerWithAudit, deleteManagerCompletelyWithAudit, demoteManagerToTrainerWithAudit, getManagerCandidates, getManagers, setManagerDeletedFlagWithAudit, type ManagerType, updateManagerInfoWithAudit } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'

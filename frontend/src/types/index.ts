@@ -103,15 +103,26 @@ export interface ProfileHistory {
   updatedAt: any;
 }
 
+export interface ToolMediaItem {
+  url: string;
+  type: 'VIDEO' | 'IMAGE';
+}
+
 export interface ToolUsage {
   id: string;
   title: string;
   description: string;
-  mediaUrl: string; // Video or image
-  mediaType: 'VIDEO' | 'IMAGE';
-  category: string; // e.g., 'Chest', 'Legs'
+  /** @deprecated use media[] */
+  mediaUrl?: string;
+  /** @deprecated use media[] */
+  mediaType?: 'VIDEO' | 'IMAGE';
+  /** Multiple media (videos/images). When present, takes precedence over mediaUrl/mediaType. */
+  media?: ToolMediaItem[];
+  category: string;
   trainerEmail: string;
+  /** Display name of the registrant (nickname). Shown in list instead of email. */
+  trainerNickname?: string;
   isPrivate: boolean;
-  targetTraineeEmail?: string; // If private, only this trainee and the trainer can see
+  targetTraineeEmail?: string;
   createdAt: any;
 }

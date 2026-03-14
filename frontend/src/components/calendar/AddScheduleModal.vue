@@ -89,41 +89,46 @@ const close = () => {
 }
 
 const save = async () => {
-  saving.value = true;
+  if (!auth.user?.email) {
+    ui.showToast(t('scheduleModal.loginRequired'), 'error')
+    return
+  }
+  saving.value = true
   try {
-      const scheduleData: any = {
-          trainerEmail: props.scheduleType === 'PT' ? auth.user?.email : null,
-          type: props.scheduleType,
-          targetType: props.classId ? 'CLASS' : 'INDIVIDUAL',
-          date: form.value.date,
-          time: form.value.time,
-          title: form.value.title,
-          notes: form.value.notes,
-          status: props.scheduleType === 'PT' ? 'PENDING' : 'APPROVED'
-      };
+    const scheduleData: Record<string, unknown> = {
+      trainerEmail: props.scheduleType === 'PT' ? auth.user.email : null,
+      type: props.scheduleType,
+      targetType: props.classId ? 'CLASS' : 'INDIVIDUAL',
+      date: form.value.date,
+      time: form.value.time,
+      title: form.value.title.trim(),
+      notes: (form.value.notes || '').trim() || undefined,
+      status: props.scheduleType === 'PT' ? 'PENDING' : 'APPROVED'
+    }
 
-      if (props.classId) {
-          scheduleData.classId = props.classId;
-          // For class schedules, userEmail isn't a single person, 
-          // but we might store the trainer's email as owner.
-          scheduleData.userEmail = auth.user?.email; 
-      } else {
-          scheduleData.clientEmail = props.clientEmail;
-          scheduleData.userEmail = props.clientEmail || auth.user?.email;
-      }
-      
-      await addSchedule(scheduleData);
-      await notifyScheduleEvent(
-        t('notification.scheduleCreatedTitle'),
-        t('notification.scheduleCreatedBody', { title: form.value.title, date: form.value.date })
-      )
-      ui.showToast(t('scheduleModal.saveSuccess'), 'success')
-      emit('saved');
-      close();
-  } catch(e: unknown) {
-      ui.showToast(extractErrorMessage(e, t('scheduleModal.saveFailed')), 'error')
+    if (props.classId) {
+      scheduleData.classId = props.classId
+      scheduleData.userEmail = auth.user.email
+    } else if (props.scheduleType === 'PERSONAL') {
+      scheduleData.userEmail = auth.user.email
+      scheduleData.clientEmail = auth.user.email
+    } else {
+      scheduleData.clientEmail = props.clientEmail || auth.user.email
+      scheduleData.userEmail = props.clientEmail || auth.user.email
+    }
+
+    await addSchedule(scheduleData as any)
+    await notifyScheduleEvent(
+      t('notification.scheduleCreatedTitle'),
+      t('notification.scheduleCreatedBody', { title: form.value.title, date: form.value.date })
+    )
+    ui.showToast(t('scheduleModal.saveSuccess'), 'success')
+    emit('saved')
+    close()
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('scheduleModal.saveFailed')), 'error')
   } finally {
-      saving.value = false;
+    saving.value = false
   }
 }
 </script>

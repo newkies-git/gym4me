@@ -1,28 +1,22 @@
 <template>
-  <div class="page-wrapper container">
-    <div class="page-header flex-between">
-      <div>
-        <h2>{{ t('body.title') }}</h2>
-        <p class="subtitle">{{ clientEmail || t('body.myStats') }}</p>
-      </div>
-      <button class="btn btn-ghost" @click="router.back()">{{ t('body.back') }}</button>
-    </div>
+  <div class="profile-page page-wrapper container">
+    <PageHeader
+      :title="t('body.title')"
+      :subtitle="clientEmail || t('body.myStats')"
+      show-back
+    />
 
     <div class="content-grid">
-      <div class="chart-col card glass">
+      <div class="chart-col">
         <ProfileChart :records="records" />
       </div>
 
       <div class="side-col">
-        <div class="card glass">
-          <ProfileForm v-if="auth.isMember || auth.isTrainer" :saving="saving" @save="saveRecord" />
-          <div v-else class="observer-notice">
-            <p class="sm-text">{{ t('body.observerReadonly') }}</p>
-          </div>
+        <ProfileForm v-if="auth.isMember || auth.isTrainer" :saving="saving" @save="saveRecord" />
+        <div v-else class="observer-card">
+          <p class="sm-text">{{ t('body.observerReadonly') }}</p>
         </div>
-        <div class="card glass">
-          <ProfileHistory :records="records" />
-        </div>
+        <ProfileHistory :records="records" />
       </div>
     </div>
   </div>
@@ -35,6 +29,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useProfileStore } from '../stores/profileStore'
 
+import PageHeader from '../components/ui/PageHeader.vue'
 import ProfileChart from '../components/profile/ProfileChart.vue'
 import ProfileForm from '../components/profile/ProfileForm.vue'
 import ProfileHistory from '../components/profile/ProfileHistory.vue'
@@ -78,23 +73,13 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
 </script>
 
 <style scoped>
+.profile-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
 .page-wrapper {
   padding: 6rem 1rem 3rem 1rem;
-}
-
-.page-header {
-  margin-bottom: 2rem;
-}
-
-.page-header h2 {
-  font-size: clamp(1.5rem, 2vw, 2rem);
-  margin: 0;
-}
-
-.subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
 }
 
 /* Grid */
@@ -116,15 +101,14 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
   gap: 1.5rem;
 }
 
-/* Card */
-.card {
+/* 관찰자 안내만 단일 카드로 표시 (폼/히스토리는 각 컴포넌트 루트가 카드) */
+.observer-card {
   padding: 1.5rem;
-  border-radius: 1rem;
-}
-
-.observer-notice {
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   text-align: center;
-  padding: 1rem 0;
 }
 
 .sm-text {

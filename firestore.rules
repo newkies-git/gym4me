@@ -51,8 +51,13 @@ service cloud.firestore {
 
     match /schedules/{scheduleId} {
       allow read: if isSignedIn();
-      allow create, update: if isTrainer() || isSiteAdmin();
-      allow delete: if isSiteAdmin();
+      allow create: if isTrainer() || isSiteAdmin()
+        || (request.resource.data.type == 'PERSONAL'
+            && request.resource.data.userEmail == request.auth.token.email);
+      allow update: if isTrainer() || isSiteAdmin()
+        || (resource.data.userEmail == request.auth.token.email);
+      allow delete: if isSiteAdmin()
+        || resource.data.userEmail == request.auth.token.email;
     }
 
     match /workoutLogs/{logId} {

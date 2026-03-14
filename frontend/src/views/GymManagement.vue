@@ -1,9 +1,10 @@
 <template>
   <div class="container gym-mgt-wrapper">
-    <div class="header page-header">
-      <h2>{{ t('gymMgt.title') }}</h2>
-      <p class="sm-text">{{ t('gymMgt.subtitle') }}</p>
-    </div>
+    <PageHeader
+      :title="t('gymMgt.title')"
+      :subtitle="t('gymMgt.subtitle')"
+      show-back
+    />
 
     <div v-if="loading" class="glass" style="padding: 2rem; margin-top: 2rem;">{{ t('gymMgt.loadingInfo') }}</div>
 
@@ -100,23 +101,95 @@
 
     <!-- Trainers List Modal -->
     <BaseModal v-model:isOpen="isTrainersModalOpen" :title="t('gymMgt.trainerList')" max-width="400px">
-      <div v-if="!selectedGymTrainers.length" class="sm-text" style="padding: 1rem 0;">
+      <div v-if="!selectedGymTrainers.length" class="trainers-modal-empty">
         {{ t('gymMgt.emptyTrainers') }}
       </div>
-      <ul v-else class="gym-list" style="list-style: none; padding: 0; margin-top: 1rem;">
-        <li v-for="tr in selectedGymTrainers" :key="tr.id || tr.uid" class="glass gym-item" style="padding: 1rem; margin-bottom: 0.5rem; flex-direction: column; align-items: flex-start;">
-          <h4 style="margin: 0 0 0.2rem 0;">{{ tr.nickname || tr.email || tr.data?.nickname || tr.data?.email }}</h4>
-          <p class="sm-text" style="margin: 0; font-size: 0.8rem;">
-            Role: {{ tr.role || tr.data?.role }} | Lvl: {{ tr.lvl || tr.data?.lvl }}
+      <ul v-else class="trainers-modal-list">
+        <li v-for="tr in selectedGymTrainers" :key="tr.id || tr.uid" class="trainers-modal-item" @click="openProfileModal(tr)">
+          <div class="trainers-modal-item-header">
+            <span class="trainers-modal-item-name">{{ tr.nickname || tr.email || tr.data?.nickname || tr.data?.email }}</span>
+            <span class="trainers-modal-item-badge" :class="(tr.role || tr.data?.role || '').toLowerCase()">
+              {{ tr.role || tr.data?.role }}
+            </span>
+          </div>
+          <p class="trainers-modal-item-meta">
+            Lv.{{ tr.lvl ?? tr.data?.lvl ?? '—' }}
           </p>
-          <p class="sm-text" style="margin: 0; font-size: 0.8rem;">
-            {{ tr.email || tr.data?.email }}
-          </p>
+          <p class="trainers-modal-item-email">{{ tr.email || tr.data?.email }}</p>
         </li>
       </ul>
       <template #footer>
-        <button class="btn btn-ghost" @click="isTrainersModalOpen = false">{{ t('common.close') }}</button>
+        <button class="btn btn-primary btn-sm" @click="isTrainersModalOpen = false">{{ t('common.close') }}</button>
       </template>
+    </BaseModal>
+
+    <!-- ── Trainer Profile Detail Modal ── -->
+    <BaseModal
+      :is-open="showProfileModal"
+      :title="viewingStaff?.name || viewingStaff?.nickname || viewingStaff?.email || ''"
+      max-width="480px"
+      @close="showProfileModal = false"
+    >
+      <div v-if="viewingStaff" class="profile-modal">
+        <!-- Hero Header -->
+        <div class="profile-hero">
+          <div class="profile-avatar-lg" :class="(viewingStaff.role || '').toLowerCase()">
+            <img v-if="viewingTrainerProfile?.photoUrl" :src="viewingTrainerProfile.photoUrl" alt="Profile" />
+            <img v-else-if="viewingStaff.profileImageUrl" :src="viewingStaff.profileImageUrl" alt="Profile" />
+            <span v-else>{{ (viewingStaff.name || viewingStaff.nickname || viewingStaff.email).charAt(0).toUpperCase() }}</span>
+          </div>
+          <div class="profile-hero-info">
+            <h3>{{ viewingStaff.name || viewingStaff.nickname || '—' }}</h3>
+            <p class="profile-nickname" v-if="viewingStaff.nickname">@{{ viewingStaff.nickname }}</p>
+            <div class="badge-row" style="margin-top: 0.5rem;">
+              <span class="role-badge" :class="(viewingStaff.role || '').toLowerCase()">{{ viewingStaff.role }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trainer Profile Sections -->
+        <div v-if="loadingTrainerProfile" class="trainer-loading">
+          <span class="loader-sm"></span> {{ t('common.loading') }}...
+        </div>
+        <template v-else-if="viewingTrainerProfile">
+          <!-- Bio -->
+          <div v-if="viewingTrainerProfile.bio" class="trainer-section">
+            <div class="trainer-section-label">소개</div>
+            <p class="trainer-bio">{{ viewingTrainerProfile.bio }}</p>
+          </div>
+
+          <!-- Specialties -->
+          <div v-if="viewingTrainerProfile.specialties?.length" class="trainer-section">
+            <div class="trainer-section-label">전문분야</div>
+            <div class="tag-row">
+              <span v-for="s in viewingTrainerProfile.specialties" :key="s" class="tag">{{ s }}</span>
+            </div>
+          </div>
+
+          <!-- Career -->
+          <div v-if="viewingTrainerProfile.career?.length" class="trainer-section">
+            <div class="trainer-section-label">경력</div>
+            <ul class="trainer-list">
+              <li v-for="c in viewingTrainerProfile.career" :key="c">{{ c }}</li>
+            </ul>
+          </div>
+
+          <!-- Awards -->
+          <div v-if="viewingTrainerProfile.awards?.length" class="trainer-section">
+            <div class="trainer-section-label">수상이력</div>
+            <ul class="trainer-list">
+              <li v-for="a in viewingTrainerProfile.awards" :key="a">{{ a }}</li>
+            </ul>
+          </div>
+        </template>
+        <div v-else class="trainer-no-profile">
+          아직 등록된 트레이너 프로필이 없습니다.
+        </div>
+
+        <div class="profile-modal-footer" style="margin-top: 1.5rem; justify-content: flex-end; display: flex;">
+          <button class="btn btn-ghost" @click="showProfileModal = false">{{ t('common.close') }}</button>
+        </div>
+      </div>
     </BaseModal>
   </div>
 </template>
@@ -126,10 +199,11 @@ import { ref, onMounted, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
+import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import GymCard from '../components/gym/GymCard.vue'
-import { getGyms, createGym, updateGym, deleteGym, getGymMembers, getTrainers } from '../services/firebaseService'
-import type { Gym } from '../types'
+import { getGyms, createGym, updateGym, deleteGym, getGymMembers, getTrainers, getTrainerProfile } from '../services/firebaseService'
+import type { Gym, TrainerProfile, User } from '../types'
 
 const auth = useAuthStore()
 const ui = useUIStore()
@@ -145,6 +219,12 @@ const trainersMap = ref<Record<string, any[]>>({})
 
 const isTrainersModalOpen = ref(false)
 const selectedGymTrainers = ref<any[]>([])
+
+// Profile Modal State
+const showProfileModal = ref(false)
+const viewingStaff = ref<any | null>(null)
+const viewingTrainerProfile = ref<TrainerProfile | null>(null)
+const loadingTrainerProfile = ref(false)
 
 const newGym = reactive({
   name: '',
@@ -207,6 +287,25 @@ function openCreateModal() {
 function openTrainersModal(gymId: string) {
   selectedGymTrainers.value = trainersMap.value[gymId] || []
   isTrainersModalOpen.value = true
+}
+
+const openProfileModal = async (staff: any) => {
+  // staff here could be the raw data from getTrainers
+  const staffData = staff.data || staff
+  viewingStaff.value = staffData
+  viewingTrainerProfile.value = null
+  showProfileModal.value = true
+  
+  if (staffData.email) {
+    loadingTrainerProfile.value = true
+    try {
+      viewingTrainerProfile.value = await getTrainerProfile(staffData.email)
+    } catch (e) {
+      console.warn('Failed to load trainer profile', e)
+    } finally {
+      loadingTrainerProfile.value = false
+    }
+  }
 }
 
 function openEditModal(g: Gym) {
@@ -297,5 +396,234 @@ async function handleCreateGym() {
 }
 .clickable-count:hover {
   opacity: 0.7;
+}
+
+/* --- Trainer Profile Popup Styles --- */
+.trainer-name-link {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.trainer-name-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-avatar-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.profile-avatar-lg.manager    { background: #fae8ff; color: #d946ef; }
+.profile-avatar-lg.sub_manager { background: #fff7ed; color: #f97316; }
+.profile-avatar-lg.trainer    { background: #ede9fe; color: #8b5cf6; }
+.profile-avatar-lg.site_admin  { background: #e0f2fe; color: #0ea5e9; }
+
+.profile-avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.profile-hero-info h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.profile-nickname {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+.trainer-section {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.trainer-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.trainer-bio {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  white-space: pre-line;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag {
+  padding: 0.2rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #5e35b1;
+}
+
+/* ── Trainers List Modal ── */
+.trainers-modal-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.trainers-modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trainers-modal-item {
+  padding: 1rem 1.25rem;
+  background: var(--bg-dark, rgba(0, 0, 0, 0.03));
+  border-radius: 0.75rem;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trainers-modal-item:hover {
+  background: rgba(94, 53, 177, 0.06);
+  border-color: rgba(94, 53, 177, 0.2);
+  box-shadow: 0 2px 8px rgba(94, 53, 177, 0.08);
+}
+
+.trainers-modal-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.trainers-modal-item-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.trainers-modal-item-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.trainers-modal-item-badge.manager,
+.trainers-modal-item-badge.site_admin {
+  background: #ede9fe;
+  color: #5e35b1;
+}
+
+.trainers-modal-item-badge.trainer {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.trainers-modal-item-badge:not(.manager):not(.site_admin):not(.trainer) {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-muted);
+}
+
+.trainers-modal-item-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.trainers-modal-item-email {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.trainer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.trainer-list li {
+  font-size: 0.88rem;
+  padding-left: 0.75rem;
+  position: relative;
+}
+
+.trainer-list li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.trainer-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  border-top: 1px solid var(--border);
+}
+
+.loader-sm {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.trainer-no-profile {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
 }
 </style>

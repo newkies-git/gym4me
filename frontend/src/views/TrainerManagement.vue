@@ -1,9 +1,6 @@
 <template>
   <div class="management-wrapper container">
-    <div class="header page-header flex-between">
-      <h2>{{ t('trainerMgt.title') }}</h2>
-      <button class="btn btn-ghost" @click="router.back()">{{ t('trainerMgt.back') }}</button>
-    </div>
+    <PageHeader :title="t('trainerMgt.title')" show-back />
 
     <div class="grid-2" style="margin-top: 2rem;">
       <!-- Trainer List Section -->
@@ -107,6 +104,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import { getTrainers, searchUserByEmail, updateTrainerRole, updateTrainerInfo, setTrainerDeletedFlagWithAudit, deleteTrainerCompletelyWithAudit } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'

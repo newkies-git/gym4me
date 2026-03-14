@@ -1,9 +1,6 @@
 <template>
   <div class="settings-wrapper container">
-    <div class="header page-header flex-between">
-      <h2>{{ t('settings.title') }}</h2>
-      <button class="btn btn-ghost" @click="router.back()">{{ t('settings.back') }}</button>
-    </div>
+    <PageHeader :title="t('settings.title')" show-back />
 
     <!-- 초기 비밀번호 변경 안내 -->
     <div v-if="auth.user?.mustChangePassword" class="notice-banner glass">
@@ -132,6 +129,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import PageHeader from '../components/ui/PageHeader.vue'
 import { useUIStore } from '../stores/uiStore'
 import { auth as firebaseAuth, db } from '../firebase/config'
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'

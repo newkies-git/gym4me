@@ -1,12 +1,9 @@
 <template>
   <div class="staff-page">
-    <!-- 페이지 헤더 -->
-    <div class="page-header">
-      <div>
-        <h2>{{ t('staffMgt.title') }}</h2>
-        <p class="subtitle">{{ t('staffMgt.subtitle') }}</p>
-      </div>
-    </div>
+    <PageHeader
+      :title="t('staffMgt.title')"
+      :subtitle="t('staffMgt.subtitle')"
+    />
 
     <!-- 툴바: 버튼 + 검색/필터 -->
     <div class="toolbar">
@@ -342,10 +339,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../components/ui/PageHeader.vue'
+import BaseModal from '../components/ui/BaseModal.vue'
 import { getStaffs, updateStaffData, getGyms, createStaffAccount, getTrainerProfile } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import type { User, Gym, TrainerProfile } from '../types'
-import BaseModal from '../components/ui/BaseModal.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -512,12 +510,6 @@ onMounted(fetchStaffs)
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-}
-
-/* 페이지 헤더 */
-.page-header h2 {
-  margin: 0;
-  font-size: clamp(1.5rem, 2vw, 2rem);
 }
 
 .subtitle {
@@ -873,8 +865,6 @@ onMounted(fetchStaffs)
 /* 반응형 */
 @media (max-width: 600px) {
   .staff-grid { grid-template-columns: 1fr; }
-  .page-header { flex-direction: column; }
-  .header-actions { width: 100%; justify-content: flex-end; }
 }
 /* 프로필 모달 */
 .profile-hero {

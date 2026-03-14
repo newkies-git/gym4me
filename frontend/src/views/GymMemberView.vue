@@ -1,9 +1,9 @@
 <template>
   <div class="gym-member-wrapper container">
-    <div class="header page-header">
-      <h2>{{ t('gymMember.title') }}</h2>
-      <p class="sm-text">{{ t('gymMember.subtitle') }}</p>
-    </div>
+    <PageHeader
+      :title="t('gymMember.title')"
+      :subtitle="t('gymMember.subtitle')"
+    />
 
     <div class="search-bar glass" style="margin: 1.5rem 0; padding: 1rem;">
       <input 
@@ -74,9 +74,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import PageHeader from '../components/ui/PageHeader.vue'
+import BaseModal from '../components/ui/BaseModal.vue'
 import { getGymMembers } from '../services/firebaseService'
 import type { ClientInfo } from '../types'
-import BaseModal from '../components/ui/BaseModal.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()

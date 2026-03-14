@@ -1,12 +1,10 @@
 <template>
   <div class="page-wrapper container">
-    <div class="page-header flex-between">
-      <div>
-        <h2>{{ t('trainerProfile.title') }}</h2>
-        <p class="subtitle">{{ t('trainerProfile.subtitle') }}</p>
-      </div>
-      <button class="btn btn-ghost" @click="router.back()">{{ t('trainerProfile.back') }}</button>
-    </div>
+    <PageHeader
+      :title="t('trainerProfile.title')"
+      :subtitle="t('trainerProfile.subtitle')"
+      show-back
+    />
 
     <div class="content-grid">
       <!-- 편집 섹션 -->
@@ -86,6 +84,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../components/ui/PageHeader.vue'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { getTrainerProfile, updateTrainerProfile, getProfileHistory } from '../services/firebaseService'
@@ -172,21 +171,6 @@ function isChanged(before: any, after: any, key: string) {
 <style scoped>
 .page-wrapper {
   padding: 6rem 1rem 3rem 1rem;
-}
-
-.page-header {
-  margin-bottom: 2rem;
-}
-
-.page-header h2 {
-  font-size: clamp(1.5rem, 2vw, 2rem);
-  margin: 0;
-}
-
-.subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
 }
 
 /* Grid */

@@ -1,6 +1,6 @@
 <template>
   <div class="history-section glass">
-    <h3>{{ t('profileHistory.title') }}</h3>
+    <h3 class="card-title">{{ t('profileHistory.title') }}</h3>
     <ul class="history-list">
         <li v-for="rec in reversedRecords" :key="rec.id" class="history-item">
             <div class="date" style="font-weight:bold; font-size:0.9rem;">{{ rec.date }}</div>
@@ -31,8 +31,17 @@ const reversedRecords = computed(() => {
 </script>
 
 <style scoped>
-.history-section { padding: 2rem; }
-h3 { margin-bottom: 1.5rem; }
+.history-section {
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+}
 .history-list { max-height: 400px; overflow-y: auto; }
 .stats { display: flex; gap: 0.5rem; margin-top: 0.3rem; }
 .badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem; color: white; font-weight: 600; }
