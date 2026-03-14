@@ -136,7 +136,8 @@ button {
   font-weight: 600;
 }
 
-.field input, .field select, .field textarea {
+.field input, .field select, .field textarea,
+.form-field input, .form-field select, .form-field textarea {
   width: 100%;
   padding: 0.75rem 1rem;
   background-color: #fafafa;
@@ -148,7 +149,8 @@ button {
   transition: all 0.2s ease;
 }
 
-.field input:focus, .field select:focus, .field textarea:focus {
+.field input:focus, .field select:focus, .field textarea:focus,
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
   border-color: var(--primary);
   background-color: #fff;
   box-shadow: 0 0 0 2px rgba(94, 53, 177, 0.1);

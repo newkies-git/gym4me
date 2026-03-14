@@ -24,9 +24,13 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
-            path: '/settings',
-            component: () => import('./views/ProfileSettingsView.vue'),
+            path: '/user-info',
+            component: () => import('./views/UserInfoView.vue'),
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/settings',
+            redirect: '/user-info'
         },
         {
             path: '/manage-trainers',
@@ -40,7 +44,7 @@ const router = createRouter({
         {
             path: '/manage-gym',
             component: () => import('./views/GymManagement.vue'),
-            meta: { requiresAuth: true, requiresManager: true }
+            meta: { requiresAuth: true, requiresManager: true, requiresSiteAdmin: false }
         },
         {
             path: '/manager/gym',
@@ -58,6 +62,10 @@ const router = createRouter({
                 {
                     path: 'managers',
                     component: () => import('./views/ManagerManagement.vue')
+                },
+                {
+                    path: 'staff',
+                    component: () => import('./views/StaffManagement.vue')
                 }
             ]
         },
@@ -88,11 +96,11 @@ router.beforeEach((to, from, next) => {
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
         next('/auth')
-    } else if (auth.isAuthenticated && auth.user?.mustChangePassword && to.path !== '/settings') {
-        next('/settings')
+    } else if (auth.isAuthenticated && auth.user?.mustChangePassword && to.path !== '/user-info') {
+        next('/user-info')
     } else if (to.meta.requiresSiteAdmin && !auth.isSiteAdmin) {
         next('/dashboard')
-    } else if (to.meta.requiresManager && !auth.isManager) {
+    } else if (to.meta.requiresManager && !auth.isManager && !auth.isSiteAdmin) {
         next('/dashboard')
     } else if (to.meta.requiresTrainer && !auth.isTrainer) {
         next('/dashboard')

@@ -2,13 +2,23 @@ export interface User {
   uid: string;
   email: string;
   nickname?: string;
+  name?: string;
+  phone?: string;
   profileImageUrl?: string;
   lvl: number;
   role: string;
   gymId?: string;
+  managerType?: 'PRIMARY' | 'VICE';
   remainingSessions?: number;
   expirationDate?: string;
   mustChangePassword?: boolean;
+  
+  // Staff Details
+  joinDate?: string;
+  leaveDate?: string;
+  employmentStatus?: 'ACTIVE' | 'ON_LEAVE' | 'RESIGNED';
+  registeredByEmail?: string;
+  registeredAt?: any;
 }
 
 export interface Gym {

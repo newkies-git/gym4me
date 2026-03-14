@@ -17,6 +17,8 @@ import {
     type QueryDocumentSnapshot,
     type Transaction
 } from 'firebase/firestore'
+import { initializeApp, deleteApp } from 'firebase/app'
+import { getAuth, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth'
 import type { CalendarEvent, ExerciseRecord, ClientInfo, BodyRecord, TrainerProfile, ProfileHistory, Gym, GymClass, User } from '../types'
 
 type AccessActor = Pick<User, 'email' | 'lvl' | 'role'>
@@ -655,4 +657,98 @@ export const addBodyProfile = async (targetEmail: string, data: Partial<BodyReco
         muscleMass: data.muscleMass || null,
         createdAt: serverTimestamp()
     })
+}
+// Staff Management (Global Site Admin Actions)
+export const getStaffs = async (): Promise<User[]> => {
+    const q = query(
+        collection(db, 'users'),
+        where('role', 'in', ['MANAGER', 'SUB_MANAGER', 'TRAINER'])
+    )
+    const snapshot = await getDocs(q)
+    return mapUsers(snapshot) as User[]
+}
+
+export const updateStaffData = async (uid: string, updates: Partial<User>, audit?: AuditPayload) => {
+    const staffRef = doc(db, 'users', uid)
+    await updateDoc(staffRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+    })
+    if (audit) await writeAuditLog(audit)
+}
+
+export type CreateStaffPayload = {
+    email: string
+    password: string
+    name: string
+    nickname?: string
+    role: 'MANAGER' | 'SUB_MANAGER' | 'TRAINER'
+    gymId?: string
+    joinDate?: string
+    employmentStatus: 'ACTIVE' | 'ON_LEAVE' | 'RESIGNED'
+    registeredByEmail: string
+}
+
+export const createStaffAccount = async (payload: CreateStaffPayload): Promise<string> => {
+    // Use a secondary Firebase app instance so the current admin session is not affected
+    const secondaryApp = initializeApp(
+        {
+            apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: import.meta.env.VITE_FIREBASE_APP_ID,
+        },
+        `secondary-${Date.now()}`
+    )
+    const secondaryAuth = getAuth(secondaryApp)
+
+    let newUid = ''
+    try {
+        const lvl = payload.role === 'MANAGER' ? 20 : payload.role === 'SUB_MANAGER' ? 15 : 10
+        const credential = await createUserWithEmailAndPassword(secondaryAuth, payload.email, payload.password)
+        newUid = credential.user.uid
+
+        // Sign out the secondary auth immediately to avoid any state leakage
+        await firebaseSignOut(secondaryAuth)
+
+        // Save staff document in Firestore
+        await setDoc(doc(db, 'users', newUid), {
+            email: payload.email,
+            name: payload.name,
+            nickname: payload.nickname || '',
+            role: payload.role,
+            lvl,
+            gymId: payload.gymId || null,
+            joinDate: payload.joinDate || null,
+            employmentStatus: payload.employmentStatus,
+            registeredByEmail: payload.registeredByEmail,
+            registeredAt: serverTimestamp(),
+            mustChangePassword: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        })
+
+        await writeAuditLog({
+            actorEmail: payload.registeredByEmail,
+            action: 'CREATE_STAFF_ACCOUNT',
+            targetUid: newUid,
+            targetEmail: payload.email,
+            metadata: { role: payload.role, gymId: payload.gymId || null }
+        })
+
+        return newUid
+    } catch (err) {
+        // Attempt cleanup: if the auth account was created but Firestore write failed, delete the auth account
+        if (newUid) {
+            try {
+                // We can't delete via client SDK after sign-out, but we log the orphaned account
+                console.warn('Orphaned Firebase Auth account may exist for uid:', newUid)
+            } catch (_) { /* ignore */ }
+        }
+        throw err
+    } finally {
+        try { await deleteApp(secondaryApp) } catch (_) { /* ignore */ }
+    }
 }

@@ -25,7 +25,7 @@
             
             <!-- Dropdown Menu -->
             <div v-if="isSettingsOpen" class="settings-dropdown glass">
-              <router-link to="/profile" class="dropdown-item" @click="closeSettings">개인정보 수정</router-link>
+              <router-link to="/user-info" class="dropdown-item" @click="closeSettings">개인정보 수정</router-link>
               <button class="dropdown-item" @click="toggleTheme">테마 변경</button>
               <div class="dropdown-divider"></div>
               <button class="dropdown-item text-danger" @click="logoutFromDropdown">로그아웃</button>
@@ -55,16 +55,15 @@
           <div class="drawer-divider"></div>
           
           <!-- Role Specific -->
-          <router-link v-if="auth.isTrainer" to="/trainer-profile" class="drawer-link" @click="closeMenu">{{ t('nav.trainerBio') }}</router-link>
-          <router-link v-if="auth.isManager || auth.isSiteAdmin" to="/manage-trainers" class="drawer-link" @click="closeMenu">{{ t('nav.trainerMgt') }}</router-link>
-          <router-link v-if="auth.isManager" to="/gym/members" class="drawer-link" @click="closeMenu">{{ t('nav.gymMember') }}</router-link>
+          <router-link v-if="auth.isTrainer && !auth.isSiteAdmin" to="/trainer-profile" class="drawer-link" @click="closeMenu">{{ t('nav.trainerBio') }}</router-link>
+          <router-link v-if="auth.isManager && !auth.isSiteAdmin" to="/manage-trainers" class="drawer-link" @click="closeMenu">{{ t('nav.trainerMgt') }}</router-link>
+          <router-link v-if="auth.isManager && !auth.isSiteAdmin" to="/gym/members" class="drawer-link" @click="closeMenu">{{ t('nav.gymMember') }}</router-link>
           <router-link v-if="auth.isSiteAdmin" to="/manage-gym" class="drawer-link" @click="closeMenu">{{ t('nav.gymMgt') }}</router-link>
-          <router-link v-if="auth.isSiteAdmin" to="/admin/managers" class="drawer-link" @click="closeMenu">{{ t('nav.managerMgt') }}</router-link>
+          <router-link v-if="auth.isSiteAdmin" to="/admin/staff" class="drawer-link" @click="closeMenu">{{ t('nav.staffMgt') }}</router-link>
           
           <div class="drawer-divider"></div>
           <router-link to="/tool-usage" class="drawer-link" @click="closeMenu">{{ t('nav.toolUsage') }}</router-link>
           <router-link to="/profile" class="drawer-link" @click="closeMenu">{{ t('nav.profile') }}</router-link>
-          <router-link to="/settings" class="drawer-link" @click="closeMenu">{{ t('nav.settings') }}</router-link>
         </nav>
       </aside>
     </template>
