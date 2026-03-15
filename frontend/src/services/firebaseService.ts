@@ -315,6 +315,12 @@ export const getGyms = async (): Promise<Gym[]> => {
     return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Gym))
 }
 
+export const getGymById = async (id: string): Promise<Gym | null> => {
+    const snap = await getDoc(doc(db, 'gyms', id))
+    if (!snap.exists()) return null
+    return { id: snap.id, ...snap.data() } as Gym
+}
+
 export const createGym = async (gymData: Partial<Gym>) => {
     const docRef = await addDoc(collection(db, 'gyms'), {
         ...gymData,

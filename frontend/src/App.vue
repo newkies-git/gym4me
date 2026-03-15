@@ -10,7 +10,13 @@
       </div>
 
       <div class="nav-center">
-        <router-link to="/" class="logo-text" @click="closeMenu">gym4me</router-link>
+        <router-link
+          v-if="auth.isAuthenticated"
+          :to="homePath"
+          class="logo-text"
+          @click="closeMenu"
+        >{{ gnbTitle }}</router-link>
+        <router-link v-else to="/" class="logo-text" @click="closeMenu">gym4me</router-link>
       </div>
 
       <div class="nav-right">
@@ -85,13 +91,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useUIStore } from './stores/uiStore'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import { useThemeStore } from './stores/themeStore'
+import { getGymById } from './services/firebaseService'
 
 const auth = useAuthStore()
 const themeStore = useThemeStore()
@@ -101,6 +108,33 @@ const { t } = useI18n()
 
 const isMenuOpen = ref(false)
 const isSettingsOpen = ref(false)
+const gymName = ref('')
+
+const gnbTitle = computed(() => {
+  if (!auth.isAuthenticated) return 'gym4me'
+  return gymName.value || 'gym4me'
+})
+
+const homePath = computed(() => {
+  if (!auth.isAuthenticated) return '/'
+  return auth.isSiteAdmin ? '/manage-gym' : '/dashboard'
+})
+
+async function loadGymName() {
+  const id = auth.user?.gymId
+  if (!id) {
+    gymName.value = ''
+    return
+  }
+  try {
+    const gym = await getGymById(id)
+    gymName.value = gym?.name ?? ''
+  } catch {
+    gymName.value = ''
+  }
+}
+
+watch(() => auth.user?.gymId, loadGymName, { immediate: true })
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
