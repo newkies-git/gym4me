@@ -71,6 +71,16 @@ service cloud.firestore {
       allow create, update, delete: if isManager() || isSiteAdmin();
     }
 
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isTrainer() || isSiteAdmin();
+    }
+    match /courseApplications/{appId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.traineeEmail == request.auth.token.email;
+      allow delete: if isSignedIn() && (resource.data.traineeEmail == request.auth.token.email || isTrainer() || isSiteAdmin());
+    }
+
     match /{document=**} {
       allow read: if isSignedIn();
       allow write: if false;

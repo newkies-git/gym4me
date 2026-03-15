@@ -18,6 +18,13 @@ export const useAuthStore = defineStore('auth', {
         isMember: (state) => (state.user?.lvl || 0) >= 5 || (state.user?.remainingSessions || 0) > 0,
         isObserver: (state) => (state.user?.lvl || 0) >= 1,
         isAdmin: (state) => (state.user?.lvl || 0) >= 20,
+        /** Trainee/Observer(lvl<10) 이고 프로필 미완료 시 true → 추가 정보 입력 페이지로 유도 */
+        needsMemberProfile: (state) => {
+            const u = state.user;
+            if (!u) return false;
+            const isMemberOrObserver = (u.lvl || 0) < 10;
+            return isMemberOrObserver && u.profileComplete !== true;
+        },
     },
     actions: {
         initAuth() {
@@ -41,14 +48,17 @@ export const useAuthStore = defineStore('auth', {
                     this.user = {
                         uid: firebaseUser.uid,
                         email: firebaseUser.email || '',
+                        name: data.name,
                         nickname: data.nickname,
+                        phone: data.phone,
                         profileImageUrl: data.profileImageUrl,
                         lvl: data.lvl || 1,
                         role: data.role || 'MEMBER',
                         gymId: data.gymId,
                         remainingSessions: data.remainingSessions,
                         expirationDate: data.expirationDate,
-                        mustChangePassword: data.mustChangePassword === true
+                        mustChangePassword: data.mustChangePassword === true,
+                        profileComplete: data.profileComplete === true
                     };
                 } else {
                     // Default user profile if doesn't exist in Firestore
@@ -57,7 +67,8 @@ export const useAuthStore = defineStore('auth', {
                         email: firebaseUser.email || '',
                         nickname: firebaseUser.email?.split('@')[0],
                         lvl: 1,
-                        role: 'MEMBER'
+                        role: 'MEMBER',
+                        profileComplete: false
                     };
                     // optionally save to db here: await setDoc(doc(db, 'users', firebaseUser.uid), this.user)
                 }
@@ -65,6 +76,10 @@ export const useAuthStore = defineStore('auth', {
                 console.error("Error fetching user role:", error);
                 this.user = null;
             }
+        },
+        async refreshUser() {
+            const firebaseUser = auth.currentUser;
+            if (firebaseUser) await this.fetchUserRole(firebaseUser);
         },
         async logout() {
             try {

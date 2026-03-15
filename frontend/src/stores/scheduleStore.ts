@@ -1,9 +1,23 @@
 import { defineStore } from 'pinia'
 import { getSchedules, addSchedule, updateSchedule, getSchedulesByClass } from '../services/firebaseService'
+import { getCoursesForUser } from '../services/courseService'
 import type { CalendarEvent } from '../types'
 import { useAuthStore } from './auth'
 import { useUIStore } from './uiStore'
 import { extractErrorMessage } from '../utils/error'
+
+function courseToCalendarEvent(course: { id: string; title: string; dateStr: string; timeFrom: string; timeTo: string; trainerEmail: string }): CalendarEvent {
+  return {
+    id: course.id,
+    title: course.title,
+    dateStr: course.dateStr,
+    time: course.timeFrom,
+    type: 'PERSONAL',
+    targetType: 'INDIVIDUAL',
+    status: 'PENDING',
+    trainerEmail: course.trainerEmail
+  }
+}
 
 export const useScheduleStore = defineStore('schedule', {
     state: () => ({
@@ -24,8 +38,15 @@ export const useScheduleStore = defineStore('schedule', {
 
             this.loading = true;
             try {
-                const results = await getSchedules(targetEmail, auth.user);
-                this.schedules[targetEmail] = results;
+                const [scheduleResults, courses] = await Promise.all([
+                    getSchedules(targetEmail, auth.user),
+                    getCoursesForUser(targetEmail)
+                ]);
+                const courseEvents: CalendarEvent[] = courses.map(c => courseToCalendarEvent(c));
+                const merged = [...scheduleResults, ...courseEvents];
+                const unique = Array.from(new Map(merged.map(e => [e.id, e])).values());
+                unique.sort((a, b) => (a.dateStr + a.time).localeCompare(b.dateStr + b.time));
+                this.schedules[targetEmail] = unique;
                 this.lastFetch[targetEmail] = Date.now();
             } catch (e: unknown) {
                 const ui = useUIStore()

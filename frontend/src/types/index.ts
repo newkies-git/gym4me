@@ -12,7 +12,9 @@ export interface User {
   remainingSessions?: number;
   expirationDate?: string;
   mustChangePassword?: boolean;
-  
+  /** 회원(Member/Observer) 첫 로그인 시 추가 정보 입력 완료 여부 */
+  profileComplete?: boolean;
+
   // Staff Details
   joinDate?: string;
   leaveDate?: string;
@@ -124,5 +126,26 @@ export interface ToolUsage {
   trainerNickname?: string;
   isPrivate: boolean;
   targetTraineeEmail?: string;
+  createdAt: any;
+}
+
+/** 수업/강좌: trainer 이상 생성·수정·삭제, trainee 조회·참석 신청 */
+export interface Course {
+  id: string;
+  title: string;
+  trainerEmail: string;
+  trainerNickname?: string;
+  /** 소속 Gym ID (Gym 관리 목록 기준) */
+  gymId?: string;
+  dateStr: string;
+  timeFrom: string;
+  timeTo: string;
+  type: '1:1' | '1:2' | '1:n';
+  maxParticipants?: number;
+  content: string;
+  traineeEmails: string[];
+  applicationEmails: string[];
+  createdBy: string;
+  createdByName?: string;
   createdAt: any;
 }

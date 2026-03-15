@@ -51,6 +51,7 @@
         <nav class="drawer-nav">
           <router-link to="/dashboard" class="drawer-link" @click="closeMenu">{{ t('nav.home') }}</router-link>
           <router-link to="/calendar" class="drawer-link" @click="closeMenu">{{ t('nav.calendar') }}</router-link>
+          <router-link to="/courses" class="drawer-link" @click="closeMenu">{{ t('nav.courses') }}</router-link>
           
           <div class="drawer-divider"></div>
           

@@ -279,6 +279,23 @@ export const getGymMembers = async (gymId: string): Promise<ClientInfo[]> => {
     }))
 }
 
+/** 해당 Gym에 등록된 회원(트레이니 lvl 5 + 옵저버 lvl 1) — 강좌 참석자 드롭다운용 */
+export const getGymTraineesAndObservers = async (gymId: string): Promise<ClientInfo[]> => {
+    const q = query(
+        collection(db, 'users'),
+        where('gymId', '==', gymId),
+        where('lvl', 'in', [1, 5])
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(docSnap => ({
+        uid: docSnap.id,
+        email: docSnap.data().email,
+        nickname: docSnap.data().nickname,
+        remainingSessions: docSnap.data().remainingSessions,
+        expirationDate: docSnap.data().expirationDate
+    }))
+}
+
 export const logTicketHistory = async (historyData: Partial<DocumentData>) => {
     return await addDoc(collection(db, 'ticketHistory'), {
         ...historyData,
@@ -347,6 +364,22 @@ export const updateTrainerRole = async (uid: string, role: string, lvl: number, 
 
 export const updateTrainerInfo = async (uid: string, updates: { nickname?: string; gymId?: string }) => {
     return await updateDoc(doc(db, 'users', uid), updates)
+}
+
+/** 회원(Member/Observer) 첫 로그인 시 추가 개인정보 저장 및 프로필 완료 처리 */
+export const updateMemberProfile = async (
+    uid: string,
+    data: { name: string; phone?: string; gymId: string; nickname?: string }
+) => {
+    const payload: Record<string, unknown> = {
+        name: (data.name || '').trim(),
+        gymId: data.gymId || null,
+        profileComplete: true,
+        updatedAt: serverTimestamp()
+    }
+    if (data.phone !== undefined) payload.phone = (data.phone || '').trim() || null
+    if (data.nickname !== undefined) payload.nickname = (data.nickname || '').trim() || null
+    await updateDoc(doc(db, 'users', uid), payload)
 }
 
 export const setTrainerDeletedFlag = async (uid: string, deleted: boolean) => {

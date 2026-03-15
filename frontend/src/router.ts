@@ -9,6 +9,19 @@ const router = createRouter({
         { path: '/', component: HomeView },
         { path: '/auth', component: AuthView },
         {
+            path: '/terms',
+            component: () => import('./views/TermsView.vue')
+        },
+        {
+            path: '/privacy',
+            component: () => import('./views/PrivacyView.vue')
+        },
+        {
+            path: '/complete-profile',
+            component: () => import('./views/CompleteProfileView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/dashboard',
             component: () => import('./views/DashboardView.vue'),
             meta: { requiresAuth: true }
@@ -79,6 +92,11 @@ const router = createRouter({
             meta: { requiresAuth: true, requiresTrainer: true }
         },
         {
+            path: '/courses',
+            component: () => import('./views/CourseListView.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/tool-usage',
             component: () => import('./views/ToolUsageView.vue'),
             meta: { requiresAuth: true }
@@ -98,6 +116,10 @@ router.beforeEach((to, from, next) => {
         next('/auth')
     } else if (auth.isAuthenticated && auth.user?.mustChangePassword && to.path !== '/user-info') {
         next('/user-info')
+    } else if (auth.isAuthenticated && auth.needsMemberProfile && to.path !== '/complete-profile' && to.path !== '/auth') {
+        next('/complete-profile')
+    } else if (to.path === '/complete-profile' && auth.isAuthenticated && !auth.needsMemberProfile) {
+        next('/dashboard')
     } else if (to.meta.requiresSiteAdmin && !auth.isSiteAdmin) {
         next('/dashboard')
     } else if (to.meta.requiresManager && !auth.isManager && !auth.isSiteAdmin) {
