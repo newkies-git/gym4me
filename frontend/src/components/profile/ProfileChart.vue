@@ -3,7 +3,7 @@
     <h3 class="card-title">{{ t('body.chartTitle') }}</h3>
     <div v-if="records.length === 0" class="empty-state">{{ t('body.noRecords') }}</div>
     <div v-else class="chart-container" style="position: relative; height:300px; width:100%">
-        <Bar :data="chartData" :options="chartOptions" />
+        <Bar :data="(chartData as any)" :options="(chartOptions as any)" />
     </div>
   </div>
 </template>
@@ -93,15 +93,15 @@ const chartOptions = {
   scales: {
     x: { grid: { display: false } },
     y: {
-      type: 'linear',
-      position: 'left',
+      type: 'linear' as const,
+      position: 'left' as const,
       beginAtZero: true,
       title: { display: true, text: 'kg' },
       grid: { color: 'rgba(0,0,0,0.06)' }
     },
     yPercent: {
-      type: 'linear',
-      position: 'right',
+      type: 'linear' as const,
+      position: 'right' as const,
       beginAtZero: true,
       title: { display: true, text: '%' },
       grid: { drawOnChartArea: false }

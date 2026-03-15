@@ -31,7 +31,7 @@
             
             <!-- Dropdown Menu -->
             <div v-if="isSettingsOpen" class="settings-dropdown glass">
-              <router-link to="/user-info" class="dropdown-item" @click="closeSettings">개인정보 수정</router-link>
+              <router-link to="/user-info" class="dropdown-item" @click="closeSettings">{{ t('nav.editProfile') }}</router-link>
               <ThemeSwitcher />
               <div class="dropdown-divider"></div>
               <button class="dropdown-item text-danger" @click="logoutFromDropdown">로그아웃</button>
@@ -55,7 +55,7 @@
           <button @click="closeMenu" class="close-drawer">&times;</button>
         </div>
         <nav class="drawer-nav">
-          <router-link to="/dashboard" class="drawer-link" @click="closeMenu">{{ t('nav.home') }}</router-link>
+          <router-link to="/home" class="drawer-link" @click="closeMenu">{{ t('nav.home') }}</router-link>
           <router-link to="/calendar" class="drawer-link" @click="closeMenu">{{ t('nav.calendar') }}</router-link>
           <router-link to="/courses" class="drawer-link" @click="closeMenu">{{ t('nav.courses') }}</router-link>
           
@@ -91,50 +91,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useUIStore } from './stores/uiStore'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import { useThemeStore } from './stores/themeStore'
-import { getGymById } from './services/firebaseService'
+import { useGnb } from './composables/useGnb'
 
 const auth = useAuthStore()
 const themeStore = useThemeStore()
 const ui = useUIStore()
 const router = useRouter()
 const { t } = useI18n()
+const { gnbTitle, homePath } = useGnb()
 
 const isMenuOpen = ref(false)
 const isSettingsOpen = ref(false)
-const gymName = ref('')
-
-const gnbTitle = computed(() => {
-  if (!auth.isAuthenticated) return 'gym4me'
-  return gymName.value || 'gym4me'
-})
-
-const homePath = computed(() => {
-  if (!auth.isAuthenticated) return '/'
-  return auth.isSiteAdmin ? '/manage-gym' : '/dashboard'
-})
-
-async function loadGymName() {
-  const id = auth.user?.gymId
-  if (!id) {
-    gymName.value = ''
-    return
-  }
-  try {
-    const gym = await getGymById(id)
-    gymName.value = gym?.name ?? ''
-  } catch {
-    gymName.value = ''
-  }
-}
-
-watch(() => auth.user?.gymId, loadGymName, { immediate: true })
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value

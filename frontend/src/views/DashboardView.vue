@@ -24,11 +24,12 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useSimulatePurchase } from '../composables/useSimulatePurchase'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SiteAdminHome from '../components/home/SiteAdminHome.vue'
 import ManagerHome from '../components/home/ManagerHome.vue'
-import TrainerHome from '../components/dashboard/TrainerHome.vue'
-import MemberHome from '../components/dashboard/MemberHome.vue'
+import TrainerHome from '../components/home/TrainerHome.vue'
+import MemberHome from '../components/home/MemberHome.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -41,26 +42,7 @@ const dashboardSubtitle = computed(() => {
   return t('dashboard.observerDashboard')
 })
 
-// Simulate Purchase logic (can remove later)
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase/config'
-
-const simulatePurchase = async () => {
-    if(!auth.user) return;
-    try {
-        const userRef = doc(db, 'users', auth.user.uid);
-        await updateDoc(userRef, {
-            remainingSessions: 10,
-            lvl: 5,
-            role: 'MEMBER',
-            updatedAt: serverTimestamp()
-        });
-        alert(t('dashboard.testPurchaseSuccess'));
-        location.reload(); 
-    } catch(e: any) {
-        alert(t('common.errorWithMessage', { msg: e.message }));
-    }
-}
+const simulatePurchase = useSimulatePurchase()
 </script>
 
 <style scoped>

@@ -174,7 +174,8 @@ const handleSubmit = async () => {
           localStorage.removeItem(SAVED_EMAIL_KEY)
         }
       } catch (_) { /* ignore */ }
-      router.push('/')
+      // 권한에 맞는 홈(대시보드)으로 이동. DashboardView가 MemberHome/TrainerHome 등 역할별 뷰 표시
+      router.push('/home')
     } else {
       if (form.password !== form.passwordConfirm) {
         error.value = t('auth.passwordMismatch')
@@ -225,9 +226,9 @@ const handleSubmit = async () => {
 .auth-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  min-height: 80vh;
-  padding-top: 8vh;
+  align-items: center;
+  min-height: calc(100vh - 60px);
+  padding: 2rem 1rem;
 }
 .auth-card {
   width: 100%;
@@ -261,6 +262,10 @@ const handleSubmit = async () => {
 
 .field-checkbox {
   margin-top: 0.5rem;
+}
+/* 이용약관 / 개인정보 체크박스 사이 여백 1/2 */
+.field-checkbox + .field-checkbox {
+  margin-top: 0.25rem;
 }
 
 .checkbox-label {

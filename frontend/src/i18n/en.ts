@@ -13,6 +13,7 @@ export default {
         toolUsage: 'Equipment Guide',
         profile: 'Profile',
         settings: 'Settings',
+        editProfile: 'Edit profile',
         theme: 'Theme',
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',

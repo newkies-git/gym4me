@@ -102,7 +102,7 @@ async function handleSubmit() {
       nickname: form.nickname.trim() || undefined
     })
     await auth.refreshUser()
-    router.push('/dashboard')
+    router.push('/home')
   } catch (e: unknown) {
     error.value = (e as Error)?.message || t('completeProfile.saveFailed')
     ui.showToast(error.value, 'error')

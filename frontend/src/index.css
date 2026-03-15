@@ -171,10 +171,14 @@ button {
   margin-top: -1rem; /* Adjust for wrapper padding if needed, or visually align */
   margin-left: -1rem; /* Bleed over container padding */
   margin-right: -1rem;
-  padding: 1rem 1rem; /* Restore inner padding */
+  padding: 0.5rem 1rem;
+  height: 72px;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid transparent; 
+  border-bottom: 1px solid transparent;
   transition: border-bottom-color 0.2s;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 /* Responsive adjustment for sticking headers */
@@ -182,7 +186,7 @@ button {
   .page-header {
     margin-left: -2rem;
     margin-right: -2rem;
-    padding: 1rem 2rem;
+    padding: 0.5rem 2rem;
   }
 }
 

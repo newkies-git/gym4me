@@ -5,7 +5,7 @@
         <button v-if="auth.isTrainer && (clientEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
           {{ classId ? t('calendar.assignClassSession') : t('calendar.assignPTSession') }}
         </button>
-        <button class="btn btn-ghost" @click="router.push('/dashboard')">{{ t('calendar.back') }}</button>
+        <button class="btn btn-ghost" @click="router.push('/home')">{{ t('calendar.back') }}</button>
       </template>
     </PageHeader>
 

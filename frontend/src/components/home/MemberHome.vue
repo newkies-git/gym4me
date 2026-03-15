@@ -37,7 +37,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
-import PastExerciseSearch from './PastExerciseSearch.vue'
+import PastExerciseSearch from '../courses/PastExerciseSearch.vue'
 import StatCard from '../ui/StatCard.vue'
 
 const auth = useAuthStore()

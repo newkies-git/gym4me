@@ -13,6 +13,7 @@ export default {
         gymMember: '지점 회원 관리',
         profile: '프로필',
         settings: '설정',
+        editProfile: '개인정보 수정',
         theme: '테마',
         loginSignup: '로그인 / 회원가입',
         logout: '로그아웃',

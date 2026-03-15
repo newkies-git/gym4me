@@ -13,7 +13,7 @@
         </p>
         
         <div class="hero-actions">
-          <router-link v-if="auth.isAuthenticated" to="/dashboard" class="btn btn-primary btn-lg pulse-hover">
+          <router-link v-if="auth.isAuthenticated" to="/home" class="btn btn-primary btn-lg pulse-hover">
             {{ t('home.goToDashboard') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />

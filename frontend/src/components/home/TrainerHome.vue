@@ -6,6 +6,6 @@
 </template>
 
 <script setup lang="ts">
-import ClientManager from './ClientManager.vue'
-import ClassManager from './ClassManager.vue'
+import ClientManager from '../courses/ClientManager.vue'
+import ClassManager from '../courses/ClassManager.vue'
 </script>
