@@ -13,6 +13,7 @@ export default {
         toolUsage: 'Equipment Guide',
         profile: 'Profile',
         settings: 'Settings',
+        theme: 'Theme',
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',
         staffMgt: 'Staff Mgt',
@@ -56,6 +57,17 @@ export default {
         agreeTerms: 'I agree to the Terms of Service',
         agreePrivacy: 'I agree to the collection and use of personal information',
         termsRequired: 'Please agree to the Terms of Service and Privacy Policy.',
+    },
+
+    theme: {
+        berry: 'Berry (default)',
+        ocean: 'Ocean Blue',
+        forest: 'Forest Green',
+        rose: 'Rose Pink',
+        amber: 'Amber',
+        teal: 'Teal',
+        indigo: 'Indigo',
+        coral: 'Coral',
     },
 
     legal: {

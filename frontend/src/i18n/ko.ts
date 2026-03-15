@@ -13,6 +13,7 @@ export default {
         gymMember: '지점 회원 관리',
         profile: '프로필',
         settings: '설정',
+        theme: '테마',
         loginSignup: '로그인 / 회원가입',
         logout: '로그아웃',
         staffMgt: '직원 관리',
@@ -54,6 +55,17 @@ export default {
         accountCreated: '계정이 생성됐습니다! 로그인하세요.',
         errEmailInUse: '이미 사용 중인 이메일입니다.',
         errInvalidCredential: '이메일 또는 비밀번호가 올바르지 않습니다.',
+    },
+
+    theme: {
+        berry: '베리 (기본)',
+        ocean: '오션 블루',
+        forest: '포레스트 그린',
+        rose: '로즈 핑크',
+        amber: '앰버',
+        teal: '틸',
+        indigo: '인디고',
+        coral: '코랄',
     },
 
     legal: {

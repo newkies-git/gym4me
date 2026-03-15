@@ -26,7 +26,7 @@
             <!-- Dropdown Menu -->
             <div v-if="isSettingsOpen" class="settings-dropdown glass">
               <router-link to="/user-info" class="dropdown-item" @click="closeSettings">개인정보 수정</router-link>
-              <button class="dropdown-item" @click="toggleTheme">테마 변경</button>
+              <ThemeSwitcher />
               <div class="dropdown-divider"></div>
               <button class="dropdown-item text-danger" @click="logoutFromDropdown">로그아웃</button>
             </div>
@@ -85,13 +85,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useUIStore } from './stores/uiStore'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import ThemeSwitcher from './components/ThemeSwitcher.vue'
+import { useThemeStore } from './stores/themeStore'
 
 const auth = useAuthStore()
+const themeStore = useThemeStore()
 const ui = useUIStore()
 const router = useRouter()
 const { t } = useI18n()
@@ -115,11 +118,9 @@ const closeSettings = () => {
   isSettingsOpen.value = false
 }
 
-const toggleTheme = () => {
-  // Toggle theme logic will go here
-  ui.showToast('테마 변경 기능은 준비 중입니다.', 'info')
-  closeSettings()
-}
+onMounted(() => {
+  themeStore.applyTheme()
+})
 
 const logout = () => {
   closeMenu()
