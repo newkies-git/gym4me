@@ -1,29 +1,47 @@
-# Vue 3 + Vite
+# Gym4me Frontend
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Vue 3 기반 헬스장·PT 관리 웹 앱 클라이언트입니다.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 기술 스택
 
-## SITE_ADMIN first-login policy
+- **Vue 3** (Composition API)
+- **Vite 7** · **TypeScript**
+- **Vue Router 5** · **Pinia**
+- **vue-i18n** (한/영)
+- **Chart.js** · **vue-chartjs**
+- **Firebase** (Auth, Firestore)
+- **PWA**: vite-plugin-pwa
 
-If both `VITE_SITE_ADMIN_EMAIL` and `VITE_SITE_ADMIN_INITIAL_PASSWORD` are set:
+스타일은 전역 CSS(`src/index.css`)와 Berry 테마 변수·테마 프리셋 8종을 사용합니다.
 
-- When that email logs in with the initial password,
-- the account is marked as `SITE_ADMIN (lvl 100)` and `mustChangePassword=true`,
-- then the user is forced to `/settings` to change password.
+## 요구 사항
 
-- `VITE_SITE_ADMIN_EMAIL`
-- `VITE_SITE_ADMIN_INITIAL_PASSWORD`
+- Node.js 18+
+- npm
 
-### 2) Manual promote script
-
-Run manual promote after the target user has signed up:
+## 설치 및 실행
 
 ```bash
-npm run init:admin
+npm install
+npm run dev
 ```
 
-Set these environment variables before running:
+개발 서버는 기본적으로 `http://localhost:5173`에서 실행됩니다.
+
+## 스크립트
+
+| 명령 | 설명 |
+| :--- | :--- |
+| `npm run dev` | 개발 서버 실행 |
+| `npm run build` | 프로덕션 빌드 (vue-tsc + vite build) |
+| `npm run preview` | 빌드 결과물 미리보기 |
+| `npm run type-check` | 타입 검사만 수행 (vue-tsc --noEmit) |
+| `npm run test:unit` | 단위 테스트 (Vitest) |
+| `npm run init:admin` | 초기 Site Admin 계정 생성 (환경 변수 필요) |
+
+## 환경 변수
+
+Firebase 설정을 위해 `.env`에 다음 변수를 설정합니다.
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -31,6 +49,34 @@ Set these environment variables before running:
 - `VITE_FIREBASE_STORAGE_BUCKET`
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
-- `VITE_SITE_ADMIN_EMAIL` (optional)
-- `VITE_SITE_ADMIN_INITIAL_PASSWORD` (optional)
-- `SITE_ADMIN_EMAIL`
+
+`init:admin` 사용 시 Admin 이메일/비밀번호 등 추가 변수는 `init_admin.mjs`를 참고하세요.
+
+## 소스 구조 (요약)
+
+```
+src/
+├── App.vue              # 루트 레이아웃, GNB, 테마
+├── main.ts
+├── index.css            # 전역·테마 변수
+├── router/              # 라우트 정의, 가드
+├── stores/              # Pinia (auth, schedule, class, client, profile, theme, ui)
+├── views/               # 페이지 뷰 (Auth, Home, Calendar, Courses, Profile 등)
+├── components/          # home, courses, calendar, profile, gym, ui
+├── layouts/             # AdminLayout
+├── services/            # firebaseService, courseService, toolService
+├── composables/         # useGnb, useSimulatePurchase
+├── theme/               # 테마 정의 (themes.ts)
+├── i18n/                # ko, en
+├── firebase/            # config
+├── types/               # 공통 타입
+├── constants/
+└── utils/
+```
+
+## 관련 문서
+
+- 프로젝트 전체: [../README.md](../README.md)
+- 기능 명세·요구사항 대비: [../FUNCTIONS.md](../FUNCTIONS.md)
+- 할 일: [../TO-DO.md](../TO-DO.md)
+- 모바일 배포: [../Deployment_Mobile.md](../Deployment_Mobile.md)
