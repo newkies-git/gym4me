@@ -139,158 +139,53 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
-import { appendClassWorkoutLog, updateSchedule, completeSession } from '../../services/firebaseService'
-import { arrayUnion, doc, getDoc } from 'firebase/firestore'
-import { db } from '../../firebase/config'
 import SignaturePad from '../ui/SignaturePad.vue'
-import type { CalendarEvent, ExerciseRecord } from '../../types'
-import { useUIStore } from '../../stores/uiStore'
-import { extractErrorMessage } from '../../utils/error'
-import { notifyScheduleEvent } from '../../utils/notification'
+import type { CalendarEvent } from '../../types'
+import { useEventDetails } from '../../composables/calendar/useEventDetails'
 
 const props = defineProps<{
-  isOpen: boolean;
-  event: CalendarEvent | null;
+  isOpen: boolean
+  event: CalendarEvent | null
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:isOpen', val: boolean): void;
-  (e: 'updated'): void;
+  (e: 'update:isOpen', val: boolean): void
+  (e: 'updated'): void
 }>()
 
 const auth = useAuthStore()
-const ui = useUIStore()
 const { t } = useI18n()
 
-const savingRecord = ref(false)
-const newRecordObj = ref<ExerciseRecord>({ name: '', sets: 0, reps: 0 })
-const applyingBulkLogs = ref(false)
-const approving = ref(false)
-const rejecting = ref(false)
-const isRejecting = ref(false)
-const rejectionReasonInput = ref('')
+const eventRef = computed(() => props.event)
 
-const canAddRecord = computed(() => {
-    if(!props.event) return false;
-    // Trainer can add to their assigned PT sessions. User can add to personal sessions.
-    if(props.event.type === 'PT') return auth.isTrainer;
-    return !auth.isTrainer; 
+const {
+  canAddRecord,
+  savingRecord,
+  newRecordObj,
+  applyingBulkLogs,
+  approving,
+  rejecting,
+  isRejecting,
+  rejectionReasonInput,
+  tempSignature,
+  completing,
+  loadingClassInfo,
+  classEmails,
+  saveRecord,
+  approveSession,
+  handleReject,
+  handleSignAndComplete,
+  applyLogsToClass
+} = useEventDetails(eventRef, {
+  onUpdated: () => emit('updated'),
+  onClose: () => emit('update:isOpen', false)
 })
 
 const close = () => {
-    emit('update:isOpen', false)
-}
-
-const saveRecord = async () => {
-    if(!props.event || !newRecordObj.value.name) return;
-    savingRecord.value = true;
-    try {
-        await updateSchedule(props.event.id, {
-            records: arrayUnion({ ...newRecordObj.value })
-        });
-        
-        newRecordObj.value = { name: '', sets: 0, reps: 0 };
-        emit('updated');
-    } catch(e: unknown) {
-        ui.showToast(extractErrorMessage(e, t('eventDetails.recordSaveFailed')), 'error')
-    } finally {
-        savingRecord.value = false;
-    }
-}
-
-const tempSignature = ref('')
-const completing = ref(false)
-
-const loadingClassInfo = ref(false)
-const classEmails = ref<string[]>([])
-
-watch(() => props.event, async (newEv) => {
-    if (newEv?.targetType === 'CLASS' && newEv.classId) {
-        loadingClassInfo.value = true
-        try {
-            const snap = await getDoc(doc(db, 'classes', newEv.classId))
-            if (snap.exists()) {
-                classEmails.value = snap.data().traineeEmails || []
-            }
-        } catch (e) {
-            ui.showToast(t('eventDetails.classLoadFailed'), 'error')
-        } finally {
-            loadingClassInfo.value = false
-        }
-    } else {
-        classEmails.value = []
-    }
-}, { immediate: true })
-
-const handleSignAndComplete = async () => {
-    if(!props.event || !tempSignature.value || !auth.user) return;
-    completing.value = true;
-    try {
-        await completeSession(props.event.id, tempSignature.value, auth.user);
-        ui.showToast(t('eventDetails.sessionCompleted'), 'success')
-        await notifyScheduleEvent(
-          t('notification.sessionCompletedTitle'),
-          t('notification.sessionCompletedBody', { title: props.event.title })
-        )
-        emit('updated');
-        close();
-    } catch(e: unknown) {
-        ui.showToast(extractErrorMessage(e, t('eventDetails.completeFailed')), 'error')
-    } finally {
-        completing.value = false;
-    }
-}
-
-const approveSession = async () => {
-  if (!props.event) return
-  approving.value = true
-  try {
-    await updateSchedule(props.event.id, { status: 'APPROVED' })
-    await notifyScheduleEvent(
-      t('notification.sessionApprovedTitle'),
-      t('notification.sessionApprovedBody', { title: props.event.title })
-    )
-    ui.showToast(t('eventDetails.approveSuccess'), 'success')
-    emit('updated')
-  } catch (e: unknown) {
-    ui.showToast(extractErrorMessage(e, t('eventDetails.approveFailed')), 'error')
-  } finally {
-    approving.value = false
-  }
-}
-
-const handleReject = async () => {
-  if (!props.event || !rejectionReasonInput.value.trim()) return
-  rejecting.value = true
-  try {
-    await updateSchedule(props.event.id, { 
-      status: 'REJECTED',
-      rejectionReason: rejectionReasonInput.value.trim()
-    })
-    ui.showToast(t('calendar.rejected'), 'info')
-    emit('updated')
-    close()
-  } catch (e: unknown) {
-    ui.showToast(extractErrorMessage(e, t('common.errorWithMessage', { msg: '' })), 'error')
-  } finally {
-    rejecting.value = false
-  }
-}
-
-const applyLogsToClass = async () => {
-  if (!props.event || !props.event.records || props.event.records.length === 0) return
-  applyingBulkLogs.value = true
-  try {
-    await appendClassWorkoutLog(props.event, props.event.records)
-    ui.showToast(t('eventDetails.bulkApplySuccess'), 'success')
-  } catch (e: unknown) {
-    ui.showToast(extractErrorMessage(e, t('eventDetails.bulkApplyFailed')), 'error')
-  } finally {
-    applyingBulkLogs.value = false
-  }
+  emit('update:isOpen', false)
 }
 </script>
 

@@ -123,6 +123,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useScheduleStore } from '../stores/scheduleStore'
+import { useCalendarPeriod } from '../composables/calendar/useCalendarPeriod'
 import type { CalendarEvent } from '../types'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
@@ -133,7 +134,18 @@ const auth = useAuthStore()
 const scheduleStore = useScheduleStore()
 const route = useRoute()
 const router = useRouter()
-const { t, tm } = useI18n()
+const { t } = useI18n()
+
+const {
+  dayNames,
+  weekRows,
+  formatCellDate,
+  periodTitle,
+  weekRangeText,
+  goPrevWeek,
+  goNextWeek,
+  goToToday
+} = useCalendarPeriod()
 
 const clientEmail = computed(() => {
     const requested = route.query.client as string | undefined
@@ -212,83 +224,10 @@ const viewDetails = (event: CalendarEvent) => {
     isDetailsModalOpen.value = true;
 }
 
-// Calendar: 2주간(14일) 일정
-const today = new Date()
-const getSunday = (d: Date) => {
-    const x = new Date(d)
-    x.setDate(d.getDate() - d.getDay())
-    return x
-}
-const currentPeriodStart = ref(getSunday(today))
-
-const dayNames = computed(() => (tm('calendar.dayNames') as string[]).slice(0, 7))
-
-const weekDays = computed(() => {
-    const days = []
-    const names = tm('calendar.dayNames') as string[]
-    const start = currentPeriodStart.value
-    const todayStr = today.toISOString().split('T')[0]
-
-    for (let i = 0; i < 14; i++) {
-        const d = new Date(start)
-        d.setDate(start.getDate() + i)
-        const dateStr = d.toISOString().split('T')[0]
-        days.push({
-            name: names[d.getDay()],
-            num: d.getDate(),
-            month: d.getMonth() + 1,
-            dateStr,
-            isToday: dateStr === todayStr
-        })
-    }
-    return days
-})
-
-const weekRows = computed(() => {
-    const list = weekDays.value
-    return [list.slice(0, 7), list.slice(7, 14)]
-})
-
-function formatCellDate(day: { num: number; month: number; dateStr: string }) {
-    const start = currentPeriodStart.value
-    const isFirstDay = day.dateStr === start.toISOString().split('T')[0]
-    if (isFirstDay) return `${day.month}${t('calendar.monthShort')} ${day.num}${t('calendar.dayShort')}`
-    return `${day.num}${t('calendar.dayShort')}`
-}
-
 function eventIcon(event: CalendarEvent) {
     if (event.targetType === 'CLASS') return '◆'
     if (event.type === 'PT') return '★'
     return '●'
-}
-
-const periodTitle = computed(() => {
-    const start = currentPeriodStart.value
-    return t('calendar.yearMonth', { year: start.getFullYear(), month: start.getMonth() + 1 })
-})
-
-const weekRangeText = computed(() => {
-    const start = currentPeriodStart.value
-    const end = new Date(start)
-    end.setDate(start.getDate() + 13)
-    const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`
-    return `${fmt(start)} ~ ${fmt(end)} ${t('calendar.twoWeeksLabel')}`
-})
-
-function goPrevWeek() {
-    const d = new Date(currentPeriodStart.value)
-    d.setDate(d.getDate() - 7)
-    currentPeriodStart.value = d
-}
-
-function goNextWeek() {
-    const d = new Date(currentPeriodStart.value)
-    d.setDate(d.getDate() + 7)
-    currentPeriodStart.value = d
-}
-
-function goToToday() {
-    currentPeriodStart.value = getSunday(today)
 }
 
 const getEventsForDay = (dateStr: string) => {
