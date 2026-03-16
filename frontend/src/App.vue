@@ -63,8 +63,15 @@
           
           <!-- Role Specific -->
           <router-link v-if="auth.isTrainer && !auth.isSiteAdmin" to="/trainer-profile" class="drawer-link" @click="closeMenu">{{ t('nav.trainerBio') }}</router-link>
-          <router-link v-if="auth.isManager && !auth.isSiteAdmin" to="/manage-trainers" class="drawer-link" @click="closeMenu">{{ t('nav.trainerMgt') }}</router-link>
-          <router-link v-if="auth.isManager && !auth.isSiteAdmin" to="/gym/members" class="drawer-link" @click="closeMenu">{{ t('nav.gymMember') }}</router-link>
+          <router-link v-if="auth.user?.role === 'MANAGER' && !auth.isSiteAdmin" to="/manage-trainers" class="drawer-link" @click="closeMenu">{{ t('nav.trainerMgt') }}</router-link>
+          <router-link
+            v-if="(auth.isTrainer || auth.isManager || auth.isSiteAdmin)"
+            to="/gym/members"
+            class="drawer-link"
+            @click="closeMenu"
+          >
+            {{ t('nav.gymMember') }}
+          </router-link>
           <router-link v-if="auth.isSiteAdmin" to="/manage-gym" class="drawer-link" @click="closeMenu">{{ t('nav.gymMgt') }}</router-link>
           <router-link v-if="auth.isSiteAdmin" to="/admin/staff" class="drawer-link" @click="closeMenu">{{ t('nav.staffMgt') }}</router-link>
           

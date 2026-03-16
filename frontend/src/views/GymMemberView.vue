@@ -3,16 +3,26 @@
     <PageHeader
       :title="t('gymMember.title')"
       :subtitle="t('gymMember.subtitle')"
+      :showBack="true"
+      back-url="/home"
     />
 
-    <div class="search-bar glass" style="margin: 1.5rem 0; padding: 1rem;">
-      <input 
-        type="text" 
-        v-model="searchQuery" 
-        :placeholder="t('gymMember.searchPlaceholder')"
-        class="glass-input"
-        style="width: 100%;"
-      >
+    <div class="filter-bar glass">
+      <div v-if="auth.isSiteAdmin" class="gym-filter">
+        <label class="filter-label">{{ t('gymMgt.title') }}</label>
+        <BaseSelect
+          v-model="selectedGymId"
+          class="gym-select"
+          :options="[{ value: '__all__', label: (t('common.all' as any) || '전체') }, ...gyms.map(g => ({ value: g.id, label: g.name }))]"
+        />
+      </div>
+
+      <div class="search-bar-inner">
+        <BaseSearchInput
+          v-model="searchQuery"
+          :placeholder="t('gymMember.searchPlaceholder')"
+        />
+      </div>
     </div>
 
     <div v-if="loading" class="empty-state">{{ t('common.loading') }}</div>
@@ -24,11 +34,11 @@
             <th>{{ t('gymMember.email') }}</th>
             <th>{{ t('gymMember.remainingSessions') }}</th>
             <th>{{ t('gymMember.expirationDate') }}</th>
-            <th>{{ t('gymMember.actions') }}</th>
+            <th v-if="showActions">{{ t('gymMember.actions') }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="member in filteredMembers" :key="member.uid">
+          <tr v-for="member in pagedMembers" :key="member.uid">
             <td>{{ member.nickname }}</td>
             <td>{{ member.email }}</td>
             <td :class="{ 'warning-text': (member.remainingSessions || 0) < 3 }">
@@ -37,14 +47,41 @@
             <td :class="{ 'warning-text': isExpired(member.expirationDate) }">
                 {{ member.expirationDate || 'N/A' }}
             </td>
-            <td>
+            <td v-if="showActions">
               <button class="btn btn-ghost btn-mini" @click="viewDetails(member)">
                 {{ t('common.details' as any) || 'Details' }}
               </button>
             </td>
           </tr>
+          <tr v-if="!pagedMembers.length">
+            <td :colspan="showActions ? 5 : 4" class="empty-state">
+              {{ t('gymMember.noMembers') || t('common.na') }}
+            </td>
+          </tr>
         </tbody>
       </table>
+
+      <div class="pagination" v-if="totalPages > 1">
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          :disabled="page === 1"
+          @click="page--"
+        >
+          ‹
+        </button>
+        <span class="page-indicator">
+          {{ page }} / {{ totalPages }}
+        </span>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          :disabled="page === totalPages"
+          @click="page++"
+        >
+          ›
+        </button>
+      </div>
     </div>
 
     <!-- Details Modal (Future Enhancement: can add credit adjustment here if needed) -->
@@ -76,7 +113,10 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
-import { getGymMembers } from '../services/firebaseService'
+import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
+import { getGymMembers, getGyms } from '../services/firebaseService'
+import { getCoursesForUser } from '../services/courseService'
 import type { ClientInfo } from '../types'
 
 const { t } = useI18n()
@@ -87,24 +127,77 @@ const members = ref<ClientInfo[]>([])
 const searchQuery = ref('')
 const isModalOpen = ref(false)
 const selectedMember = ref<ClientInfo | null>(null)
+const page = ref(1)
+const pageSize = 20
+const gyms = ref<{ id: string; name: string }[]>([])
+const selectedGymId = ref<string>('__all__')
+
+const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSiteAdmin))
 
 const filteredMembers = computed(() => {
-    if (!searchQuery.value) return members.value
-    const q = searchQuery.value.toLowerCase()
-    return members.value.filter(m => 
-        m.nickname?.toLowerCase().includes(q) || 
-        m.email.toLowerCase().includes(q)
-    )
+  let base = members.value
+  if (auth.isSiteAdmin && selectedGymId.value !== '__all__') {
+    base = base.filter((m) => m.gymId === selectedGymId.value)
+  }
+  if (!searchQuery.value) return base
+  const q = searchQuery.value.toLowerCase()
+  return base.filter(
+    (m) =>
+      m.nickname?.toLowerCase().includes(q) ||
+      m.email.toLowerCase().includes(q)
+  )
+})
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredMembers.value.length / pageSize))
+)
+
+const pagedMembers = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return filteredMembers.value.slice(start, start + pageSize)
 })
 
 onMounted(async () => {
-    if (!auth.user?.gymId) return
-    loading.value = true
-    try {
+  if (!auth.user) return
+  loading.value = true
+  try {
+    if (auth.isSiteAdmin) {
+      // Site admin: load all gyms and all their members
+      gyms.value = await getGyms()
+      const allMembers: ClientInfo[] = []
+      for (const g of gyms.value) {
+        const list = await getGymMembers(g.id)
+        list.forEach((m) => allMembers.push({ ...m, gymId: g.id } as any))
+      }
+      members.value = allMembers
+    } else if (auth.isManager) {
+      // Manager: only their gym members
+      if (!auth.user.gymId) {
+        members.value = []
+      } else {
         members.value = await getGymMembers(auth.user.gymId)
-    } finally {
-        loading.value = false
+      }
+    } else if (auth.isTrainer) {
+      // Trainer: only members attending their courses
+      if (!auth.user.gymId || !auth.user.email) {
+        members.value = []
+      } else {
+        const [gymMembers, courses] = await Promise.all([
+          getGymMembers(auth.user.gymId),
+          getCoursesForUser(auth.user.email)
+        ])
+        const traineeSet = new Set<string>()
+        courses.forEach((c) => {
+          ;(c.traineeEmails || []).forEach((email) => traineeSet.add(email))
+        })
+        members.value = gymMembers.filter((m) => traineeSet.has(m.email))
+      }
+    } else {
+      members.value = []
     }
+  } finally {
+    loading.value = false
+  }
 })
 
 const isExpired = (dateStr?: string) => {
@@ -131,4 +224,53 @@ const viewDetails = (member: ClientInfo) => {
 .detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
 .detail-row:last-child { border-bottom: none; }
 .btn-mini { padding: 0.2rem 0.6rem; font-size: 0.75rem; }
+
+.filter-bar {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.gym-filter {
+  min-width: 220px;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.gym-select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.search-bar-inner {
+  flex: 1;
+}
+
+.glass-input {
+  width: 100%;
+}
+
+.pagination {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.page-indicator {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
 </style>

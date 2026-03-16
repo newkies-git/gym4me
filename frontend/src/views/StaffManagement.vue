@@ -9,27 +9,32 @@
     <div class="toolbar">
       <div class="filter-bar glass">
         <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input
-            type="text"
+          <BaseSearchInput
             v-model="searchQuery"
             :placeholder="t('staffMgt.staffList')"
-            class="search-input"
           />
         </div>
         <div class="filter-chips">
-          <select v-model="roleFilter" class="chip-select">
-            <option value="">{{ t('staffMgt.filterByRole') }}</option>
-            <option value="MANAGER">{{ t('staffMgt.roleManager') }}</option>
-            <option value="SUB_MANAGER">{{ t('staffMgt.roleSubManager') }}</option>
-            <option value="TRAINER">{{ t('staffMgt.roleTrainer') }}</option>
-          </select>
-          <select v-model="statusFilter" class="chip-select">
-            <option value="">{{ t('staffMgt.filterByStatus') }}</option>
-            <option value="ACTIVE">{{ t('staffDetail.status.ACTIVE') }}</option>
-            <option value="ON_LEAVE">{{ t('staffDetail.status.ON_LEAVE') }}</option>
-            <option value="RESIGNED">{{ t('staffDetail.status.RESIGNED') }}</option>
-          </select>
+          <BaseSelect
+            v-model="roleFilter"
+            class="chip-select"
+            :options="[
+              { value: '', label: t('staffMgt.filterByRole') },
+              { value: 'MANAGER', label: t('staffMgt.roleManager') },
+              { value: 'SUB_MANAGER', label: t('staffMgt.roleSubManager') },
+              { value: 'TRAINER', label: t('staffMgt.roleTrainer') }
+            ]"
+          />
+          <BaseSelect
+            v-model="statusFilter"
+            class="chip-select"
+            :options="[
+              { value: '', label: t('staffMgt.filterByStatus') },
+              { value: 'ACTIVE', label: t('staffDetail.status.ACTIVE') },
+              { value: 'ON_LEAVE', label: t('staffDetail.status.ON_LEAVE') },
+              { value: 'RESIGNED', label: t('staffDetail.status.RESIGNED') }
+            ]"
+          />
         </div>
       </div>
       <div class="toolbar-actions">
@@ -342,6 +347,8 @@ import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
+import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
 import { getStaffs, updateStaffData, getGyms, createStaffAccount, getTrainerProfile } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import type { User, Gym, TrainerProfile } from '../types'
@@ -553,20 +560,6 @@ onMounted(fetchStaffs)
 .search-wrap {
   flex: 1;
   min-width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.search-icon { font-size: 0.9rem; opacity: 0.6; }
-
-.search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-main);
-  font-size: 0.9rem;
 }
 
 .filter-chips {
