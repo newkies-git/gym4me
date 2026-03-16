@@ -5,7 +5,10 @@
     <div class="glass complete-profile-card">
       <form @submit.prevent="handleSubmit" class="complete-profile-form">
         <div class="field">
-          <label>{{ t('completeProfile.name') }} <span class="required">*</span></label>
+          <label>
+            {{ t('completeProfile.name') }}
+            <span class="required">*</span>
+          </label>
           <input
             v-model="form.name"
             type="text"
@@ -22,10 +25,15 @@
           />
         </div>
         <div class="field">
-          <label>{{ t('completeProfile.gym') }} <span class="required">*</span></label>
+          <label>
+            {{ t('completeProfile.gym') }}
+            <span class="required">*</span>
+          </label>
           <select v-model="form.gymId" required>
             <option value="">{{ t('completeProfile.gymPlaceholder') }}</option>
-            <option v-for="g in gymsList" :key="g.id" :value="g.id">{{ g.name }}</option>
+            <option v-for="g in gymsList" :key="g.id" :value="g.id">
+              {{ g.name }}
+            </option>
           </select>
         </div>
         <div class="field">
@@ -38,12 +46,15 @@
         </div>
 
         <p v-if="error" class="error-text">{{ error }}</p>
-        <button type="submit" class="btn btn-primary" :disabled="saving" style="width: 100%; margin-top: 1rem;">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          :disabled="saving"
+          style="width: 100%; margin-top: 1rem;"
+        >
           {{ saving ? t('common.processing') : t('completeProfile.submit') }}
         </button>
       </form>
-    </div>
-  </div>
     </div>
   </div>
 </template>

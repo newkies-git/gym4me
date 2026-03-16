@@ -26,4 +26,5 @@ export interface ClientInfo {
   nickname?: string
   remainingSessions?: number
   expirationDate?: string
+  gymId?: string
 }

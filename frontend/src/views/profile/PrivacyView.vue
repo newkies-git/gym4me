@@ -1,6 +1,10 @@
 <template>
   <div class="container legal-container">
-    <PageHeader :title="t('legal.privacyTitle')" :subtitle="t('legal.privacyIntro')" :showBack="true" />
+    <PageHeader
+      :title="t('legal.privacyTitle')"
+      :subtitle="t('legal.privacyIntro')"
+      :showBack="true"
+    />
 
     <div class="glass legal-card">
       <div class="legal-body">
@@ -10,9 +14,12 @@
         <p v-html="t('legal.privacySection4')"></p>
         <p v-html="t('legal.privacySection5')"></p>
       </div>
-      <router-link :to="{ path: '/auth', query: { tab: 'signup' } }" class="btn btn-primary">{{ t('legal.backToSignup') }}</router-link>
-    </div>
-  </div>
+      <router-link
+        :to="{ path: '/auth', query: { tab: 'signup' } }"
+        class="btn btn-primary"
+      >
+        {{ t('legal.backToSignup') }}
+      </router-link>
     </div>
   </div>
 </template>
