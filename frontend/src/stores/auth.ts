@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { auth, db } from '../firebase/config'
+import { auth, db, messaging } from '../firebase/config'
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { getToken } from 'firebase/messaging'
 import type { User } from '../types'
 
 export const useAuthStore = defineStore('auth', {
@@ -60,6 +61,9 @@ export const useAuthStore = defineStore('auth', {
                         mustChangePassword: data.mustChangePassword === true,
                         profileComplete: data.profileComplete === true
                     };
+                    
+                    // Request FCM Token in background
+                    this.requestAndSaveFCMToken(firebaseUser.uid);
                 } else {
                     // Default user profile if doesn't exist in Firestore
                     this.user = {
@@ -87,6 +91,25 @@ export const useAuthStore = defineStore('auth', {
                 this.user = null;
             } catch (error) {
                 console.error("Error signing out:", error);
+            }
+        },
+        async requestAndSaveFCMToken(uid: string) {
+            if (!messaging) return;
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // You should replace VAPID_KEY with your actual web push certificate key from Firebase Console
+                    const currentToken = await getToken(messaging, {
+                         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+                    });
+                    if (currentToken) {
+                        await updateDoc(doc(db, 'users', uid), { fcmToken: currentToken });
+                    } else {
+                        console.log('No registration token available. Request permission to generate one.');
+                    }
+                }
+            } catch (error) {
+                console.error('An error occurred while retrieving token. ', error);
             }
         }
     }
