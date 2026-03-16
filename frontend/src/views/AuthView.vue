@@ -56,6 +56,7 @@ import { useI18n } from 'vue-i18n'
 import { auth, db } from '../firebase/config'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -63,6 +64,7 @@ const isLogin = ref(true)
 const loading = ref(false)
 const error = ref('')
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 const rememberEmail = ref(false)
 const agreeTerms = ref(false)
@@ -174,6 +176,10 @@ const handleSubmit = async () => {
           localStorage.removeItem(SAVED_EMAIL_KEY)
         }
       } catch (_) { /* ignore */ }
+      
+      // 라우터 가드에서 정확한 권한으로 확인될 수 있도록 로그인 정보를 강제 동기화
+      await authStore.fetchUserRole(userCredential.user)
+
       // 권한에 맞는 홈(대시보드)으로 이동. DashboardView가 MemberHome/TrainerHome 등 역할별 뷰 표시
       router.push('/home')
     } else {
