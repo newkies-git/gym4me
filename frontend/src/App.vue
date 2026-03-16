@@ -130,16 +130,16 @@ onMounted(() => {
   themeStore.applyTheme()
 })
 
-const logout = () => {
+const logout = async () => {
   closeMenu()
-  auth.logout()
+  await auth.logout()
   ui.showToast(t('common.loggedOut'), 'info')
   router.push('/')
 }
 
-const logoutFromDropdown = () => {
+const logoutFromDropdown = async () => {
   closeSettings()
-  logout()
+  await logout()
 }
 </script>
 
