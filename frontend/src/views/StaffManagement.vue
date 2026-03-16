@@ -47,7 +47,7 @@
     <div class="stats-row" v-if="!loading">
       <div class="stat-chip">
         <span class="stat-num">{{ filteredStaffs.length }}</span>
-        <span class="stat-label">전체</span>
+        <span class="stat-label">{{ t('common.all') }}</span>
       </div>
       <div class="stat-chip manager">
         <span class="stat-num">{{ countByRole('MANAGER') }}</span>
@@ -96,7 +96,13 @@
               </span>
             </div>
           </div>
-          <button class="edit-fab" @click="openEditModal(staff)" title="수정">✏️</button>
+          <button
+            class="edit-fab"
+            @click="openEditModal(staff)"
+            :title="t('staffMgt.editStaff')"
+          >
+            ✏️
+          </button>
         </div>
 
         <!-- 카드 본문 -->
@@ -143,39 +149,42 @@
         <!-- 트레이너 프로필 섹션 -->
         <template v-if="viewingStaff.role === 'TRAINER'">
           <div v-if="loadingTrainerProfile" class="trainer-loading">
-            <span class="loader-sm"></span> 트레이너 프로필 로딩 중...
+            <span class="loader-sm"></span>
+            {{ t('trainerProfile.loadFailed') || t('common.loading') }}
           </div>
           <template v-else-if="viewingTrainerProfile">
             <div v-if="viewingTrainerProfile.bio" class="trainer-section">
-              <div class="trainer-section-label">소개</div>
+              <div class="trainer-section-label">{{ t('trainerProfile.bio') }}</div>
               <p class="trainer-bio">{{ viewingTrainerProfile.bio }}</p>
             </div>
             <div v-if="viewingTrainerProfile.specialties?.length" class="trainer-section">
-              <div class="trainer-section-label">전문분야</div>
+              <div class="trainer-section-label">{{ t('trainerProfile.specialties') }}</div>
               <div class="tag-row">
                 <span v-for="s in viewingTrainerProfile.specialties" :key="s" class="tag">{{ s }}</span>
               </div>
             </div>
             <div v-if="viewingTrainerProfile.career?.length" class="trainer-section">
-              <div class="trainer-section-label">경력</div>
+              <div class="trainer-section-label">{{ t('trainerProfile.career') }}</div>
               <ul class="trainer-list">
                 <li v-for="c in viewingTrainerProfile.career" :key="c">{{ c }}</li>
               </ul>
             </div>
             <div v-if="viewingTrainerProfile.awards?.length" class="trainer-section">
-              <div class="trainer-section-label">수상이력</div>
+              <div class="trainer-section-label">{{ t('trainerProfile.awards') }}</div>
               <ul class="trainer-list">
                 <li v-for="a in viewingTrainerProfile.awards" :key="a">{{ a }}</li>
               </ul>
             </div>
           </template>
           <div v-else class="trainer-no-profile">
-            아직 등록된 트레이너 프로필이 없습니다.
+            {{ t('trainerProfile.noProfile') }}
           </div>
         </template>
 
         <div class="profile-modal-footer">
-          <button class="btn btn-ghost" @click="showProfileModal = false">닫기</button>
+          <button class="btn btn-ghost" @click="showProfileModal = false">
+            {{ t('common.close') }}
+          </button>
         </div>
       </div>
     </BaseModal>

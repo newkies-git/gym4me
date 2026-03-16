@@ -76,6 +76,11 @@ export default {
         backToSignup: '회원가입으로 돌아가기',
         termsIntro: 'gym4me 서비스 이용약관입니다. 가입 시 동의한 것으로 간주됩니다.',
         privacyIntro: 'gym4me 개인정보 처리방침입니다. 수집·이용·보관·파기 등에 관한 내용을 안내합니다.',
+        privacySection1: '<strong>1. 수집하는 개인정보 항목</strong> 서비스는 회원가입·이용 시 이메일, 비밀번호, 이름, 전화번호, 닉네임, 소속 헬스장 정보 등을 수집할 수 있습니다.',
+        privacySection2: '<strong>2. 수집 목적</strong> 서비스 제공, 회원 식별, 일정·강좌 관리, 고객 문의 대응 및 이용약관에 따른 의무 이행을 위하여 수집합니다.',
+        privacySection3: '<strong>3. 보유 및 이용 기간</strong> 회원 탈퇴 또는 동의 철회 시까지 보유하며, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.',
+        privacySection4: '<strong>4. 제3자 제공</strong> 원칙적으로 회원의 개인정보를 제3자에게 제공하지 않습니다. 법령에 의한 경우 등 예외가 있는 경우 해당 법령에 따릅니다.',
+        privacySection5: '<strong>5. 동의 거부 권리</strong> 개인정보 수집·이용에 동의하지 않을 수 있으며, 동의 거부 시 서비스 가입 및 이용이 제한될 수 있습니다.',
     },
 
     completeProfile: {
@@ -571,6 +576,16 @@ export default {
         after: '이후',
     },
 
+    // ── Profile / Role Labels ────────────────────────────────────────
+    role: {
+        member: '회원',
+        observer: '옵저버',
+        trainer: '트레이너',
+        manager: '매니저',
+        subManager: '부매니저',
+        siteAdmin: '사이트 관리자',
+    },
+
     // ── Gym Member Management ───────────────────────────────────────
     gymMember: {
         title: '지점 회원 관리',
@@ -647,6 +662,9 @@ export default {
         byLabel: '등록자',
         forLabel: '대상',
         registeredAt: '등록일시',
+        loadFailed: '운동기구 목록을 불러오지 못했습니다.',
+        titleRequired: '제목을 입력해 주세요.',
+        mediaRequired: '미디어 URL을 1개 이상 입력해 주세요.',
     },
 
     // ── Common ───────────────────────────────────────────────────────
@@ -662,6 +680,16 @@ export default {
         back: '뒤로',
         confirm: '확인',
         loggedOut: '로그아웃 되었습니다.',
+        close: '닫기',
+        saveSuccess: '저장되었습니다.',
+        saveFailed: '저장에 실패했습니다.',
+        updateSuccess: '수정되었습니다.',
+        updateFailed: '수정에 실패했습니다.',
+        prev: '이전',
+        next: '다음',
+        loginRequired: '로그인이 필요합니다.',
+        all: '전체',
+        details: '상세',
     },
     admin: {
         eyebrow: '사이트 관리자',

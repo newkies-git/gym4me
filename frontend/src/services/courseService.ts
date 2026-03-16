@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   where
 } from 'firebase/firestore'
+import { logTicketHistory } from '../services/firebaseService'
 import type { Course } from '../types'
 
 function toCourse(id: string, data: Record<string, unknown>): Course {
@@ -175,6 +176,20 @@ export async function approveApplication(
   applicationId: string,
   traineeEmail: string
 ): Promise<void> {
+  // 1) Check and deduct trainee credit
+  const userSnap = await getDocs(
+    query(collection(db, 'users'), where('email', '==', traineeEmail))
+  )
+  if (userSnap.empty) {
+    throw new Error('Trainee not found for credit deduction')
+  }
+  const userDoc = userSnap.docs[0]
+  const userData = userDoc.data() as Record<string, unknown>
+  const currentCredits = (userData.remainingSessions as number | undefined) ?? 0
+  if (currentCredits <= 0) {
+    throw new Error('남은 PT 이용권이 없습니다.')
+  }
+
   const courseRef = doc(db, 'courses', courseId)
   const courseSnap = await getDoc(courseRef)
   if (!courseSnap.exists()) throw new Error('Course not found')
@@ -183,4 +198,14 @@ export async function approveApplication(
   if (!traineeEmails.includes(traineeEmail)) traineeEmails.push(traineeEmail)
   await updateDoc(courseRef, { traineeEmails, updatedAt: serverTimestamp() })
   await deleteDoc(doc(db, 'courseApplications', applicationId))
+
+  const newCredits = currentCredits - 1
+  await updateDoc(userDoc.ref, { remainingSessions: newCredits, updatedAt: serverTimestamp() })
+  await logTicketHistory({
+    clientEmail: traineeEmail,
+    action: 'USE',
+    amountChanged: -1,
+    newTotal: newCredits,
+    courseId
+  })
 }

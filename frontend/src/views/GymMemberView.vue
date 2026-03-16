@@ -45,7 +45,7 @@
                 {{ member.remainingSessions }}
             </td>
             <td :class="{ 'warning-text': isExpired(member.expirationDate) }">
-                {{ member.expirationDate || 'N/A' }}
+                {{ member.expirationDate || t('common.na') }}
             </td>
             <td v-if="showActions">
               <button class="btn btn-ghost btn-mini" @click="viewDetails(member)">
@@ -97,7 +97,7 @@
             </div>
             <div class="detail-row">
                 <span>{{ t('gymMember.expirationDate') }}:</span>
-                <strong>{{ selectedMember.expirationDate || 'N/A' }}</strong>
+                <strong>{{ selectedMember.expirationDate || t('common.na') }}</strong>
             </div>
         </div>
         <template #footer>

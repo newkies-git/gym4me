@@ -41,8 +41,22 @@
             <div v-else class="tool-media tool-media-placeholder">No media</div>
             <div v-if="tool.isPrivate" class="private-badge">🔒 Private</div>
             <template v-if="toolMediaList(tool).length > 1">
-              <button type="button" class="media-nav media-prev" aria-label="이전" @click="setMediaIndex(tool.id, -1)">‹</button>
-              <button type="button" class="media-nav media-next" aria-label="다음" @click="setMediaIndex(tool.id, 1)">›</button>
+              <button
+                type="button"
+                class="media-nav media-prev"
+                :aria-label="t('common.prev')"
+                @click="setMediaIndex(tool.id, -1)"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                class="media-nav media-next"
+                :aria-label="t('common.next')"
+                @click="setMediaIndex(tool.id, 1)"
+              >
+                ›
+              </button>
               <span class="media-counter">{{ mediaIndexMap[tool.id] + 1 }} / {{ toolMediaList(tool).length }}</span>
             </template>
           </div>
@@ -228,7 +242,7 @@ const fetchTools = async () => {
         tools.value = await getTools(auth.user)
     } catch (e: any) {
         console.error('Failed to fetch tools:', e)
-        ui.showToast(e?.message || '목록을 불러오지 못했습니다.', 'error')
+        ui.showToast(e?.message || t('toolUsage.loadFailed'), 'error')
         tools.value = []
     } finally {
         loading.value = false
@@ -304,16 +318,16 @@ function formMediaFiltered(): ToolMediaItem[] {
 
 const handleSave = async () => {
     if (!auth.user?.email) {
-        ui.showToast('로그인이 필요합니다.', 'error')
+        ui.showToast(t('common.loginRequired' as any) || '로그인이 필요합니다.', 'error')
         return
     }
     if (!form.value.title?.trim()) {
-        ui.showToast('제목을 입력해 주세요.', 'error')
+        ui.showToast(t('toolUsage.titleRequired'), 'error')
         return
     }
     const mediaList = formMediaFiltered()
     if (mediaList.length === 0) {
-        ui.showToast('미디어 URL을 1개 이상 입력해 주세요.', 'error')
+        ui.showToast(t('toolUsage.mediaRequired'), 'error')
         return
     }
     saving.value = true
@@ -331,9 +345,9 @@ const handleSave = async () => {
         isAddModalOpen.value = false
         resetForm()
         await fetchTools()
-        ui.showToast(t('common.saveSuccess' as any) || '저장되었습니다.', 'success')
+        ui.showToast(t('common.saveSuccess'), 'success')
     } catch (e: any) {
-        ui.showToast(e?.message || '저장에 실패했습니다.', 'error')
+        ui.showToast(e?.message || t('common.saveFailed'), 'error')
     } finally {
         saving.value = false
     }
@@ -343,12 +357,12 @@ const handleUpdate = async () => {
     const id = editingId.value
     if (!id || !auth.user?.email) return
     if (!form.value.title?.trim()) {
-        ui.showToast('제목을 입력해 주세요.', 'error')
+        ui.showToast(t('toolUsage.titleRequired'), 'error')
         return
     }
     const mediaList = formMediaFiltered()
     if (mediaList.length === 0) {
-        ui.showToast('미디어 URL을 1개 이상 입력해 주세요.', 'error')
+        ui.showToast(t('toolUsage.mediaRequired'), 'error')
         return
     }
     saving.value = true
@@ -366,9 +380,9 @@ const handleUpdate = async () => {
         isEditModalOpen.value = false
         editingId.value = null
         await fetchTools()
-        ui.showToast('수정되었습니다.', 'success')
+        ui.showToast(t('common.updateSuccess'), 'success')
     } catch (e: any) {
-        ui.showToast(e?.message || '수정에 실패했습니다.', 'error')
+        ui.showToast(e?.message || t('common.updateFailed'), 'error')
     } finally {
         saving.value = false
     }
