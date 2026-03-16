@@ -1,11 +1,10 @@
 <template>
   <div class="calendar-wrapper container">
-    <PageHeader :title="headerTitle">
+    <PageHeader :title="headerTitle" :showBack="true" back-url="/home">
       <template #actions>
         <button v-if="auth.isTrainer && (clientEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
           {{ classId ? t('calendar.assignClassSession') : t('calendar.assignPTSession') }}
         </button>
-        <button class="btn btn-ghost" @click="router.push('/home')">{{ t('calendar.back') }}</button>
       </template>
     </PageHeader>
 

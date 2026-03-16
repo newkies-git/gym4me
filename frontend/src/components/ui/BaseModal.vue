@@ -2,7 +2,7 @@
   <div v-if="isOpen" class="modal-overlay" @click.self="close">
     <div class="modal-content glass" :style="{ maxWidth: maxWidth }">
       <div v-if="title" class="modal-header">
-        <h3>{{ title }}</h3>
+        <ModalTitle :title="title" />
         <button class="close-btn" @click="close">&times;</button>
       </div>
       <div class="modal-body">
@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { watch } from 'vue'
+import ModalTitle from './ModalTitle.vue'
 
 const props = withDefaults(defineProps<{
   isOpen: boolean;
@@ -62,7 +63,7 @@ watch(() => props.isOpen, (val) => {
 }
 
 .modal-content {
-  padding: 2rem;
+  padding: 1.75rem 1.75rem 1.25rem 1.75rem;
   border-radius: 1rem;
   width: 90%;
   max-height: 90vh;
@@ -74,7 +75,9 @@ watch(() => props.isOpen, (val) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .modal-header h3 {
@@ -82,26 +85,29 @@ watch(() => props.isOpen, (val) => {
 }
 
 .close-btn {
-  background: none;
-  border: none;
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 1.5rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 0;
+  padding: 0.25rem 0.55rem;
   line-height: 1;
+  border-radius: 999px;
   transition: color 0.2s;
 }
 
 .close-btn:hover {
-  color: white;
+  color: var(--primary);
+  background: rgba(129, 140, 248, 0.16);
+  border-color: var(--primary);
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 </style>

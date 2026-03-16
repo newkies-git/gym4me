@@ -74,7 +74,7 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
 
 <style scoped>
 .profile-page {
-  background-color: #f5f5f5;
+  background-color: var(--bg-dark);
   min-height: 100vh;
 }
 
@@ -105,7 +105,7 @@ const saveRecord = async (payload: { date: string, weight: number, bodyFat?: num
 .observer-card {
   padding: 1.5rem;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   text-align: center;

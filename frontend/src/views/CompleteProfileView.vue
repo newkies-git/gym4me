@@ -1,9 +1,8 @@
 <template>
   <div class="container complete-profile-container">
-    <div class="glass complete-profile-card">
-      <h1 class="complete-profile-title">{{ t('completeProfile.title') }}</h1>
-      <p class="complete-profile-subtitle">{{ t('completeProfile.subtitle') }}</p>
+    <PageHeader :title="t('completeProfile.title')" :subtitle="t('completeProfile.subtitle')" :showBack="true" />
 
+    <div class="glass complete-profile-card">
       <form @submit.prevent="handleSubmit" class="complete-profile-form">
         <div class="field">
           <label>{{ t('completeProfile.name') }} <span class="required">*</span></label>
@@ -45,12 +44,15 @@
       </form>
     </div>
   </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../components/ui/PageHeader.vue'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { getGyms, updateMemberProfile } from '../services/firebaseService'

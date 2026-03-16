@@ -89,6 +89,7 @@ export function useCourseList() {
     selectedCourse.value = course
     applicationList.value = []
     isDetailOpen.value = true
+    form.value.gymId = course.gymId || ''
     if (course.id) {
       getCourseApplications(course.id).then((list) => (applicationList.value = list))
     }
@@ -243,6 +244,38 @@ export function useCourseList() {
     }
   }
 
+  async function addTraineeToCourse(email: string) {
+    if (!selectedCourse.value?.id) return
+    const current = selectedCourse.value.traineeEmails || []
+    if (current.includes(email)) return
+    try {
+      const updated = [...current, email]
+      await updateCourse(selectedCourse.value.id, { traineeEmails: updated })
+      ui.showToast(t('courses.updateSuccess'), 'success')
+      await loadCourses()
+      selectedCourse.value = courses.value.find((c) => c.id === selectedCourse.value?.id) || selectedCourse.value
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      ui.showToast(msg || 'Failed to update course', 'error')
+    }
+  }
+
+  async function removeTraineeFromCourse(email: string) {
+    if (!selectedCourse.value?.id) return
+    const current = selectedCourse.value.traineeEmails || []
+    if (!current.includes(email)) return
+    try {
+      const updated = current.filter((e) => e !== email)
+      await updateCourse(selectedCourse.value.id, { traineeEmails: updated })
+      ui.showToast(t('courses.updateSuccess'), 'success')
+      await loadCourses()
+      selectedCourse.value = courses.value.find((c) => c.id === selectedCourse.value?.id) || selectedCourse.value
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      ui.showToast(msg || 'Failed to update course', 'error')
+    }
+  }
+
   async function loadGyms() {
     try {
       gymsList.value = await getGyms()
@@ -312,6 +345,8 @@ export function useCourseList() {
     confirmDelete,
     doApply,
     cancelApply,
-    approveApp
+    approveApp,
+    addTraineeToCourse,
+    removeTraineeFromCourse
   }
 }

@@ -1,8 +1,8 @@
 <template>
   <div class="container legal-container">
+    <PageHeader :title="t('legal.termsTitle')" :subtitle="t('legal.termsIntro')" :showBack="true" />
+
     <div class="glass legal-card">
-      <h1 class="legal-title">{{ t('legal.termsTitle') }}</h1>
-      <p class="legal-intro">{{ t('legal.termsIntro') }}</p>
       <div class="legal-body">
         <p>제1조 (목적) 이 약관은 gym4me(이하 "서비스")가 제공하는 헬스/PT 관리 서비스의 이용 조건 및 절차, 회원과 서비스 제공자 간의 권리·의무를 정함을 목적으로 합니다.</p>
         <p>제2조 (약관의 효력) 약관은 서비스 화면에 게시하거나 기타의 방법으로 회원에게 공지함으로써 효력이 발생합니다. 회원이 가입 시 동의한 경우 이 약관에 구속됩니다.</p>
@@ -12,10 +12,13 @@
       <router-link :to="{ path: '/auth', query: { tab: 'signup' } }" class="btn btn-primary">{{ t('legal.backToSignup') }}</router-link>
     </div>
   </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../../components/ui/PageHeader.vue'
 const { t } = useI18n()
 </script>
 
@@ -27,17 +30,6 @@ const { t } = useI18n()
 }
 .legal-card {
   padding: 2rem;
-}
-.legal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin: 0 0 1rem 0;
-}
-.legal-intro {
-  color: var(--text-muted);
-  margin: 0 0 1.5rem 0;
-  font-size: 0.95rem;
 }
 .legal-body {
   margin-bottom: 2rem;

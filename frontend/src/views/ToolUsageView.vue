@@ -3,13 +3,15 @@
     <PageHeader
       :title="t('toolUsage.title')"
       :subtitle="t('toolUsage.subtitle')"
-    >
-      <template #actions>
-        <button v-if="auth.isTrainer" class="btn btn-primary" @click="isAddModalOpen = true">
-          + {{ t('toolUsage.addTool') }}
-        </button>
-      </template>
-    </PageHeader>
+      :showBack="true"
+      back-url="/home"
+    />
+
+    <div v-if="auth.isTrainer" class="tool-header-actions">
+      <button class="btn btn-primary" @click="isAddModalOpen = true">
+        + {{ t('toolUsage.addTool') }}
+      </button>
+    </div>
 
     <!-- Category Filter -->
     <div class="filter-bar glass" style="margin: 1.5rem 0; padding: 1rem; display: flex; gap: 0.5rem; overflow-x: auto;">
@@ -29,7 +31,7 @@
         {{ t('toolUsage.noTools') }}
     </div>
     <div v-else class="tool-grid">
-      <div v-for="tool in filteredTools" :key="tool.id" class="tool-card glass">
+      <BaseCard v-for="tool in filteredTools" :key="tool.id" class="tool-card" :clickable="false">
         <div class="media-wrapper">
           <div class="media-container">
             <template v-if="toolMediaList(tool).length > 0">
@@ -61,7 +63,7 @@
             <span v-if="tool.targetTraineeEmail" class="tool-for">{{ t('toolUsage.forLabel') }} {{ tool.targetTraineeEmail }}</span>
           </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Add Tool Modal -->
@@ -160,6 +162,7 @@ import { getTools, addTool, updateTool } from '../services/toolService'
 import type { ToolUsage, ToolMediaItem } from '../types'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import BaseCard from '../components/ui/BaseCard.vue'
 import { useUIStore } from '../stores/uiStore'
 
 const { t } = useI18n()
@@ -374,6 +377,11 @@ const handleUpdate = async () => {
 
 <style scoped>
 .tool-usage-wrapper { padding: 6rem 1rem 2rem 1rem; }
+.tool-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
 .tool-grid {
     display: grid;
     grid-template-columns: 1fr;

@@ -1,8 +1,8 @@
 <template>
   <div class="container legal-container">
+    <PageHeader :title="t('legal.privacyTitle')" :subtitle="t('legal.privacyIntro')" :showBack="true" />
+
     <div class="glass legal-card">
-      <h1 class="legal-title">{{ t('legal.privacyTitle') }}</h1>
-      <p class="legal-intro">{{ t('legal.privacyIntro') }}</p>
       <div class="legal-body">
         <p><strong>1. 수집하는 개인정보 항목</strong> 서비스는 회원가입·이용 시 이메일, 비밀번호, 이름, 전화번호, 닉네임, 소속 헬스장 정보 등을 수집할 수 있습니다.</p>
         <p><strong>2. 수집 목적</strong> 서비스 제공, 회원 식별, 일정·강좌 관리, 고객 문의 대응 및 이용약관에 따른 의무 이행을 위하여 수집합니다.</p>
@@ -13,10 +13,13 @@
       <router-link :to="{ path: '/auth', query: { tab: 'signup' } }" class="btn btn-primary">{{ t('legal.backToSignup') }}</router-link>
     </div>
   </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import PageHeader from '../../components/ui/PageHeader.vue'
 const { t } = useI18n()
 </script>
 
@@ -28,17 +31,6 @@ const { t } = useI18n()
 }
 .legal-card {
   padding: 2rem;
-}
-.legal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin: 0 0 1rem 0;
-}
-.legal-intro {
-  color: var(--text-muted);
-  margin: 0 0 1.5rem 0;
-  font-size: 0.95rem;
 }
 .legal-body {
   margin-bottom: 2rem;

@@ -1,20 +1,21 @@
 <template>
   <div class="course-list-wrapper container">
-    <PageHeader :title="t('courses.title')" :subtitle="t('courses.subtitle')">
-      <template #actions>
-        <button v-if="canManage" class="btn btn-primary" @click="openCreateModal">
-          + {{ t('courses.addCourse') }}
-        </button>
-      </template>
-    </PageHeader>
+    <PageHeader :title="t('courses.title')" :subtitle="t('courses.subtitle')" :showBack="true" back-url="/home" />
+
+    <div class="course-header-actions" v-if="canManage">
+      <button class="btn btn-primary" @click="openCreateModal">
+        + {{ t('courses.addCourse') }}
+      </button>
+    </div>
 
     <div v-if="loading" class="empty-state">{{ t('common.loading') }}</div>
     <div v-else-if="courses.length === 0" class="empty-state">{{ t('courses.noCourses') }}</div>
     <div v-else class="course-grid">
-      <div
+      <BaseCard
         v-for="course in courses"
         :key="course.id"
-        class="course-card glass"
+        class="course-card"
+        :clickable="true"
         @click="openDetail(course)"
       >
         <p class="course-card-line1">
@@ -29,7 +30,7 @@
             {{ formatType(course.type) }}{{ course.maxParticipants != null ? ` (N=${course.maxParticipants})` : '' }}
           </span>
         </p>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- 상세 모달 -->
@@ -54,10 +55,45 @@
             {{ t('courses.registrant') }}: {{ selectedCourse.createdByName || selectedCourse.createdBy }} · {{ formatDateTime(selectedCourse.createdAt) }}
           </p>
 
-          <div v-if="selectedCourse.traineeEmails?.length" class="course-detail-block">
+          <div v-if="selectedCourse.traineeEmails?.length || (canManage && gymMembersList.length)" class="course-detail-block">
             <h4 class="course-detail-block-title">{{ t('courses.trainees') }}</h4>
-            <div class="course-detail-tags">
-              <span v-for="email in selectedCourse.traineeEmails" :key="email" class="course-detail-tag">{{ email }}</span>
+            <div v-if="selectedCourse.traineeEmails?.length" class="course-detail-tags">
+              <template v-if="canManage">
+                <div
+                  v-for="email in selectedCourse.traineeEmails"
+                  :key="email"
+                  class="course-detail-tag-row"
+                >
+                  <span class="course-detail-tag">{{ email }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    @click.stop="removeTraineeFromCourse(email)"
+                  >
+                    {{ t('courses.removeTrainee') }}
+                  </button>
+                </div>
+              </template>
+              <template v-else>
+                <span v-for="email in selectedCourse.traineeEmails" :key="email" class="course-detail-tag">
+                  {{ email }}
+                </span>
+              </template>
+            </div>
+            <div v-if="canManage && availableTraineeOptions.length" class="course-detail-add-trainee">
+              <BaseSelect
+                v-model="traineeToAdd"
+                :options="availableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
+                :placeholder="t('courses.selectTraineeToAdd')"
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                :disabled="!traineeToAdd"
+                @click.stop="handleAddTrainee"
+              >
+                {{ t('courses.addTrainee') }}
+              </button>
             </div>
           </div>
 
@@ -90,56 +126,94 @@
     <!-- 생성 모달 -->
     <BaseModal v-model:isOpen="isCreateOpen" :title="t('courses.addCourse')" max-width="520px">
       <form @submit.prevent="submitCreate" class="course-form">
-        <div class="field">
-          <label>{{ t('courses.courseName') }} <span class="danger">*</span></label>
-          <input v-model="form.title" type="text" required />
-        </div>
-        <div class="field">
-          <label>{{ t('courses.gym') }}</label>
-          <select v-model="form.gymId">
-            <option value="">{{ t('courses.gymPlaceholder') }}</option>
-            <option v-for="g in gymsList" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
-        </div>
-        <div class="field row">
-          <div class="half">
+        <BaseFormField :label="t('courses.courseName')" :required="true">
+          <BaseTextField v-model="form.title" />
+        </BaseFormField>
+        <BaseFormField :label="t('courses.gym')">
+          <BaseSelect
+            v-model="form.gymId"
+            :options="gymsList.map(g => ({ value: g.id, label: g.name }))"
+            :placeholder="t('courses.gymPlaceholder')"
+          />
+        </BaseFormField>
+        <div class="field date-time-row">
+          <div class="third">
             <label>{{ t('courses.date') }} <span class="danger">*</span></label>
             <input v-model="form.dateStr" type="date" required />
           </div>
-          <div class="half">
-            <label>{{ t('courses.timeFrom') }} ~ {{ t('courses.timeTo') }}</label>
-            <input v-model="form.timeFrom" type="time" /> <input v-model="form.timeTo" type="time" />
+          <div class="third">
+            <label>{{ t('courses.timeFrom') }}</label>
+            <VueTimepicker v-model="form.timeFrom" format="HH:mm" :minute-interval="5" />
+          </div>
+          <div class="third">
+            <label>{{ t('courses.timeTo') }}</label>
+            <VueTimepicker v-model="form.timeTo" format="HH:mm" :minute-interval="5" />
           </div>
         </div>
-        <div class="field">
-          <label>{{ t('courses.type') }}</label>
-          <select v-model="form.type">
-            <option value="1:1">{{ t('courses.type1to1') }}</option>
-            <option value="1:2">{{ t('courses.type1to2') }}</option>
-            <option value="1:n">{{ t('courses.type1toN') }}</option>
-          </select>
-          <input v-if="form.type === '1:n'" v-model.number="form.maxParticipants" type="number" min="1" :placeholder="t('courses.maxParticipants')" class="mt-1" />
-        </div>
-        <div class="field">
-          <label>{{ t('courses.content') }}</label>
-          <textarea v-model="form.content" rows="3"></textarea>
-        </div>
-        <div class="field">
-          <label>{{ t('courses.trainees') }} ({{ t('courses.instructor') }} 지정)</label>
-          <select
-            v-model="form.traineeEmails"
-            multiple
-            class="trainee-select"
-            :disabled="!form.gymId"
-          >
-            <option v-for="m in gymMembersList" :key="m.email" :value="m.email">
-              {{ m.nickname || m.email }} ({{ m.email }})
-            </option>
-          </select>
-          <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
-          <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
-          <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
-        </div>
+        <BaseFormField :label="t('courses.type')">
+          <BaseSelect
+            v-model="form.type"
+            :options="[
+              { value: '1:1', label: t('courses.type1to1') },
+              { value: '1:2', label: t('courses.type1to2') },
+              { value: '1:n', label: t('courses.type1toN') }
+            ]"
+          />
+          <BaseTextField
+            v-if="form.type === '1:n'"
+            v-model="form.maxParticipants"
+            type="number"
+            :placeholder="t('courses.maxParticipants')"
+            class="mt-1"
+          />
+        </BaseFormField>
+        <BaseFormField :label="t('courses.content')">
+          <textarea v-model="form.content" rows="3" class="base-textarea"></textarea>
+        </BaseFormField>
+        <BaseFormField :label="`${t('courses.trainees')} (${t('courses.instructor')} 지정)`">
+          <div class="chips-wrapper">
+            <div v-if="form.traineeEmails.length" class="chip-list">
+              <div
+                v-for="email in form.traineeEmails"
+                :key="email"
+                class="chip-item"
+              >
+                <span class="chip-label">
+                  {{ gymMembersMap[email]?.nickname || email }} ({{ email }})
+                </span>
+                <button
+                  type="button"
+                  class="chip-remove"
+                  @click="removeTraineeFromForm(email)"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <p v-else class="field-hint">{{ t('courses.noTraineesSelected') }}</p>
+
+            <div class="chip-add-row">
+              <BaseSelect
+                v-model="formTraineeToAdd"
+                :options="formAvailableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
+                :placeholder="t('courses.selectTraineeToAdd')"
+                :disabled="!form.gymId || formAvailableTraineeOptions.length === 0"
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                :disabled="!formTraineeToAdd"
+                @click="handleFormAddTrainee"
+              >
+                {{ t('courses.addTrainee') }}
+              </button>
+            </div>
+
+            <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
+            <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
+            <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
+          </div>
+        </BaseFormField>
       </form>
       <template #footer>
         <button class="btn btn-ghost" @click="isCreateOpen = false">{{ t('common.cancel') }}</button>
@@ -150,56 +224,94 @@
     <!-- 수정 모달 -->
     <BaseModal v-model:isOpen="isEditOpen" :title="t('courses.edit')" max-width="520px">
       <form v-if="editingCourse" @submit.prevent="submitEdit" class="course-form">
-        <div class="field">
-          <label>{{ t('courses.courseName') }} <span class="danger">*</span></label>
-          <input v-model="form.title" type="text" required />
-        </div>
-        <div class="field">
-          <label>{{ t('courses.gym') }}</label>
-          <select v-model="form.gymId">
-            <option value="">{{ t('courses.gymPlaceholder') }}</option>
-            <option v-for="g in gymsList" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
-        </div>
-        <div class="field row">
-          <div class="half">
+        <BaseFormField :label="t('courses.courseName')" :required="true">
+          <BaseTextField v-model="form.title" />
+        </BaseFormField>
+        <BaseFormField :label="t('courses.gym')">
+          <BaseSelect
+            v-model="form.gymId"
+            :options="gymsList.map(g => ({ value: g.id, label: g.name }))"
+            :placeholder="t('courses.gymPlaceholder')"
+          />
+        </BaseFormField>
+        <div class="field date-time-row">
+          <div class="third">
             <label>{{ t('courses.date') }} <span class="danger">*</span></label>
             <input v-model="form.dateStr" type="date" required />
           </div>
-          <div class="half">
-            <label>{{ t('courses.timeFrom') }} ~ {{ t('courses.timeTo') }}</label>
-            <input v-model="form.timeFrom" type="time" /> <input v-model="form.timeTo" type="time" />
+          <div class="third">
+            <label>{{ t('courses.timeFrom') }}</label>
+            <VueTimepicker v-model="form.timeFrom" format="HH:mm" :minute-interval="5" />
+          </div>
+          <div class="third">
+            <label>{{ t('courses.timeTo') }}</label>
+            <VueTimepicker v-model="form.timeTo" format="HH:mm" :minute-interval="5" />
           </div>
         </div>
-        <div class="field">
-          <label>{{ t('courses.type') }}</label>
-          <select v-model="form.type">
-            <option value="1:1">{{ t('courses.type1to1') }}</option>
-            <option value="1:2">{{ t('courses.type1to2') }}</option>
-            <option value="1:n">{{ t('courses.type1toN') }}</option>
-          </select>
-          <input v-if="form.type === '1:n'" v-model.number="form.maxParticipants" type="number" min="1" :placeholder="t('courses.maxParticipants')" class="mt-1" />
-        </div>
-        <div class="field">
-          <label>{{ t('courses.content') }}</label>
-          <textarea v-model="form.content" rows="3"></textarea>
-        </div>
-        <div class="field">
-          <label>{{ t('courses.trainees') }}</label>
-          <select
-            v-model="form.traineeEmails"
-            multiple
-            class="trainee-select"
-            :disabled="!form.gymId"
-          >
-            <option v-for="m in gymMembersList" :key="m.email" :value="m.email">
-              {{ m.nickname || m.email }} ({{ m.email }})
-            </option>
-          </select>
-          <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
-          <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
-          <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
-        </div>
+        <BaseFormField :label="t('courses.type')">
+          <BaseSelect
+            v-model="form.type"
+            :options="[
+              { value: '1:1', label: t('courses.type1to1') },
+              { value: '1:2', label: t('courses.type1to2') },
+              { value: '1:n', label: t('courses.type1toN') }
+            ]"
+          />
+          <BaseTextField
+            v-if="form.type === '1:n'"
+            v-model="form.maxParticipants"
+            type="number"
+            :placeholder="t('courses.maxParticipants')"
+            class="mt-1"
+          />
+        </BaseFormField>
+        <BaseFormField :label="t('courses.content')">
+          <textarea v-model="form.content" rows="3" class="base-textarea"></textarea>
+        </BaseFormField>
+        <BaseFormField :label="t('courses.trainees')">
+          <div class="chips-wrapper">
+            <div v-if="form.traineeEmails.length" class="chip-list">
+              <div
+                v-for="email in form.traineeEmails"
+                :key="email"
+                class="chip-item"
+              >
+                <span class="chip-label">
+                  {{ gymMembersMap[email]?.nickname || email }} ({{ email }})
+                </span>
+                <button
+                  type="button"
+                  class="chip-remove"
+                  @click="removeTraineeFromForm(email)"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <p v-else class="field-hint">{{ t('courses.noTraineesSelected') }}</p>
+
+            <div class="chip-add-row">
+              <BaseSelect
+                v-model="formTraineeToAdd"
+                :options="formAvailableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
+                :placeholder="t('courses.selectTraineeToAdd')"
+                :disabled="!form.gymId || formAvailableTraineeOptions.length === 0"
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                :disabled="!formTraineeToAdd"
+                @click="handleFormAddTrainee"
+              >
+                {{ t('courses.addTrainee') }}
+              </button>
+            </div>
+
+            <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
+            <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
+            <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
+          </div>
+        </BaseFormField>
       </form>
       <template #footer>
         <button class="btn btn-ghost" @click="isEditOpen = false">{{ t('common.cancel') }}</button>
@@ -210,12 +322,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import VueTimepicker from 'vue3-timepicker'
+import 'vue3-timepicker/dist/VueTimepicker.css'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import BaseCard from '../components/ui/BaseCard.vue'
+import BaseFormField from '../components/ui/BaseFormField.vue'
+import BaseTextField from '../components/ui/BaseTextField.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
 import { useCourseList } from '../composables/course/useCourseList'
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 const {
   loading,
@@ -245,13 +367,69 @@ const {
   confirmDelete,
   doApply,
   cancelApply,
-  approveApp
+  approveApp,
+  addTraineeToCourse,
+  removeTraineeFromCourse
 } = useCourseList()
+
+const traineeToAdd = ref('')
+const formTraineeToAdd = ref('')
+
+const gymMembersMap = computed(() =>
+  gymMembersList.value.reduce<Record<string, { nickname?: string }>>((acc, m) => {
+    acc[m.email] = { nickname: m.nickname }
+    return acc
+  }, {})
+)
+
+const availableTraineeOptions = computed(() => {
+  if (!selectedCourse.value) return []
+  const current = selectedCourse.value.traineeEmails || []
+  return gymMembersList.value.filter((m) => !current.includes(m.email))
+})
+
+const formAvailableTraineeOptions = computed(() => {
+  const current = form.value.traineeEmails || []
+  return gymMembersList.value.filter((m) => !current.includes(m.email))
+})
+
+const handleAddTrainee = async () => {
+  if (!traineeToAdd.value) return
+  await addTraineeToCourse(traineeToAdd.value)
+  traineeToAdd.value = ''
+}
+
+const handleFormAddTrainee = () => {
+  if (!formTraineeToAdd.value) return
+  if (!form.value.traineeEmails.includes(formTraineeToAdd.value)) {
+    form.value.traineeEmails = [...form.value.traineeEmails, formTraineeToAdd.value]
+  }
+  formTraineeToAdd.value = ''
+}
+
+const removeTraineeFromForm = (email: string) => {
+  form.value.traineeEmails = form.value.traineeEmails.filter((e) => e !== email)
+}
+
+onMounted(() => {
+  if (route.query.create === '1') {
+    openCreateModal()
+
+    const { create, ...rest } = route.query
+    router.replace({ query: rest })
+  }
+})
 </script>
 
 <style scoped>
 .course-list-wrapper {
   padding: 6rem 1rem 3rem 1rem;
+}
+
+.course-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
 }
 
 .course-grid {
@@ -422,7 +600,7 @@ const {
 
 .course-detail-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.4rem;
   margin-top: 0.5rem;
 }
@@ -434,6 +612,20 @@ const {
   color: var(--primary);
   border-radius: 100px;
   font-weight: 600;
+}
+
+.course-detail-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.course-detail-add-trainee {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: center;
 }
 
 .application-list {
@@ -490,6 +682,17 @@ const {
 .course-form .half {
   flex: 1;
 }
+.date-time-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+.date-time-row .third {
+  flex: 1 1 0;
+}
+
 
 .mt-1 {
   margin-top: 0.5rem;
@@ -506,13 +709,134 @@ const {
 
 .trainee-select {
   width: 100%;
-  min-height: 120px;
   padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background-color: var(--bg-input, #fff);
 }
 
 .field-hint {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0.35rem 0 0 0;
+}
+
+.chips-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.12);
+  color: var(--primary);
+  font-size: 0.8rem;
+  border: 1px solid rgba(129, 140, 248, 0.25);
+}
+
+.chip-label {
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.8;
+}
+
+.chip-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chip-add-row .btn-sm {
+  height: 2.9rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 폼 내 인풋/셀렉트/텍스트area 공통 높이 및 스타일 */
+.course-form input[type='text'],
+.course-form input[type='date'],
+.course-form input[type='time'],
+.course-form input[type='number'],
+.course-form select,
+.course-form textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.course-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.base-textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* 날짜 + 시간 필드 배치 개선 */
+.course-form .row .half input[type='date'],
+.course-form .row .half input[type='time'] {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .course-form .row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .chip-label {
+    max-width: 160px;
+  }
+
+  .chip-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chip-add-row .btn-sm {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .course-detail-add-trainee {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

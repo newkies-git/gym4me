@@ -2,7 +2,7 @@
   <div class="class-manager glass" style="margin-bottom: 2rem;">
     <div class="flex-between" style="margin-bottom: 1.5rem;">
       <h3>{{ t('classMgr.myClasses') }}</h3>
-      <button class="btn btn-primary btn-sm" @click="isCreateModalOpen = true">+ {{ t('classMgr.createClass') }}</button>
+      <button class="btn btn-primary btn-sm" @click="goToCourseCreate">+ {{ t('classMgr.createClass') }}</button>
     </div>
 
     <div v-if="loading" class="sm-text">{{ t('classMgr.loading') }}</div>
@@ -144,6 +144,10 @@ const handleInvite = async () => {
 
 const viewClassSchedule = (cls: GymClass) => {
   router.push(`/calendar?classId=${cls.id}`)
+}
+
+const goToCourseCreate = () => {
+  router.push({ path: '/courses', query: { create: '1' } })
 }
 
 const openMembersModal = (cls: GymClass) => {

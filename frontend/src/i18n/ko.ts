@@ -622,6 +622,9 @@ export default {
         applySuccess: '참석 신청이 완료되었습니다.',
         cancelApplySuccess: '참석 신청이 취소되었습니다.',
         approveSuccess: '참석이 승인되었습니다.',
+        noTraineesSelected: '선택된 참석자가 없습니다.',
+        selectTraineeToAdd: '추가할 참석자를 선택하세요',
+        addTrainee: '참석자 추가',
     },
 
     // ── Tool Usage ──────────────────────────────────────────────────

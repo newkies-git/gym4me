@@ -70,10 +70,10 @@
     </div>
 
     <div v-else class="staff-grid">
-      <div
+      <BaseCard
         v-for="staff in filteredStaffs"
         :key="staff.uid"
-        class="staff-card glass"
+        class="staff-card"
         :class="{ resigned: staff.employmentStatus === 'RESIGNED' }"
       >
         <!-- 카드 상단: 아바타 + 이름 + 뱃지 -->
@@ -105,7 +105,7 @@
         <div class="card-footer">
           <span class="reg-by">{{ t('staffMgt.registeredBy') }}: {{ staff.registeredByEmail || '—' }}</span>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- ── 프로필 뷰 모달 ── -->
@@ -341,6 +341,7 @@ import { ref, onMounted, computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import BaseCard from '../components/ui/BaseCard.vue'
 import { getStaffs, updateStaffData, getGyms, createStaffAccount, getTrainerProfile } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import type { User, Gym, TrainerProfile } from '../types'
