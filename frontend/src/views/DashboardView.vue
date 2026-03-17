@@ -6,9 +6,14 @@
     />
 
     <!-- Observer Warning -->
-    <div v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSiteAdmin && !auth.isManager" class="glass alert-banner" style="margin-top: 1rem;">
+    <div
+      v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSiteAdmin && !auth.isManager"
+      class="glass alert-banner"
+    >
       <p v-html="t('dashboard.observerMsg')"></p>
-      <button class="btn btn-primary" @click="simulatePurchase" style="margin-top: 1rem;">{{ t('dashboard.buyTestSessions') }}</button>
+      <button class="btn btn-primary trial-pt-btn" @click="simulatePurchase">
+        {{ t('dashboard.buyTestSessions') }}
+      </button>
     </div>
 
     <!-- Dynamic Role-Based View -->
@@ -48,5 +53,29 @@ const simulatePurchase = useSimulatePurchase()
 <style scoped>
 .dashboard-wrapper { 
   padding: 6rem 1rem 2rem 1rem; 
+}
+
+.alert-banner {
+  margin-top: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+}
+
+.trial-pt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 260px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .trial-pt-btn {
+    width: auto;
+    padding-inline: 1.5rem;
+  }
 }
 </style>

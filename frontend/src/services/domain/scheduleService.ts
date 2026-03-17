@@ -175,12 +175,13 @@ export async function completeSession(eventId: string, signatureUrl: string, act
           })
           const historyRef = doc(collection(db, 'ticketHistory'))
           transaction.set(historyRef, {
-            clientEmail: userData.email,
-            trainerEmail: eventData.trainerEmail,
-            action: 'DEDUCT',
+            memberUid: userSnap.id,
+            action: 'USE',
             amountChanged: -1,
-            remainingSessions: currentSessions - 1,
+            remainingSessionsBefore: currentSessions,
+            remainingSessionsAfter: currentSessions - 1,
             reason: `PT Session Completed: ${eventData.title}`,
+            registrantEmail: eventData.trainerEmail,
             createdAt: serverTimestamp()
           })
         }

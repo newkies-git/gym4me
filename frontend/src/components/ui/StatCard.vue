@@ -1,7 +1,9 @@
 <template>
   <div class="stat-card glass" :class="{ 'clickable': isClickable }" @click="handleClick">
-    <div class="stat-value" :class="{ 'text-danger': isDanger }">{{ displayValue }}</div>
-    <div class="stat-label">{{ label }}</div>
+    <div class="stat-main">
+      <div class="stat-value" :class="{ 'text-danger': isDanger }">{{ displayValue }}</div>
+      <div class="stat-label">{{ label }}</div>
+    </div>
   </div>
 </template>
 
@@ -35,10 +37,20 @@ const handleClick = () => {
 
 <style scoped>
 .stat-card {
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
+  padding: 1.1rem 1.25rem;
+  border-radius: 0.9rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.stat-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .stat-card.clickable {
@@ -51,10 +63,9 @@ const handleClick = () => {
 }
 
 .stat-value {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--primary);
-  margin-bottom: 0.5rem;
 }
 
 .stat-value.text-danger {
@@ -63,8 +74,6 @@ const handleClick = () => {
 
 .stat-label {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.8rem;
 }
 </style>

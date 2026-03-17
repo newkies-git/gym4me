@@ -127,16 +127,15 @@ async function handleSubmit() {
 
 <style scoped>
 .complete-profile-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
+  max-width: 720px;
+  margin: 0 auto;
   padding: 6rem 1rem 3rem 1rem;
 }
 
 .complete-profile-card {
   width: 100%;
   max-width: 420px;
+  margin: 1.5rem auto 0;
   padding: 2rem;
 }
 

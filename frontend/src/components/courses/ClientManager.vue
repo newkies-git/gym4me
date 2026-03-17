@@ -128,9 +128,9 @@ const saveSessionUpdates = async () => {
       );
       
       await logTicketHistory({
-          clientEmail: selectedClient.value.email,
-          trainerEmail: auth.user?.email,
-          action: diff > 0 ? 'ADD' : (diff < 0 ? 'DEDUCT' : 'UPDATE_DATE'),
+          memberUid: selectedClient.value.uid,
+          registrantEmail: auth.user?.email,
+          action: diff > 0 ? 'ADD' : (diff < 0 ? 'REDUCE' : 'EXPIRE'),
           amountChanged: diff,
           newTotal: newRemaining,
           newExpirationDate: editSessionForm.value.expiration

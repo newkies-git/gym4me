@@ -202,7 +202,7 @@ export async function approveApplication(
   const newCredits = currentCredits - 1
   await updateDoc(userDoc.ref, { remainingSessions: newCredits, updatedAt: serverTimestamp() })
   await logTicketHistory({
-    clientEmail: traineeEmail,
+    memberUid: userDoc.id,
     action: 'USE',
     amountChanged: -1,
     newTotal: newCredits,

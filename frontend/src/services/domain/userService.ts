@@ -68,9 +68,31 @@ export async function updateClientSession(
   await updateDoc(doc(db, 'users', clientId), updates)
 }
 
-export async function logTicketHistory(historyData: Partial<DocumentData>) {
-  return await addDoc(collection(db, 'ticketHistory'), {
-    ...historyData,
+export async function logTicketHistory(historyData: {
+  memberUid: string
+  action: string
+  amountChanged: number
+  newTotal: number
+  newExpirationDate?: string
+  courseId?: string
+  registrantEmail?: string
+}): Promise<void> {
+  const userRef = doc(db, 'users', historyData.memberUid)
+  const userSnap = await getDoc(userRef)
+  if (!userSnap.exists()) throw new Error('User not found for ticket history')
+
+  const userData = userSnap.data() as User
+
+  await addDoc(collection(db, 'ticketHistory'), {
+    memberUid: historyData.memberUid,
+    action: historyData.action,
+    amountChanged: historyData.amountChanged,
+    remainingSessionsBefore: historyData.newTotal - historyData.amountChanged,
+    remainingSessionsAfter: historyData.newTotal,
+    newTotal: historyData.newTotal,
+    newExpirationDate: historyData.newExpirationDate ?? userData.expirationDate ?? null,
+    courseId: historyData.courseId ?? null,
+    registrantEmail: historyData.registrantEmail ?? null,
     createdAt: serverTimestamp()
   })
 }
@@ -408,36 +430,19 @@ export async function addTicketCredit(
   })
 }
 
-export async function getTicketHistory(memberUidOrEmail: string): Promise<TicketHistoryEntry[]> {
-  let memberEmail = memberUidOrEmail
-
-  if (!memberUidOrEmail.includes('@')) {
-    try {
-      const userSnap = await getDoc(doc(db, 'users', memberUidOrEmail))
-      if (userSnap.exists()) {
-        memberEmail = (userSnap.data() as User).email
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  // Fetch ticketHistory and filter client-side to ensure compatibility with various field names
-  // Use clientEmail as the primary field for querying if we can
+export async function getTicketHistory(memberUid: string): Promise<TicketHistoryEntry[]> {
   const q = query(
     collection(db, 'ticketHistory'),
-    where('clientEmail', '==', memberEmail)
+    where('memberUid', '==', memberUid)
   )
   const snapshot = await getDocs(q)
 
   const results: TicketHistoryEntry[] = snapshot.docs.map((docSnap) => {
     const data = docSnap.data()
-    const docEmail = data.clientEmail || data.memberEmail || ''
 
     return {
       id: docSnap.id,
       memberUid: data.memberUid || '',
-      memberEmail: docEmail,
       action: data.action || 'ADD',
       amount: data.amountChanged ?? data.amount ?? 0,
       remainingSessionsBefore: data.remainingSessionsBefore ?? 0,
