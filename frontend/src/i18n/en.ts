@@ -624,6 +624,34 @@ export default {
         registeredAt: 'Registered',
     },
 
+    // ── Gym Member Management ──────────────────────────────────────
+    gymMember: {
+        title: 'Gym Member Management',
+        subtitle: 'Manage PT ticket status for all gym members.',
+        searchPlaceholder: 'Search by name or email...',
+        nickname: 'Nickname',
+        email: 'Email',
+        remainingSessions: 'Remaining PT',
+        expirationDate: 'Expiration Date',
+        actions: 'Actions',
+        addCredit: 'Add Credit',
+        ptCount: 'PT Sessions',
+        purchaseDate: 'Date',
+        creditHistory: 'View History',
+        date: 'Date / Time',
+        action: 'Type',
+        amount: 'Amount',
+        sessionsAfter: 'Remaining After',
+        registrant: 'Registrant',
+        actionType: {
+            ADD: 'Add',
+            USE: 'Use',
+            REDUCE: 'Reduce',
+            EXPIRE: 'Expire',
+        },
+        noMembers: 'No members found.',
+    },
+
     // ── Common ───────────────────────────────────────────────────────
     common: {
         na: 'N/A',
@@ -637,6 +665,11 @@ export default {
         back: 'Back',
         confirm: 'Confirm',
         loggedOut: 'Successfully logged out.',
+        close: 'Close',
+        register: 'Register',
+        noData: 'No data.',
+        all: 'All',
+        details: 'Details',
     },
     admin: {
         eyebrow: 'Site Admin',

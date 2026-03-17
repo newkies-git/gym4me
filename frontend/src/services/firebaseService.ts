@@ -66,6 +66,8 @@ export {
   getStaffs,
   updateStaffData,
   createStaffAccount,
+  addTicketCredit,
+  getTicketHistory,
   type ManagerType,
   type CreateStaffPayload
 } from './domain/userService'

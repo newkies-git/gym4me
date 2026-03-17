@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <!-- Details Modal (Future Enhancement: can add credit adjustment here if needed) -->
+    <!-- Details Modal -->
     <BaseModal v-model:isOpen="isModalOpen" :title="selectedMember?.nickname || ''">
         <div v-if="selectedMember" class="member-info-details">
             <div class="detail-row">
@@ -93,7 +93,7 @@
             </div>
             <div class="detail-row">
                 <span>{{ t('gymMember.remainingSessions') }}:</span>
-                <strong>{{ selectedMember.remainingSessions }}</strong>
+                <strong class="sessions-count">{{ selectedMember.remainingSessions ?? 0 }}</strong>
             </div>
             <div class="detail-row">
                 <span>{{ t('gymMember.expirationDate') }}:</span>
@@ -102,8 +102,25 @@
         </div>
         <template #footer>
             <button class="btn btn-ghost" @click="isModalOpen = false">{{ t('common.close') }}</button>
+            <button class="btn btn-secondary" @click="openHistory">{{ t('gymMember.creditHistory') }}</button>
+            <button v-if="canManageCredit" class="btn btn-primary" @click="openAddCredit">{{ t('gymMember.addCredit') }}</button>
         </template>
     </BaseModal>
+
+    <!-- Credit Add Modal -->
+    <CreditAddModal
+      v-if="selectedMember"
+      v-model:isOpen="isCreditAddOpen"
+      :memberUid="selectedMember.uid"
+      @success="onCreditAdded"
+    />
+
+    <!-- Credit History Modal -->
+    <CreditHistoryModal
+      v-if="selectedMember"
+      v-model:isOpen="isCreditHistoryOpen"
+      :memberUid="selectedMember.uid"
+    />
   </div>
 </template>
 
@@ -115,6 +132,8 @@ import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
+import CreditAddModal from '../components/gym/CreditAddModal.vue'
+import CreditHistoryModal from '../components/gym/CreditHistoryModal.vue'
 import { getGymMembers, getGyms } from '../services/firebaseService'
 import { getCoursesForUser } from '../services/courseService'
 import type { ClientInfo } from '../types'
@@ -126,6 +145,8 @@ const loading = ref(true)
 const members = ref<ClientInfo[]>([])
 const searchQuery = ref('')
 const isModalOpen = ref(false)
+const isCreditAddOpen = ref(false)
+const isCreditHistoryOpen = ref(false)
 const selectedMember = ref<ClientInfo | null>(null)
 const page = ref(1)
 const pageSize = 20
@@ -133,6 +154,7 @@ const gyms = ref<{ id: string; name: string }[]>([])
 const selectedGymId = ref<string>('__all__')
 
 const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSiteAdmin))
+const canManageCredit = computed(() => !!(auth.isManager || auth.isSiteAdmin))
 
 const filteredMembers = computed(() => {
   let base = members.value
@@ -162,7 +184,6 @@ onMounted(async () => {
   loading.value = true
   try {
     if (auth.isSiteAdmin) {
-      // Site admin: load all gyms and all their members
       gyms.value = await getGyms()
       const allMembers: ClientInfo[] = []
       for (const g of gyms.value) {
@@ -171,14 +192,12 @@ onMounted(async () => {
       }
       members.value = allMembers
     } else if (auth.isManager) {
-      // Manager: only their gym members
       if (!auth.user.gymId) {
         members.value = []
       } else {
         members.value = await getGymMembers(auth.user.gymId)
       }
     } else if (auth.isTrainer) {
-      // Trainer: only members attending their courses
       if (!auth.user.gymId || !auth.user.email) {
         members.value = []
       } else {
@@ -209,6 +228,50 @@ const viewDetails = (member: ClientInfo) => {
     selectedMember.value = member
     isModalOpen.value = true
 }
+
+const openAddCredit = () => {
+    isModalOpen.value = false
+    isCreditAddOpen.value = true
+}
+
+const openHistory = () => {
+    isModalOpen.value = false
+    isCreditHistoryOpen.value = true
+}
+
+const onCreditAdded = async () => {
+    // Refresh member data from Firestore after adding credit
+    if (!auth.user) return
+    loading.value = true
+    try {
+        let refreshed: ClientInfo[] = []
+        if (auth.isSiteAdmin) {
+            for (const g of gyms.value) {
+                const list = await getGymMembers(g.id)
+                list.forEach((m) => refreshed.push({ ...m, gymId: g.id } as any))
+            }
+        } else if (auth.isManager && auth.user.gymId) {
+            refreshed = await getGymMembers(auth.user.gymId)
+        } else if (auth.isTrainer && auth.user.gymId && auth.user.email) {
+            const [gymMembers, courses] = await Promise.all([
+                getGymMembers(auth.user.gymId),
+                getCoursesForUser(auth.user.email)
+            ])
+            const traineeSet = new Set<string>()
+            courses.forEach((c) => { (c.traineeEmails || []).forEach((e) => traineeSet.add(e)) })
+            refreshed = gymMembers.filter((m) => traineeSet.has(m.email))
+        }
+        members.value = refreshed
+
+        // Update the selected member reference so the detail modal shows the new count
+        if (selectedMember.value) {
+            const updated = refreshed.find((m) => m.uid === selectedMember.value!.uid)
+            if (updated) selectedMember.value = updated
+        }
+    } finally {
+        loading.value = false
+    }
+}
 </script>
 
 <style scoped>
@@ -224,6 +287,7 @@ const viewDetails = (member: ClientInfo) => {
 .detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
 .detail-row:last-child { border-bottom: none; }
 .btn-mini { padding: 0.2rem 0.6rem; font-size: 0.75rem; }
+.sessions-count { font-size: 1.1rem; }
 
 .filter-bar {
   margin: 1.5rem 0;

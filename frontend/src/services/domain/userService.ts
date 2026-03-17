@@ -10,7 +10,8 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  orderBy
 } from 'firebase/firestore'
 import { initializeApp, deleteApp } from 'firebase/app'
 import { getAuth, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth'
@@ -22,7 +23,7 @@ import {
   demotePrimaryManagersToViceInGym,
   type AppUser
 } from '../core/userUtils'
-import type { ClientInfo, User } from '../../types'
+import type { ClientInfo, User, TicketHistoryEntry } from '../../types'
 import type { DocumentData } from 'firebase/firestore'
 
 export type ManagerType = 'PRIMARY' | 'VICE'
@@ -356,3 +357,110 @@ export async function createStaffAccount(payload: CreateStaffPayload): Promise<s
     }
   }
 }
+
+export async function addTicketCredit(
+  memberUid: string,
+  payload: {
+    amount: number
+    purchaseDate: string
+    expirationDate: string
+    registrantEmail: string
+  }
+): Promise<void> {
+  const userRef = doc(db, 'users', memberUid)
+  const historyRef = collection(db, 'ticketHistory')
+
+  await runTransaction(db, async (transaction) => {
+    const userSnap = await transaction.get(userRef)
+    if (!userSnap.exists()) throw new Error('User not found')
+
+    const userData = userSnap.data() as User
+    const currentSessions = userData.remainingSessions || 0
+    const newSessions = currentSessions + payload.amount
+
+    // 1. Update User
+    transaction.update(userRef, {
+      remainingSessions: newSessions,
+      expirationDate: payload.expirationDate,
+      updatedAt: serverTimestamp()
+    })
+
+    // 2. Log History — use clientEmail for backward compat with existing records
+    const historyEntry = {
+      memberUid,
+      clientEmail: userData.email,
+      memberEmail: userData.email,
+      action: 'ADD',
+      amount: payload.amount,
+      amountChanged: payload.amount,
+      remainingSessionsBefore: currentSessions,
+      remainingSessionsAfter: newSessions,
+      newTotal: newSessions,
+      purchaseDate: payload.purchaseDate,
+      expirationDate: payload.expirationDate,
+      newExpirationDate: payload.expirationDate,
+      registrantEmail: payload.registrantEmail,
+      trainerEmail: payload.registrantEmail,
+      createdAt: serverTimestamp()
+    }
+    const newHistoryDocRef = doc(historyRef)
+    transaction.set(newHistoryDocRef, historyEntry)
+  })
+}
+
+export async function getTicketHistory(memberUidOrEmail: string): Promise<TicketHistoryEntry[]> {
+  let memberEmail = memberUidOrEmail
+
+  if (!memberUidOrEmail.includes('@')) {
+    try {
+      const userSnap = await getDoc(doc(db, 'users', memberUidOrEmail))
+      if (userSnap.exists()) {
+        memberEmail = (userSnap.data() as User).email
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Fetch ticketHistory and filter client-side to ensure compatibility with various field names
+  // Use clientEmail as the primary field for querying if we can
+  const q = query(
+    collection(db, 'ticketHistory'),
+    where('clientEmail', '==', memberEmail)
+  )
+  const snapshot = await getDocs(q)
+
+  const results: TicketHistoryEntry[] = snapshot.docs.map((docSnap) => {
+    const data = docSnap.data()
+    const docEmail = data.clientEmail || data.memberEmail || ''
+
+    return {
+      id: docSnap.id,
+      memberUid: data.memberUid || '',
+      memberEmail: docEmail,
+      action: data.action || 'ADD',
+      amount: data.amountChanged ?? data.amount ?? 0,
+      remainingSessionsBefore: data.remainingSessionsBefore ?? 0,
+      remainingSessionsAfter: data.newTotal ?? data.remainingSessionsAfter ?? 0,
+      purchaseDate: data.purchaseDate || '',
+      expirationDate: data.expirationDate || data.newExpirationDate || '',
+      registrantEmail: data.registrantEmail || data.trainerEmail || '',
+      createdAt: data.createdAt
+    } as TicketHistoryEntry
+  })
+
+  // Sort by createdAt descending
+  results.sort((a, b) => {
+    const getTime = (ts: any): number => {
+      if (!ts) return 0
+      if (typeof ts.toMillis === 'function') return ts.toMillis()
+      if (ts.seconds) return ts.seconds * 1000
+      return 0
+    }
+    return getTime(b.createdAt) - getTime(a.createdAt)
+  })
+
+  return results
+}
+
+

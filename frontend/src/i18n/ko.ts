@@ -600,6 +600,22 @@ export default {
         remainingSessions: '잔여 PT',
         expirationDate: '만료일',
         actions: '관리',
+        addCredit: 'Credit 추가',
+        ptCount: 'PT 횟수',
+        purchaseDate: '일자',
+        creditHistory: '이력 조회',
+        date: '등록일시',
+        action: '구분',
+        amount: '횟수',
+        sessionsAfter: '잔여 횟수',
+        registrant: '등록자',
+        actionType: {
+            ADD: '추가',
+            USE: '사용',
+            REDUCE: '차감',
+            EXPIRE: '만료',
+        },
+        noMembers: '회원이 없습니다.',
     },
 
     // ── 수업/강좌 ───────────────────────────────────────────────────
@@ -694,6 +710,8 @@ export default {
         loginRequired: '로그인이 필요합니다.',
         all: '전체',
         details: '상세',
+        register: '등록',
+        noData: '데이터 없음',
     },
     admin: {
         eyebrow: '사이트 관리자',
