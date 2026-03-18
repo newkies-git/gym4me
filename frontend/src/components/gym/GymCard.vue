@@ -24,8 +24,8 @@
           <span class="value">{{ trainersCount }}</span>
         </div>
         <div class="stat-item">
-          <span class="label">{{ t('gymMgt.memberCount', { n: '' }).split(':')[0] }}:</span>
-          <span class="value">{{ membersCount }}</span>
+          <span class="label">{{ t('gymMgt.traineeCount', { n: '' }).split(':')[0] }}:</span>
+          <span class="value">{{ traineesCount }}</span>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ import type { Gym } from '../../types'
 const props = defineProps<{
   gym: Gym
   trainersCount: number
-  membersCount: number
+  traineesCount: number
 }>()
 
 defineEmits<{

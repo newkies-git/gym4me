@@ -66,7 +66,7 @@ import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
-import { getGyms, updateMemberProfile } from '../services/firebaseService'
+import { getGyms, updateTraineeProfile } from '../services/firebaseService'
 import type { Gym } from '../types'
 
 const router = useRouter()
@@ -108,7 +108,7 @@ async function handleSubmit() {
   saving.value = true
   error.value = ''
   try {
-    await updateMemberProfile(auth.user.uid, {
+    await updateTraineeProfile(auth.user.uid, {
       name,
       phone: form.phone.trim() || undefined,
       gymId,

@@ -15,14 +15,14 @@ export function setupRouterGuard(router: Router): void {
     }
     if (
       auth.isAuthenticated &&
-      auth.needsMemberProfile &&
+      auth.needsTraineeProfile &&
       to.path !== '/complete-profile' &&
       to.path !== '/auth'
     ) {
       next('/complete-profile')
       return
     }
-    if (to.path === '/complete-profile' && auth.isAuthenticated && !auth.needsMemberProfile) {
+    if (to.path === '/complete-profile' && auth.isAuthenticated && !auth.needsTraineeProfile) {
       next('/home')
       return
     }

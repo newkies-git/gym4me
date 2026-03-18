@@ -7,11 +7,11 @@ import {
   createGym,
   updateGym,
   deleteGym,
-  getGymMembers,
+  getGymTrainees,
   getTrainers,
   getTrainerProfile
 } from '../../services/firebaseService'
-import type { Gym, TrainerProfile, ClientInfo } from '../../types'
+import type { Gym, TrainerProfile, TraineeInfo } from '../../types'
 
 /** getTrainers() 등에서 오는 목록 아이템 (raw + data 래핑 혼재) */
 export interface GymTrainerListItem {
@@ -34,7 +34,7 @@ export function useGymManagement() {
   const loading = ref(true)
   const gym = ref<Gym | null>(null)
   const gymsList = ref<Gym[]>([])
-  const membersMap = ref<Record<string, ClientInfo[]>>({})
+  const traineesMap = ref<Record<string, TraineeInfo[]>>({})
   const trainersMap = ref<Record<string, GymTrainerListItem[]>>({})
 
   const isTrainersModalOpen = ref(false)
@@ -70,11 +70,11 @@ export function useGymManagement() {
       const gymsToCount = auth.isSupervisor ? gymsList.value : gym.value ? [gym.value] : []
       for (const g of gymsToCount) {
         if (!g.id) continue
-        const [members, trainers] = await Promise.all([
-          getGymMembers(g.id),
+        const [trainees, trainers] = await Promise.all([
+          getGymTrainees(g.id),
           getTrainers(g.id)
         ])
-        membersMap.value[g.id] = members
+        traineesMap.value[g.id] = trainees
         trainersMap.value[g.id] = trainers
       }
     } catch (e: unknown) {
@@ -204,7 +204,7 @@ export function useGymManagement() {
     loading,
     gym,
     gymsList,
-    membersMap,
+    traineesMap,
     trainersMap,
     isModalOpen,
     isEditing,

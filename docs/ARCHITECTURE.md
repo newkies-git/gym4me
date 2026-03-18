@@ -15,7 +15,7 @@
 |------|-----------|------|
 | **views/** | 페이지 단위 뷰. 일부는 가벼움(DashboardView), 일부는 무거움(CalendarView, GymManagement, CourseListView) | 무거운 뷰에 로직·상태 집중 |
 | **components/** | home / courses / calendar / profile / gym / ui 로 구분 | 기능 도메인 + UI 공통 컴포넌트 혼재 |
-| **stores/** | auth, schedule, class, client, profile, theme, ui | 도메인별 스토어는 적절히 분리됨 |
+| **stores/** | auth, schedule, class, trainee, profile, theme, ui | 도메인별 스토어 분리 (client → trainee 용어 통일) |
 | **services/** | `firebaseService.ts`(재export 배럴), `core/`(access, audit, utils, userUtils), `domain/`(schedule, gym, profile, class, user), `courseService`, `toolService` | 도메인별 서비스 분리 완료. firebaseService는 기존 호출부 호환용 re-export만 수행 |
 | **composables/** | useGnb, useSimulatePurchase 2개만 존재 | 뷰/모달 내부 로직이 대부분 컴포넌트에 남아 있음 |
 | **types/** | `types/index.ts` 단일 파일에 전 도메인 타입 | 도메인 증가 시 발견성·유지보수 부담 |
@@ -26,7 +26,7 @@
 
 ### 3.1 서비스 레이어 — 도메인 분리
 
-- **문제**: `firebaseService.ts`가 스케줄·클래스·클라이언트·Gym·트레이너·매니저·스태프·프로필·바디·감사 로그 등 여러 도메인을 한 파일에 포함.
+- **문제**: `firebaseService.ts`가 스케줄·클래스·트레이니·Gym·트레이너·매니저·스태프·프로필·바디·감사 로그 등 여러 도메인을 한 파일에 포함.
 - **방향**:
   - 도메인별 서비스 파일 도입: 예) `scheduleService.ts`, `gymService.ts`, `userService.ts`(또는 trainerService / managerService / staffService), `profileService.ts`, `auditService.ts`.
   - 공통: `db`, `chunkByTen`, `writeAuditLog`, `assertCanAccessUserData` 등은 `shared/` 또는 한 개의 `firebaseCore.ts`에서 재사용.
@@ -89,9 +89,9 @@
 
 - **domain/**  
   - `scheduleService.ts`: getSchedules, addSchedule, updateSchedule, completeSession, appendClassWorkoutLog 등  
-  - `gymService.ts`: getGyms, getGymById, createGym, updateGym, deleteGym, getGymMembers, getGymTraineesAndObservers  
+  - `gymService.ts`: getGyms, getGymById, createGym, updateGym, deleteGym, getGymTrainees, getGymTraineesAndObservers  
   - `profileService.ts`: getTrainerProfile, updateTrainerProfile, getProfileHistory, getBodyProfiles, addBodyProfile  
   - `classService.ts`: createClass, getClassesByTrainer, addTraineeToClass, removeTraineeFromClass  
-  - `userService.ts`: 클라이언트/트레이너/매니저/스태프 CRUD, ManagerType, CreateStaffPayload, SearchUserResult 등  
+  - `userService.ts`: 트레이니/트레이너/매니저/스태프 CRUD (getTraineesByTrainer, assignTrainerToTrainee, updateTraineeSession 등), ManagerType, CreateStaffPayload, CreateSupervisorPayload, SearchUserResult 등  
 
-- **타입·시그니처**: 도메인 서비스에 명시적 반환 타입 및 인터페이스 적용. `types/`는 schedule, user, gym, trainer, profile, tool, course 등으로 분리되어 `types/index.ts`에서 re-export.
+- **타입·시그니처**: 도메인 서비스에 명시적 반환 타입 및 인터페이스 적용. `types/`는 schedule, user (User, TraineeInfo), gym, trainer, profile, tool, course 등으로 분리되어 `types/index.ts`에서 re-export.

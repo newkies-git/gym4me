@@ -5,7 +5,7 @@
       
       <form @submit.prevent="save">
         <div v-if="auth.isTrainer && scheduleType === 'PT'" class="field row">
-            <span v-if="clientEmail" class="sm-text">{{ t('eventDetails.client') }}: {{ clientEmail }}</span>
+            <span v-if="traineeEmail" class="sm-text">{{ t('eventDetails.trainee') }}: {{ traineeEmail }}</span>
             <span v-if="classId" class="sm-text badge">{{ t('calendar.classBadge') }}</span>
         </div>
         
@@ -52,7 +52,7 @@ import { notifyScheduleEvent } from '../../utils/notification'
 const props = defineProps<{
   isOpen: boolean;
   scheduleType: 'PT' | 'PERSONAL';
-  clientEmail?: string;
+  traineeEmail?: string;
   classId?: string;
 }>()
 
@@ -113,8 +113,8 @@ const save = async () => {
       scheduleData.userEmail = auth.user.email
       scheduleData.clientEmail = auth.user.email
     } else {
-      scheduleData.clientEmail = props.clientEmail || auth.user.email
-      scheduleData.userEmail = props.clientEmail || auth.user.email
+      scheduleData.clientEmail = props.traineeEmail || auth.user.email
+      scheduleData.userEmail = props.traineeEmail || auth.user.email
     }
 
     await addSchedule(scheduleData as any)

@@ -41,9 +41,9 @@ export async function assertCanAccessClassData(classId: string, actor: AccessAct
   const classData = classSnap.data()
   const traineeEmails: string[] = classData.traineeEmails || []
   const isOwnerTrainer = classData.trainerEmail === actor.email
-  const isMember = traineeEmails.includes(actor.email)
+  const isTrainee = traineeEmails.includes(actor.email)
 
-  if (!isOwnerTrainer && !isMember) {
+  if (!isOwnerTrainer && !isTrainee) {
     throw new Error('Forbidden')
   }
 }

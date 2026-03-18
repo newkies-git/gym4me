@@ -25,7 +25,7 @@
 | /admin (managers, staff) | `frontend/src/router/routes.ts` | `meta.requiresSiteAdmin: true` | `requiresSupervisor: true` 로 변경. System Admin은 접근 불가. |
 | 가드 로직 | `frontend/src/router/guard.ts` | `requiresSiteAdmin` → `isSiteAdmin` | `requiresSupervisor` 신규: `isSupervisor` 체크 |
 | 가드 로직 | `frontend/src/router/guard.ts` | `requiresManager` → `isManager \|\| isSiteAdmin` | `isManager \|\| isSupervisor` 로 변경 (isSiteAdmin 제거) |
-| Supervisor 전용 진입점 | `routes.ts` | 없음 | System Admin 전용 경로 추가 (예: `/admin/supervisors`) → **Supervisor 계정 생성** UI만 노출 |
+| Supervisor 전용 진입점 | `routes.ts` | 없음 | System Admin 전용 경로 **`/system/supervisors`** 추가 → **Supervisor 계정 생성** UI만 노출 |
 
 ---
 
@@ -47,9 +47,9 @@
 | admin/staff 링크 | 동일 | `isSiteAdmin` | `isSupervisor` |
 | trainer-profile 제외 조건 | 동일 | `!auth.isSiteAdmin` | `!auth.isSupervisor` (또는 역할 정책에 맞게 유지) |
 | manager 링크 (manage-trainers) | 동일 | `MANAGER && !isSiteAdmin` | `MANAGER && !isSupervisor` |
-| gym/members 링크 | 동일 | Trainer \|\| Manager \|\| SiteAdmin | Trainer \|\| Manager \|\| **Supervisor** |
-| System Admin 전용 메뉴 | 동일 | 없음 | “Supervisor 생성” 또는 “시스템 관리” → `/admin/supervisors` (requiresSiteAdmin) |
-| 기본 홈 경로 | `frontend/src/composables/useGnb.ts` | `isSiteAdmin ? '/manage-gym'` | `isSupervisor ? '/manage-gym'`. Site Admin은 `/home` 또는 `/admin/supervisors` |
+| gym/trainees 링크 | 동일 | Trainer \|\| Manager \|\| SiteAdmin | Trainer \|\| Manager \|\| **Supervisor** (path: `/gym/trainees`, 구 path `/gym/members` redirect) |
+| System Admin 전용 메뉴 | 동일 | 없음 | “Supervisor 생성” 또는 “시스템 관리” → **`/system/supervisors`** (requiresSiteAdmin) |
+| 기본 홈 경로 | `frontend/src/composables/useGnb.ts` | `isSiteAdmin ? '/manage-gym'` | `isSupervisor ? '/manage-gym'`. Site Admin은 **`/system/supervisors`** |
 
 ---
 
@@ -57,9 +57,9 @@
 
 | 뷰/ composable | 파일 | 현재 | 변경 |
 |----------------|------|------|------|
-| GYM 필터 / 전체 회원 | `GymMemberView.vue` | `auth.isSiteAdmin` | `auth.isSupervisor` |
+| GYM 필터 / 전체 트레이니 | **`GymTraineeView.vue`** | `auth.isSiteAdmin` | `auth.isSupervisor` |
 | showActions / canManageCredit | 동일 | Trainer \|\| Manager \|\| SiteAdmin | Trainer \|\| Manager \|\| **Supervisor** |
-| 회원 목록 로드 (전체/GYM별) | 동일 | isSiteAdmin 분기 | isSupervisor 분기 |
+| 트레이니 목록 로드 (전체/GYM별) | 동일 | isSiteAdmin 분기 | isSupervisor 분기 |
 | 홈 경로 | `useGnb.ts` | isSiteAdmin | isSupervisor |
 | gymsToCount / managerEmail | `useGymManagement.ts` | auth.isSiteAdmin | auth.isSupervisor |
 | 캘린더 client/class | `CalendarView.vue` | trainer \|\| siteAdmin | trainer \|\| **supervisor** |
@@ -95,8 +95,8 @@
 | 항목 | 파일/위치 | 현재 | 변경 |
 |------|------------|------|------|
 | 생성 API | `userService.ts` 등 | createStaffAccount(MANAGER \| SUB_MANAGER \| TRAINER) | **createSupervisorAccount** 또는 createStaffAccount에 `role: 'SUPERVISOR'`, `lvl: 90` 추가. 호출 권한: **isSiteAdminActor(actor)만** 허용. |
-| UI | 신규 뷰 | 없음 | **System Admin 전용** “Supervisor 생성” 페이지 (예: `/admin/supervisors`). 이메일/비밀번호 입력 후 SUPERVISOR 계정 생성. |
-| 라우트 | `routes.ts` | /admin 자식: managers, staff | /admin 자식에 `supervisors` 추가, `meta.requiresSiteAdmin: true` (Supervisor는 접근 불가). 또는 `/system/supervisors` 등 별도 경로. |
+| UI | 신규 뷰 | 없음 | **System Admin 전용** “Supervisor 생성” 페이지 **`/system/supervisors`** (`SystemSupervisorView.vue`). 이메일/비밀번호 입력 후 SUPERVISOR 계정 생성. |
+| 라우트 | `routes.ts` | /admin 자식: managers, staff | **`/system/supervisors`** 별도 경로, `meta.requiresSiteAdmin: true` (Supervisor는 접근 불가). |
 
 ---
 
@@ -126,8 +126,8 @@
 2. **access**: `isSupervisorActor` 추가, 데이터 접근은 `isSupervisorActor` 기준으로 변경; Supervisor 생성 API는 `isSiteAdminActor`만 허용.
 3. **라우트/가드**: `requiresSupervisor` 추가, `/admin` 은 Supervisor 전용으로, `/admin/supervisors`(또는 동일)는 Site Admin 전용으로 분리.
 4. **대시보드·네비**: SupervisorHome/SystemAdminHome 분리, SideDrawer·useGnb에서 isSiteAdmin → isSupervisor (업무 메뉴) / isSiteAdmin (시스템 메뉴만) 반영.
-5. **뷰 일괄**: GymMemberView, useGymManagement, CalendarView, BodyProfileView, TrainerManagement, GymManagement, useCourseList 등에서 isSiteAdmin → isSupervisor 변경.
-6. **Supervisor 생성**: createSupervisorAccount(또는 createStaff 확장), System Admin 전용 페이지 및 라우트 추가.
+5. **뷰 일괄**: GymTraineeView, useGymManagement, CalendarView, BodyProfileView, TrainerManagement, GymManagement, useCourseList 등에서 isSiteAdmin → isSupervisor 변경.
+6. **Supervisor 생성**: createSupervisorAccount, System Admin 전용 **SystemSupervisorView** 및 라우트 **`/system/supervisors`** 추가.
 7. **i18n·역할 라벨**: supervisorDashboard, systemAdminDashboard, role.supervisor 추가 및 기존 키 정리.
 
 이 목록대로 적용하면, System Admin은 “Supervisor 계정 생성”에만 관여하고, GYM 운영·정책·승인은 전부 Supervisor 역할로 이전할 수 있습니다.

@@ -84,7 +84,7 @@
                 @click="applyLogsToClass"
                 :disabled="applyingBulkLogs"
               >
-                {{ applyingBulkLogs ? t('common.processing') : t('eventDetails.applyToClassMembers') }}
+                {{ applyingBulkLogs ? t('common.processing') : t('eventDetails.applyToClassTrainees') }}
               </button>
           </div>
       </div>

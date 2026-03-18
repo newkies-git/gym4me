@@ -2,7 +2,7 @@
   <div class="calendar-wrapper container">
     <PageHeader :title="headerTitle" :showBack="true" back-url="/home">
       <template #actions>
-        <button v-if="auth.isTrainer && (clientEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
+        <button v-if="auth.isTrainer && (traineeEmail || classId)" class="btn btn-primary" @click="showModal('PT')">
           {{ classId ? t('calendar.assignClassSession') : t('calendar.assignPTSession') }}
         </button>
       </template>
@@ -69,7 +69,7 @@
         {{ t('calendar.viewSchedule') }}
       </button>
       <div class="calendar-footer-spacer"></div>
-      <button v-if="auth.isMember || auth.isTrainer" type="button" class="btn btn-primary" @click="showModal('PERSONAL')">
+      <button v-if="auth.isTrainee || auth.isTrainer" type="button" class="btn btn-primary" @click="showModal('PERSONAL')">
         {{ t('calendar.logPersonalWorkout') }}
       </button>
     </div>
@@ -103,7 +103,7 @@
     <AddScheduleModal 
       v-model:is-open="isAddModalOpen" 
       :schedule-type="scheduleType" 
-      :client-email="clientEmail" 
+      :trainee-email="traineeEmail" 
       :class-id="classId"
       @saved="handleSaved" 
     />
@@ -146,8 +146,8 @@ const {
   goToToday
 } = useCalendarPeriod()
 
-const clientEmail = computed(() => {
-    const requested = route.query.client as string | undefined
+const traineeEmail = computed(() => {
+    const requested = (route.query.trainee ?? route.query.client) as string | undefined
     if (!requested) return undefined
     return auth.isTrainer || auth.isSupervisor ? requested : undefined
 })
@@ -155,19 +155,19 @@ const clientEmail = computed(() => {
 const classId = computed(() => {
     const requested = route.query.classId as string | undefined
     if (!requested) return undefined
-    return auth.isTrainer || auth.isMember || auth.isSupervisor ? requested : undefined
+    return auth.isTrainer || auth.isTrainee || auth.isSupervisor ? requested : undefined
 })
 
 const headerTitle = computed(() => {
     if (classId.value) return t('calendar.classSchedule')
-    if (clientEmail.value) return t('calendar.scheduleFor', { email: clientEmail.value })
+    if (traineeEmail.value) return t('calendar.scheduleFor', { email: traineeEmail.value })
     return t('calendar.mySchedule')
 })
 
 const isAddModalOpen = ref(false)
 const scheduleType = ref<'PT' | 'PERSONAL'>('PERSONAL')
 
-const targetEmail = computed(() => clientEmail.value || auth.user?.email)
+const targetEmail = computed(() => traineeEmail.value || auth.user?.email)
 const displayKey = computed(() => classId.value || targetEmail.value || '')
 const events = computed(() => scheduleStore.getSchedulesByEmail(displayKey.value))
 
@@ -205,7 +205,7 @@ onMounted(() => {
     loadSchedules()
 })
 
-watch([clientEmail, classId], () => {
+watch([traineeEmail, classId], () => {
     loadSchedules()
 })
 

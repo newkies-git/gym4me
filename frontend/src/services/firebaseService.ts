@@ -18,7 +18,7 @@ export {
   createGym,
   updateGym,
   deleteGym,
-  getGymMembers,
+  getGymTrainees,
   getGymTraineesAndObservers
 } from './domain/gymService'
 
@@ -38,15 +38,15 @@ export {
 } from './domain/classService'
 
 export {
-  getClientsByTrainer,
-  assignTrainerToClient,
-  updateClientSession,
+  getTraineesByTrainer,
+  assignTrainerToTrainee,
+  updateTraineeSession,
   logTicketHistory,
   searchUserByEmail,
   getTrainers,
   updateTrainerRole,
   updateTrainerInfo,
-  updateMemberProfile,
+  updateTraineeProfile,
   setTrainerDeletedFlag,
   setTrainerDeletedFlagWithAudit,
   deleteTrainerCompletely,

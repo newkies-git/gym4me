@@ -2,19 +2,19 @@
   <BaseModal
     :isOpen="isOpen"
     @update:isOpen="$emit('update:isOpen', $event)"
-    :title="t('gymMember.addCredit')"
+    :title="t('gymTrainee.addCredit')"
   >
     <div class="form-grid">
       <div class="form-group">
-        <label>{{ t('gymMember.purchaseDate') }}</label>
+        <label>{{ t('gymTrainee.purchaseDate') }}</label>
         <input type="date" v-model="form.purchaseDate" class="form-control" />
       </div>
       <div class="form-group">
-        <label>{{ t('gymMember.ptCount') }}</label>
+        <label>{{ t('gymTrainee.ptCount') }}</label>
         <input type="number" v-model.number="form.amount" class="form-control" min="1" />
       </div>
       <div class="form-group">
-        <label>{{ t('gymMember.expirationDate') }}</label>
+        <label>{{ t('gymTrainee.expirationDate') }}</label>
         <input type="date" v-model="form.expirationDate" class="form-control" />
       </div>
     </div>
@@ -38,7 +38,7 @@ import { useAuthStore } from '../../stores/auth'
 
 const props = defineProps<{
   isOpen: boolean
-  memberUid: string
+  traineeUid: string
 }>()
 
 const emit = defineEmits(['update:isOpen', 'success'])
@@ -71,7 +71,7 @@ async function handleSubmit() {
   
   loading.value = true
   try {
-    await addTicketCredit(props.memberUid, {
+    await addTicketCredit(props.traineeUid, {
       amount: form.value.amount,
       purchaseDate: form.value.purchaseDate,
       expirationDate: form.value.expirationDate,

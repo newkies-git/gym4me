@@ -63,7 +63,7 @@ export const onClassCreated = onDocumentCreated('classes/{classId}', async (even
       tokens,
       notification: {
         title: '새로운 클래스에 초대되었습니다!',
-        body: '트레이너님이 클래스를 생성하고 회원님을 초대했습니다. 확인해보세요!'
+        body: '트레이너님이 클래스를 생성하고 트레이니를 초대했습니다. 확인해보세요!'
       }
     });
     console.log(`Successfully sent messages: ${response.successCount} success, ${response.failureCount} failed.`);

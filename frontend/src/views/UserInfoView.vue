@@ -159,7 +159,7 @@ const isTrainee = computed(() => !auth.isTrainer)
 const formatRole = (roleStr: string | undefined) => {
   if (!roleStr) return ''
   switch (roleStr) {
-    case 'MEMBER': return t('role.member')
+    case 'MEMBER': return t('role.trainee')
   case 'OBSERVER': return t('role.observer')
     case 'TRAINER': return t('role.trainer')
     case 'MANAGER': return t('role.manager')
@@ -281,13 +281,13 @@ const executeDeletion = async () => {
   const userUid = auth.user.uid
   try {
     const scheduleOwnerQ = query(collection(db, 'schedules'), where('userEmail', '==', userEmail))
-    const scheduleClientQ = query(collection(db, 'schedules'), where('clientEmail', '==', userEmail))
+    const scheduleTraineeQ = query(collection(db, 'schedules'), where('clientEmail', '==', userEmail))
     const profileQ = query(collection(db, 'bodyProfiles'), where('userEmail', '==', userEmail))
-    const ticketClientQ = query(collection(db, 'ticketHistory'), where('clientEmail', '==', userEmail))
+    const ticketTraineeQ = query(collection(db, 'ticketHistory'), where('clientEmail', '==', userEmail))
     const ticketTrainerQ = query(collection(db, 'ticketHistory'), where('trainerEmail', '==', userEmail))
     const [s1, s2, p1, t1, t2] = await Promise.all([
-      getDocs(scheduleOwnerQ), getDocs(scheduleClientQ), getDocs(profileQ),
-      getDocs(ticketClientQ), getDocs(ticketTrainerQ)
+      getDocs(scheduleOwnerQ), getDocs(scheduleTraineeQ), getDocs(profileQ),
+      getDocs(ticketTraineeQ), getDocs(ticketTrainerQ)
     ])
     const deleteMap = new Map<string, ReturnType<typeof deleteDoc>>()
     const enqueue = (docs: Array<{ ref: any }>) => docs.forEach((d) => {

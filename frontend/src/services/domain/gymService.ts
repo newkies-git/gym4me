@@ -1,6 +1,6 @@
 import { collection, getDocs, getDoc, doc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import type { Gym, ClientInfo } from '../../types'
+import type { Gym, TraineeInfo } from '../../types'
 
 export async function getGyms(): Promise<Gym[]> {
   const snapshot = await getDocs(collection(db, 'gyms'))
@@ -40,7 +40,7 @@ export async function deleteGym(id: string): Promise<void> {
   await deleteDoc(doc(db, 'gyms', id))
 }
 
-export async function getGymMembers(gymId: string): Promise<ClientInfo[]> {
+export async function getGymTrainees(gymId: string): Promise<TraineeInfo[]> {
   const q = query(
     collection(db, 'users'),
     where('gymId', '==', gymId),
@@ -56,7 +56,7 @@ export async function getGymMembers(gymId: string): Promise<ClientInfo[]> {
   }))
 }
 
-export async function getGymTraineesAndObservers(gymId: string): Promise<ClientInfo[]> {
+export async function getGymTraineesAndObservers(gymId: string): Promise<TraineeInfo[]> {
   const q = query(
     collection(db, 'users'),
     where('gymId', '==', gymId),

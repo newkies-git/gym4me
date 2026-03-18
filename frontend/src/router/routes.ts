@@ -90,8 +90,9 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/gym/members',
-    component: () => import('../views/GymMemberView.vue'),
+    path: '/gym/trainees',
+    component: () => import('../views/GymTraineeView.vue'),
     meta: { requiresAuth: true, requiresManager: true }
-  }
+  },
+  { path: '/gym/members', redirect: '/gym/trainees' }
 ]

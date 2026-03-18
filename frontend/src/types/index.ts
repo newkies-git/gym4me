@@ -8,7 +8,7 @@ export type {
   CalendarEvent
 } from './schedule'
 
-export type { User, ClientInfo } from './user'
+export type { User, TraineeInfo } from './user'
 export type { Gym } from './gym'
 export type { BodyRecord, ProfileHistory } from './profile'
 export type { TrainerProfile } from './trainer'

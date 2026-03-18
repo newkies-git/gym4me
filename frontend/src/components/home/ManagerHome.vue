@@ -6,8 +6,8 @@
         :label="t('dashboard.totalTrainers', '총 소속 트레이너')"
       />
       <StatCard
-        :value="totalMembersDisplay"
-        :label="t('dashboard.totalGymMembers', '총 등록 회원')"
+        :value="totalTraineesDisplay"
+        :label="t('dashboard.totalGymTrainees', '총 등록 트레이니')"
       />
     </div>
 
@@ -15,13 +15,13 @@
       <h3>{{ t('dashboard.quickActions') }}</h3>
       <div class="action-buttons">
         <router-link to="/manage-trainers" class="btn btn-primary">{{ t('nav.trainerMgt') }}</router-link>
-        <router-link to="/gym/members" class="btn btn-secondary">{{ t('nav.gymMember') }}</router-link>
+        <router-link to="/gym/trainees" class="btn btn-secondary">{{ t('nav.gymTrainee') }}</router-link>
       </div>
     </div>
 
-    <div class="member-section glass">
-      <h3>{{ t('gymMember.title') }}</h3>
-      <p class="sm-text" style="margin-bottom: 1rem;">{{ t('gymMember.subtitle') }}</p>
+    <div class="trainee-section glass">
+      <h3>{{ t('gymTrainee.title') }}</h3>
+      <p class="sm-text" style="margin-bottom: 1rem;">{{ t('gymTrainee.subtitle') }}</p>
 
       <div v-if="!auth.user?.gymId" class="empty-state">
         {{ t('gymMgt.noGymAssigned') }}
@@ -29,30 +29,30 @@
       <div v-else>
         <div v-if="loading" class="empty-state">{{ t('common.loading') }}</div>
         <div v-else>
-          <div class="member-table-container">
-            <table class="member-table">
+          <div class="trainee-table-container">
+            <table class="trainee-table">
               <thead>
                 <tr>
-                  <th>{{ t('gymMember.nickname') }}</th>
-                  <th>{{ t('gymMember.email') }}</th>
-                  <th>{{ t('gymMember.remainingSessions') }}</th>
-                  <th>{{ t('gymMember.expirationDate') }}</th>
+                  <th>{{ t('gymTrainee.nickname') }}</th>
+                  <th>{{ t('gymTrainee.email') }}</th>
+                  <th>{{ t('gymTrainee.remainingSessions') }}</th>
+                  <th>{{ t('gymTrainee.expirationDate') }}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="member in pagedMembers" :key="member.uid">
-                  <td>{{ member.nickname || member.email }}</td>
-                  <td>{{ member.email }}</td>
-                  <td :class="{ 'warning-text': (member.remainingSessions || 0) < 3 }">
-                    {{ member.remainingSessions ?? t('common.na') }}
+                <tr v-for="trainee in pagedTrainees" :key="trainee.uid">
+                  <td>{{ trainee.nickname || trainee.email }}</td>
+                  <td>{{ trainee.email }}</td>
+                  <td :class="{ 'warning-text': (trainee.remainingSessions || 0) < 3 }">
+                    {{ trainee.remainingSessions ?? t('common.na') }}
                   </td>
-                  <td :class="{ 'warning-text': isExpired(member.expirationDate) }">
-                    {{ member.expirationDate || t('common.na') }}
+                  <td :class="{ 'warning-text': isExpired(trainee.expirationDate) }">
+                    {{ trainee.expirationDate || t('common.na') }}
                   </td>
                 </tr>
-                <tr v-if="!pagedMembers.length">
+                <tr v-if="!pagedTrainees.length">
                   <td colspan="4" class="empty-state">
-                    {{ t('gymMember.noStaff') || t('gymMember.noMembers') }}
+                    {{ t('gymTrainee.noTrainees') }}
                   </td>
                 </tr>
               </tbody>
@@ -90,34 +90,34 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
-import { getGymMembers, getTrainers } from '../../services/firebaseService'
-import type { ClientInfo } from '../../types'
+import { getGymTrainees, getTrainers } from '../../services/firebaseService'
+import type { TraineeInfo } from '../../types'
 import StatCard from './../ui/StatCard.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(false)
-const members = ref<ClientInfo[]>([])
+const trainees = ref<TraineeInfo[]>([])
 const totalTrainers = ref<number | null>(null)
 
 const page = ref(1)
 const pageSize = 10
 
-const totalMembersDisplay = computed(() =>
-  loading.value ? '…' : members.value.length || t('common.na')
+const totalTraineesDisplay = computed(() =>
+  loading.value ? '…' : trainees.value.length || t('common.na')
 )
 const totalTrainersDisplay = computed(() =>
   totalTrainers.value == null ? '…' : totalTrainers.value
 )
 
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(members.value.length / pageSize))
+  Math.max(1, Math.ceil(trainees.value.length / pageSize))
 )
 
-const pagedMembers = computed(() => {
+const pagedTrainees = computed(() => {
   const start = (page.value - 1) * pageSize
-  return members.value.slice(start, start + pageSize)
+  return trainees.value.slice(start, start + pageSize)
 })
 
 const isExpired = (dateStr?: string) => {
@@ -129,11 +129,11 @@ onMounted(async () => {
   if (!auth.user?.gymId) return
   loading.value = true
   try {
-    const [memberList, allTrainers] = await Promise.all([
-      getGymMembers(auth.user.gymId),
+    const [traineeList, allTrainers] = await Promise.all([
+      getGymTrainees(auth.user.gymId),
       getTrainers()
     ])
-    members.value = memberList
+    trainees.value = traineeList
     totalTrainers.value = allTrainers.filter((t) => t.gymId === auth.user?.gymId).length
   } finally {
     loading.value = false
@@ -154,7 +154,7 @@ onMounted(async () => {
   margin-top: 2rem;
 }
 
-.member-section {
+.trainee-section {
   padding: 1.5rem;
   margin-top: 2rem;
 }
@@ -176,24 +176,24 @@ h3 {
   color: var(--text-muted);
 }
 
-.member-table-container {
+.trainee-table-container {
   overflow-x: auto;
 }
 
-.member-table {
+.trainee-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.member-table th,
-.member-table td {
+.trainee-table th,
+.trainee-table td {
   padding: 0.75rem 0.5rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.85rem;
 }
 
-.member-table th {
+.trainee-table th {
   color: var(--text-muted);
   text-transform: uppercase;
 }

@@ -15,7 +15,7 @@
         </div>
         <div class="class-actions">
           <button class="btn btn-ghost btn-sm" @click="openInviteModal(cls)">{{ t('classMgr.invite') }}</button>
-          <button class="btn btn-ghost btn-sm" @click="openMembersModal(cls)">{{ t('classMgr.members') }}</button>
+          <button class="btn btn-ghost btn-sm" @click="openTraineesModal(cls)">{{ t('classMgr.trainees') }}</button>
           <button class="btn btn-ghost btn-sm" @click="viewClassSchedule(cls)">{{ t('classMgr.viewCalendar') }}</button>
         </div>
         
@@ -60,17 +60,17 @@
       </template>
     </BaseModal>
 
-    <BaseModal v-model:isOpen="isMembersModalOpen" :title="t('classMgr.members')" max-width="460px">
-      <div v-if="selectedClass?.traineeEmails?.length" class="member-list">
-        <div v-for="email in selectedClass.traineeEmails" :key="email" class="member-row">
+    <BaseModal v-model:isOpen="isTraineesModalOpen" :title="t('classMgr.trainees')" max-width="460px">
+      <div v-if="selectedClass?.traineeEmails?.length" class="trainee-list">
+        <div v-for="email in selectedClass.traineeEmails" :key="email" class="trainee-row">
           <div>
             <strong>{{ email.split('@')[0] }}</strong>
             <div class="sm-text">{{ email }}</div>
           </div>
-          <button class="btn btn-danger btn-sm" @click="removeMember(email)">{{ t('classMgr.removeMember') }}</button>
+          <button class="btn btn-danger btn-sm" @click="removeTrainee(email)">{{ t('classMgr.removeTrainee') }}</button>
         </div>
       </div>
-      <div v-else class="sm-text">{{ t('classMgr.noMembers') }}</div>
+      <div v-else class="sm-text">{{ t('classMgr.noTrainees') }}</div>
     </BaseModal>
   </div>
 </template>
@@ -100,7 +100,7 @@ const isInviteModalOpen = ref(false)
 const selectedClass = ref<GymClass | null>(null)
 const inviteEmail = ref('')
 const inviting = ref(false)
-const isMembersModalOpen = ref(false)
+const isTraineesModalOpen = ref(false)
 
 onMounted(() => {
   classStore.fetchClasses()
@@ -150,18 +150,18 @@ const goToCourseCreate = () => {
   router.push({ path: '/courses', query: { create: '1' } })
 }
 
-const openMembersModal = (cls: GymClass) => {
+const openTraineesModal = (cls: GymClass) => {
   selectedClass.value = cls
-  isMembersModalOpen.value = true
+  isTraineesModalOpen.value = true
 }
 
-const removeMember = async (email: string) => {
+const removeTrainee = async (email: string) => {
   if (!selectedClass.value) return
-  if (!confirm(t('classMgr.confirmRemoveMember', { email }))) return
+  if (!confirm(t('classMgr.confirmRemoveTrainee', { email }))) return
   try {
     await classStore.removeTrainee(selectedClass.value.id, email)
     selectedClass.value = classStore.classes.find((cls) => cls.id === selectedClass.value?.id) || null
-    ui.showToast(t('classMgr.removeMemberSuccess'), 'success')
+    ui.showToast(t('classMgr.removeTraineeSuccess'), 'success')
   } catch (e: any) {
     ui.showToast(e.message, 'error')
   }
@@ -199,8 +199,8 @@ const removeMember = async (email: string) => {
 .field input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; }
 .sm-text { font-size: 0.8rem; color: var(--text-muted); }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-.member-list { display: flex; flex-direction: column; gap: 0.75rem; }
-.member-row {
+.trainee-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.trainee-row {
   display: flex;
   justify-content: space-between;
   align-items: center;

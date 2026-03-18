@@ -17,11 +17,11 @@
         <router-link v-if="auth.user?.role === 'MANAGER' && !auth.isSupervisor" to="/manage-trainers" class="drawer-link" @click="emit('close')">{{ t('nav.trainerMgt') }}</router-link>
         <router-link
           v-if="(auth.isTrainer || auth.isManager || auth.isSupervisor)"
-          to="/gym/members"
+          to="/gym/trainees"
           class="drawer-link"
           @click="emit('close')"
         >
-          {{ t('nav.gymMember') }}
+          {{ t('nav.gymTrainee') }}
         </router-link>
         <router-link v-if="auth.isSupervisor" to="/manage-gym" class="drawer-link" @click="emit('close')">{{ t('nav.gymMgt') }}</router-link>
         <router-link v-if="auth.isSupervisor" to="/admin/staff" class="drawer-link" @click="emit('close')">{{ t('nav.staffMgt') }}</router-link>

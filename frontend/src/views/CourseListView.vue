@@ -55,7 +55,7 @@
             {{ t('courses.registrant') }}: {{ selectedCourse.createdByName || selectedCourse.createdBy }} · {{ formatDateTime(selectedCourse.createdAt) }}
           </p>
 
-          <div v-if="selectedCourse.traineeEmails?.length || (canManage && gymMembersList.length)" class="course-detail-block">
+          <div v-if="selectedCourse.traineeEmails?.length || (canManage && gymTraineesList.length)" class="course-detail-block">
             <h4 class="course-detail-block-title">{{ t('courses.trainees') }}</h4>
             <div v-if="selectedCourse.traineeEmails?.length" class="course-detail-tags">
               <template v-if="canManage">
@@ -179,7 +179,7 @@
                 class="chip-item"
               >
                 <span class="chip-label">
-                  {{ gymMembersMap[email]?.nickname || email }} ({{ email }})
+                  {{ gymTraineesMap[email]?.nickname || email }} ({{ email }})
                 </span>
                 <button
                   type="button"
@@ -210,8 +210,8 @@
             </div>
 
             <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
-            <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
-            <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
+            <p v-else-if="loadingGymTrainees" class="field-hint">{{ t('common.loading') }}...</p>
+            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.noGymTrainees') }}</p>
           </div>
         </BaseFormField>
       </form>
@@ -277,7 +277,7 @@
                 class="chip-item"
               >
                 <span class="chip-label">
-                  {{ gymMembersMap[email]?.nickname || email }} ({{ email }})
+                  {{ gymTraineesMap[email]?.nickname || email }} ({{ email }})
                 </span>
                 <button
                   type="button"
@@ -308,8 +308,8 @@
             </div>
 
             <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
-            <p v-else-if="loadingGymMembers" class="field-hint">{{ t('common.loading') }}...</p>
-            <p v-else-if="form.gymId && !gymMembersList.length" class="field-hint">{{ t('courses.noGymMembers') }}</p>
+            <p v-else-if="loadingGymTrainees" class="field-hint">{{ t('common.loading') }}...</p>
+            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.noGymTrainees') }}</p>
           </div>
         </BaseFormField>
       </form>
@@ -350,8 +350,8 @@ const {
   editingCourse,
   applicationList,
   gymsList,
-  gymMembersList,
-  loadingGymMembers,
+  gymTraineesList,
+  loadingGymTrainees,
   form,
   canManage,
   hasApplied,
@@ -375,8 +375,8 @@ const {
 const traineeToAdd = ref('')
 const formTraineeToAdd = ref('')
 
-const gymMembersMap = computed(() =>
-  gymMembersList.value.reduce<Record<string, { nickname?: string }>>((acc, m) => {
+const gymTraineesMap = computed(() =>
+  gymTraineesList.value.reduce<Record<string, { nickname?: string }>>((acc, m) => {
     acc[m.email] = { nickname: m.nickname }
     return acc
   }, {})
@@ -385,12 +385,12 @@ const gymMembersMap = computed(() =>
 const availableTraineeOptions = computed(() => {
   if (!selectedCourse.value) return []
   const current = selectedCourse.value.traineeEmails || []
-  return gymMembersList.value.filter((m) => !current.includes(m.email))
+  return gymTraineesList.value.filter((m) => !current.includes(m.email))
 })
 
 const formAvailableTraineeOptions = computed(() => {
   const current = form.value.traineeEmails || []
-  return gymMembersList.value.filter((m) => !current.includes(m.email))
+  return gymTraineesList.value.filter((m) => !current.includes(m.email))
 })
 
 const handleAddTrainee = async () => {

@@ -15,7 +15,7 @@ import {
   type CourseApplication
 } from '../../services/courseService'
 import { getGyms, getGymTraineesAndObservers } from '../../services/firebaseService'
-import type { Course, Gym, ClientInfo } from '../../types'
+import type { Course, Gym, TraineeInfo } from '../../types'
 
 export function useCourseList() {
   const auth = useAuthStore()
@@ -33,8 +33,8 @@ export function useCourseList() {
   const editingCourse = ref<Course | null>(null)
   const applicationList = ref<CourseApplication[]>([])
   const gymsList = ref<Gym[]>([])
-  const gymMembersList = ref<ClientInfo[]>([])
-  const loadingGymMembers = ref(false)
+  const gymTraineesList = ref<TraineeInfo[]>([])
+  const loadingGymTrainees = ref(false)
 
   const canManage = computed(() => auth.isTrainer || auth.isSupervisor)
 
@@ -295,18 +295,18 @@ export function useCourseList() {
     () => form.value.gymId,
     async (gymId) => {
       if (!gymId) {
-        gymMembersList.value = []
+        gymTraineesList.value = []
         return
       }
-      loadingGymMembers.value = true
+      loadingGymTrainees.value = true
       try {
-        gymMembersList.value = await getGymTraineesAndObservers(gymId)
+        gymTraineesList.value = await getGymTraineesAndObservers(gymId)
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e)
-        ui.showToast(msg || 'Failed to load gym members', 'error')
-        gymMembersList.value = []
+        ui.showToast(msg || 'Failed to load gym trainees', 'error')
+        gymTraineesList.value = []
       } finally {
-        loadingGymMembers.value = false
+        loadingGymTrainees.value = false
       }
     },
     { immediate: true }
@@ -327,8 +327,8 @@ export function useCourseList() {
     editingCourse,
     applicationList,
     gymsList,
-    gymMembersList,
-    loadingGymMembers,
+    gymTraineesList,
+    loadingGymTrainees,
     form,
     canManage,
     hasApplied,

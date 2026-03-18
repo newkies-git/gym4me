@@ -2,7 +2,7 @@
   <div class="profile-page page-wrapper container">
     <PageHeader
       :title="t('body.title')"
-      :subtitle="clientEmail || t('body.myStats')"
+      :subtitle="traineeEmail || t('body.myStats')"
       show-back
     />
 
@@ -12,7 +12,7 @@
       </div>
 
       <div class="side-col">
-        <ProfileForm v-if="auth.isMember || auth.isTrainer" :saving="saving" @save="saveRecord" />
+        <ProfileForm v-if="auth.isTrainee || auth.isTrainer" :saving="saving" @save="saveRecord" />
         <div v-else class="observer-card">
           <p class="sm-text">{{ t('body.observerReadonly') }}</p>
         </div>
@@ -40,12 +40,12 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 
-const clientEmail = computed(() => {
-    const requested = route.query.client as string | undefined
+const traineeEmail = computed(() => {
+    const requested = (route.query.trainee ?? route.query.client) as string | undefined
     if (!requested) return undefined
     return auth.isTrainer || auth.isSupervisor ? requested : undefined
 })
-const targetEmail = computed(() => clientEmail.value || auth.user?.email)
+const targetEmail = computed(() => traineeEmail.value || auth.user?.email)
 const records = computed(() => profileStore.getProfilesByEmail(targetEmail.value || ''))
 const saving = computed(() => profileStore.loading)
 
@@ -55,7 +55,7 @@ const loadRecords = async (force = false) => {
 }
 
 onMounted(() => loadRecords())
-watch(clientEmail, () => loadRecords())
+watch(traineeEmail, () => loadRecords())
 
 const saveRecord = async (payload: { date: string, weight: number, bodyFat?: number, muscleMass?: number }) => {
     if (!targetEmail.value) return

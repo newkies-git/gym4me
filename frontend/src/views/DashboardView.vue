@@ -7,7 +7,7 @@
 
     <!-- Observer Warning -->
     <div
-      v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSupervisor && !auth.isManager"
+      v-if="auth.isObserver && !auth.isTrainee && !auth.isTrainer && !auth.isSupervisor && !auth.isManager"
       class="glass alert-banner"
     >
       <p v-html="t('dashboard.observerMsg')"></p>
@@ -21,7 +21,7 @@
     <SystemAdminHome v-else-if="auth.isSiteAdmin" />
     <ManagerHome v-else-if="auth.isManager" />
     <TrainerHome v-else-if="auth.isTrainer" />
-    <TraineeHome v-else-if="auth.isMember" />
+    <TraineeHome v-else-if="auth.isTrainee" />
 
   </div>
 </template>
@@ -46,7 +46,7 @@ const dashboardSubtitle = computed(() => {
   if (auth.isSiteAdmin) return t('dashboard.systemAdminDashboard')
   if (auth.isManager) return t('dashboard.managerDashboard')
   if (auth.isTrainer) return t('dashboard.trainerDashboard')
-  if (auth.isMember) return t('dashboard.memberDashboard')
+  if (auth.isTrainee) return t('dashboard.traineeDashboard')
   return t('dashboard.observerDashboard')
 })
 

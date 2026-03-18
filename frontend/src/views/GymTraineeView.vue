@@ -1,8 +1,8 @@
 <template>
-  <div class="gym-member-wrapper container">
+  <div class="gym-trainee-wrapper container">
     <PageHeader
-      :title="t('gymMember.title')"
-      :subtitle="t('gymMember.subtitle')"
+      :title="t('gymTrainee.title')"
+      :subtitle="t('gymTrainee.subtitle')"
       :showBack="true"
       back-url="/home"
     />
@@ -20,42 +20,42 @@
       <div class="search-bar-inner">
         <BaseSearchInput
           v-model="searchQuery"
-          :placeholder="t('gymMember.searchPlaceholder')"
+          :placeholder="t('gymTrainee.searchPlaceholder')"
         />
       </div>
     </div>
 
     <div v-if="loading" class="empty-state">{{ t('common.loading') }}</div>
-    <div v-else class="member-table-container glass">
-      <table class="member-table">
+    <div v-else class="trainee-table-container glass">
+      <table class="trainee-table">
         <thead>
           <tr>
-            <th>{{ t('gymMember.nickname') }}</th>
-            <th>{{ t('gymMember.email') }}</th>
-            <th>{{ t('gymMember.remainingSessions') }}</th>
-            <th>{{ t('gymMember.expirationDate') }}</th>
-            <th v-if="showActions">{{ t('gymMember.actions') }}</th>
+            <th>{{ t('gymTrainee.nickname') }}</th>
+            <th>{{ t('gymTrainee.email') }}</th>
+            <th>{{ t('gymTrainee.remainingSessions') }}</th>
+            <th>{{ t('gymTrainee.expirationDate') }}</th>
+            <th v-if="showActions">{{ t('gymTrainee.actions') }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="member in pagedMembers" :key="member.uid">
-            <td>{{ member.nickname }}</td>
-            <td>{{ member.email }}</td>
-            <td :class="{ 'warning-text': (member.remainingSessions || 0) < 3 }">
-                {{ member.remainingSessions }}
+          <tr v-for="trainee in pagedTrainees" :key="trainee.uid">
+            <td>{{ trainee.nickname }}</td>
+            <td>{{ trainee.email }}</td>
+            <td :class="{ 'warning-text': (trainee.remainingSessions || 0) < 3 }">
+                {{ trainee.remainingSessions }}
             </td>
-            <td :class="{ 'warning-text': isExpired(member.expirationDate) }">
-                {{ member.expirationDate || t('common.na') }}
+            <td :class="{ 'warning-text': isExpired(trainee.expirationDate) }">
+                {{ trainee.expirationDate || t('common.na') }}
             </td>
             <td v-if="showActions">
-              <button class="btn btn-ghost btn-mini" @click="viewDetails(member)">
+              <button class="btn btn-ghost btn-mini" @click="viewDetails(trainee)">
                 {{ t('common.details' as any) || 'Details' }}
               </button>
             </td>
           </tr>
-          <tr v-if="!pagedMembers.length">
+          <tr v-if="!pagedTrainees.length">
             <td :colspan="showActions ? 5 : 4" class="empty-state">
-              {{ t('gymMember.noMembers') || t('common.na') }}
+              {{ t('gymTrainee.noTrainees') || t('common.na') }}
             </td>
           </tr>
         </tbody>
@@ -85,41 +85,41 @@
     </div>
 
     <!-- Details Modal -->
-    <BaseModal v-model:isOpen="isModalOpen" :title="selectedMember?.nickname || ''">
-        <div v-if="selectedMember" class="member-info-details">
+    <BaseModal v-model:isOpen="isModalOpen" :title="selectedTrainee?.nickname || ''">
+        <div v-if="selectedTrainee" class="trainee-info-details">
             <div class="detail-row">
-                <span>{{ t('gymMember.email') }}:</span>
-                <strong>{{ selectedMember.email }}</strong>
+                <span>{{ t('gymTrainee.email') }}:</span>
+                <strong>{{ selectedTrainee.email }}</strong>
             </div>
             <div class="detail-row">
-                <span>{{ t('gymMember.remainingSessions') }}:</span>
-                <strong class="sessions-count">{{ selectedMember.remainingSessions ?? 0 }}</strong>
+                <span>{{ t('gymTrainee.remainingSessions') }}:</span>
+                <strong class="sessions-count">{{ selectedTrainee.remainingSessions ?? 0 }}</strong>
             </div>
             <div class="detail-row">
-                <span>{{ t('gymMember.expirationDate') }}:</span>
-                <strong>{{ selectedMember.expirationDate || t('common.na') }}</strong>
+                <span>{{ t('gymTrainee.expirationDate') }}:</span>
+                <strong>{{ selectedTrainee.expirationDate || t('common.na') }}</strong>
             </div>
         </div>
         <template #footer>
             <button class="btn btn-ghost" @click="isModalOpen = false">{{ t('common.close') }}</button>
-            <button class="btn btn-secondary" @click="openHistory">{{ t('gymMember.creditHistory') }}</button>
-            <button v-if="canManageCredit" class="btn btn-primary" @click="openAddCredit">{{ t('gymMember.addCredit') }}</button>
+            <button class="btn btn-secondary" @click="openHistory">{{ t('gymTrainee.creditHistory') }}</button>
+            <button v-if="canManageCredit" class="btn btn-primary" @click="openAddCredit">{{ t('gymTrainee.addCredit') }}</button>
         </template>
     </BaseModal>
 
     <!-- Credit Add Modal -->
     <CreditAddModal
-      v-if="selectedMember"
+      v-if="selectedTrainee"
       v-model:isOpen="isCreditAddOpen"
-      :memberUid="selectedMember.uid"
+      :traineeUid="selectedTrainee.uid"
       @success="onCreditAdded"
     />
 
     <!-- Credit History Modal -->
     <CreditHistoryModal
-      v-if="selectedMember"
+      v-if="selectedTrainee"
       v-model:isOpen="isCreditHistoryOpen"
-      :memberUid="selectedMember.uid"
+      :traineeUid="selectedTrainee.uid"
     />
   </div>
 </template>
@@ -134,20 +134,20 @@ import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
 import CreditAddModal from '../components/gym/CreditAddModal.vue'
 import CreditHistoryModal from '../components/gym/CreditHistoryModal.vue'
-import { getGymMembers, getGyms } from '../services/firebaseService'
+import { getGymTrainees, getGyms } from '../services/firebaseService'
 import { getCoursesForUser } from '../services/courseService'
-import type { ClientInfo } from '../types'
+import type { TraineeInfo } from '../types'
 
 const { t } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(true)
-const members = ref<ClientInfo[]>([])
+const trainees = ref<TraineeInfo[]>([])
 const searchQuery = ref('')
 const isModalOpen = ref(false)
 const isCreditAddOpen = ref(false)
 const isCreditHistoryOpen = ref(false)
-const selectedMember = ref<ClientInfo | null>(null)
+const selectedTrainee = ref<TraineeInfo | null>(null)
 const page = ref(1)
 const pageSize = 20
 const gyms = ref<{ id: string; name: string }[]>([])
@@ -156,8 +156,8 @@ const selectedGymId = ref<string>('__all__')
 const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSupervisor))
 const canManageCredit = computed(() => !!(auth.isManager || auth.isSupervisor))
 
-const filteredMembers = computed(() => {
-  let base = members.value
+const filteredTrainees = computed(() => {
+  let base = trainees.value
   if (auth.isSupervisor && selectedGymId.value !== '__all__') {
     base = base.filter((m) => m.gymId === selectedGymId.value)
   }
@@ -171,12 +171,12 @@ const filteredMembers = computed(() => {
 })
 
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredMembers.value.length / pageSize))
+  Math.max(1, Math.ceil(filteredTrainees.value.length / pageSize))
 )
 
-const pagedMembers = computed(() => {
+const pagedTrainees = computed(() => {
   const start = (page.value - 1) * pageSize
-  return filteredMembers.value.slice(start, start + pageSize)
+  return filteredTrainees.value.slice(start, start + pageSize)
 })
 
 onMounted(async () => {
@@ -185,34 +185,34 @@ onMounted(async () => {
   try {
     if (auth.isSupervisor) {
       gyms.value = await getGyms()
-      const allMembers: ClientInfo[] = []
+      const all: TraineeInfo[] = []
       for (const g of gyms.value) {
-        const list = await getGymMembers(g.id)
-        list.forEach((m) => allMembers.push({ ...m, gymId: g.id } as any))
+        const list = await getGymTrainees(g.id)
+        list.forEach((m) => all.push({ ...m, gymId: g.id } as any))
       }
-      members.value = allMembers
+      trainees.value = all
     } else if (auth.isManager) {
       if (!auth.user.gymId) {
-        members.value = []
+        trainees.value = []
       } else {
-        members.value = await getGymMembers(auth.user.gymId)
+        trainees.value = await getGymTrainees(auth.user.gymId)
       }
     } else if (auth.isTrainer) {
       if (!auth.user.gymId || !auth.user.email) {
-        members.value = []
+        trainees.value = []
       } else {
-        const [gymMembers, courses] = await Promise.all([
-          getGymMembers(auth.user.gymId),
+        const [gymTrainees, courses] = await Promise.all([
+          getGymTrainees(auth.user.gymId),
           getCoursesForUser(auth.user.email)
         ])
         const traineeSet = new Set<string>()
         courses.forEach((c) => {
           ;(c.traineeEmails || []).forEach((email) => traineeSet.add(email))
         })
-        members.value = gymMembers.filter((m) => traineeSet.has(m.email))
+        trainees.value = gymTrainees.filter((m) => traineeSet.has(m.email))
       }
     } else {
-      members.value = []
+      trainees.value = []
     }
   } finally {
     loading.value = false
@@ -224,8 +224,8 @@ const isExpired = (dateStr?: string) => {
     return new Date(dateStr) < new Date()
 }
 
-const viewDetails = (member: ClientInfo) => {
-    selectedMember.value = member
+const viewDetails = (trainee: TraineeInfo) => {
+    selectedTrainee.value = trainee
     isModalOpen.value = true
 }
 
@@ -240,33 +240,30 @@ const openHistory = () => {
 }
 
 const onCreditAdded = async () => {
-    // Refresh member data from Firestore after adding credit
     if (!auth.user) return
     loading.value = true
     try {
-        let refreshed: ClientInfo[] = []
+        let refreshed: TraineeInfo[] = []
         if (auth.isSupervisor) {
             for (const g of gyms.value) {
-                const list = await getGymMembers(g.id)
+                const list = await getGymTrainees(g.id)
                 list.forEach((m) => refreshed.push({ ...m, gymId: g.id } as any))
             }
         } else if (auth.isManager && auth.user.gymId) {
-            refreshed = await getGymMembers(auth.user.gymId)
+            refreshed = await getGymTrainees(auth.user.gymId)
         } else if (auth.isTrainer && auth.user.gymId && auth.user.email) {
-            const [gymMembers, courses] = await Promise.all([
-                getGymMembers(auth.user.gymId),
+            const [gymTrainees, courses] = await Promise.all([
+                getGymTrainees(auth.user.gymId),
                 getCoursesForUser(auth.user.email)
             ])
             const traineeSet = new Set<string>()
             courses.forEach((c) => { (c.traineeEmails || []).forEach((e) => traineeSet.add(e)) })
-            refreshed = gymMembers.filter((m) => traineeSet.has(m.email))
+            refreshed = gymTrainees.filter((m) => traineeSet.has(m.email))
         }
-        members.value = refreshed
-
-        // Update the selected member reference so the detail modal shows the new count
-        if (selectedMember.value) {
-            const updated = refreshed.find((m) => m.uid === selectedMember.value!.uid)
-            if (updated) selectedMember.value = updated
+        trainees.value = refreshed
+        if (selectedTrainee.value) {
+            const updated = refreshed.find((m) => m.uid === selectedTrainee.value!.uid)
+            if (updated) selectedTrainee.value = updated
         }
     } finally {
         loading.value = false
@@ -275,14 +272,14 @@ const onCreditAdded = async () => {
 </script>
 
 <style scoped>
-.gym-member-wrapper { 
-  padding: 6rem 1rem 2rem 1rem; 
+.gym-trainee-wrapper {
+  padding: 6rem 1rem 2rem 1rem;
 }
-.member-table-container { overflow-x: auto; }
-.member-table { width: 100%; border-collapse: collapse; text-align: left; }
-.member-table th, .member-table td { padding: 1rem; border-bottom: 1px solid var(--border); }
-.member-table th { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
-.member-table tr:last-child td { border-bottom: none; }
+.trainee-table-container { overflow-x: auto; }
+.trainee-table { width: 100%; border-collapse: collapse; text-align: left; }
+.trainee-table th, .trainee-table td { padding: 1rem; border-bottom: 1px solid var(--border); }
+.trainee-table th { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
+.trainee-table tr:last-child td { border-bottom: none; }
 .warning-text { color: var(--accent); font-weight: 600; }
 .detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
 .detail-row:last-child { border-bottom: none; }

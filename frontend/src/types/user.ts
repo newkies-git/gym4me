@@ -20,7 +20,7 @@ export interface User {
   registeredAt?: unknown
 }
 
-export interface ClientInfo {
+export interface TraineeInfo {
   uid: string
   email: string
   nickname?: string

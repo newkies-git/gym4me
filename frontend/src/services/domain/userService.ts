@@ -23,7 +23,7 @@ import {
   demotePrimaryManagersToViceInGym,
   type AppUser
 } from '../core/userUtils'
-import type { ClientInfo, User, TicketHistoryEntry } from '../../types'
+import type { TraineeInfo, User, TicketHistoryEntry } from '../../types'
 import type { DocumentData } from 'firebase/firestore'
 
 export type ManagerType = 'PRIMARY' | 'VICE'
@@ -45,7 +45,7 @@ export interface SearchUserResult {
   data: Record<string, unknown>
 }
 
-export async function getClientsByTrainer(trainerEmail: string): Promise<ClientInfo[]> {
+export async function getTraineesByTrainer(trainerEmail: string): Promise<TraineeInfo[]> {
   const q = query(collection(db, 'users'), where('trainerEmail', '==', trainerEmail))
   const snapshot = await getDocs(q)
   return snapshot.docs.map((docSnap) => ({
@@ -57,15 +57,15 @@ export async function getClientsByTrainer(trainerEmail: string): Promise<ClientI
   }))
 }
 
-export async function assignTrainerToClient(clientId: string, trainerEmail: string): Promise<void> {
-  await updateDoc(doc(db, 'users', clientId), { trainerEmail })
+export async function assignTrainerToTrainee(traineeId: string, trainerEmail: string): Promise<void> {
+  await updateDoc(doc(db, 'users', traineeId), { trainerEmail })
 }
 
-export async function updateClientSession(
-  clientId: string,
-  updates: Pick<ClientInfo, 'remainingSessions' | 'expirationDate'>
+export async function updateTraineeSession(
+  traineeId: string,
+  updates: Pick<TraineeInfo, 'remainingSessions' | 'expirationDate'>
 ): Promise<void> {
-  await updateDoc(doc(db, 'users', clientId), updates)
+  await updateDoc(doc(db, 'users', traineeId), updates)
 }
 
 export async function logTicketHistory(historyData: {
@@ -133,7 +133,7 @@ export async function updateTrainerInfo(
   await updateDoc(doc(db, 'users', uid), updates)
 }
 
-export async function updateMemberProfile(
+export async function updateTraineeProfile(
   uid: string,
   data: { name: string; phone?: string; gymId: string; nickname?: string }
 ): Promise<void> {

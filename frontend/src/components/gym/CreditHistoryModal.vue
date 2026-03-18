@@ -2,7 +2,7 @@
   <BaseModal
     :isOpen="isOpen"
     @update:isOpen="$emit('update:isOpen', $event)"
-    :title="t('gymMember.creditHistory')"
+    :title="t('gymTrainee.creditHistory')"
     maxWidth="800px"
   >
     <div v-if="loading" class="loading-state">{{ t('common.loading') }}</div>
@@ -11,11 +11,11 @@
       <table class="history-table">
         <thead>
           <tr>
-            <th>{{ t('gymMember.date') }}</th>
-            <th>{{ t('gymMember.action') }}</th>
-            <th>{{ t('gymMember.amount') }}</th>
-            <th>{{ t('gymMember.sessionsAfter') }}</th>
-            <th>{{ t('gymMember.registrant') }}</th>
+            <th>{{ t('gymTrainee.date') }}</th>
+            <th>{{ t('gymTrainee.action') }}</th>
+            <th>{{ t('gymTrainee.amount') }}</th>
+            <th>{{ t('gymTrainee.sessionsAfter') }}</th>
+            <th>{{ t('gymTrainee.registrant') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -23,7 +23,7 @@
             <td>{{ formatDateTime(entry.createdAt) }}</td>
             <td>
               <span :class="['badge', entry.action.toLowerCase()]">
-                {{ t(`gymMember.actionType.${entry.action}`) }}
+                {{ t(`gymTrainee.actionType.${entry.action}`) }}
               </span>
             </td>
             <td :class="entry.amount >= 0 ? 'text-success' : 'text-danger'">
@@ -59,7 +59,7 @@ import type { TicketHistoryEntry } from '../../types'
 
 const props = defineProps<{
   isOpen: boolean
-  memberUid: string
+  traineeUid: string
 }>()
 
 const { t } = useI18n()
@@ -68,11 +68,11 @@ const history = ref<TicketHistoryEntry[]>([])
 const errorMessage = ref('')
 
 watch(() => props.isOpen, async (newVal) => {
-  if (newVal && props.memberUid) {
+  if (newVal && props.traineeUid) {
     loading.value = true
     errorMessage.value = ''
     try {
-      history.value = await getTicketHistory(props.memberUid)
+      history.value = await getTicketHistory(props.traineeUid)
     } catch (err: any) {
       console.error('Failed to fetch history:', err)
       errorMessage.value = err.message || 'Failed to fetch history'

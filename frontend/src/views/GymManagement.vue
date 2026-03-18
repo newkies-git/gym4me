@@ -25,7 +25,7 @@
           :key="g.id" 
           :gym="g"
           :trainers-count="trainersMap[g.id]?.length || 0"
-          :members-count="membersMap[g.id]?.length || 0"
+          :trainees-count="traineesMap[g.id]?.length || 0"
           @edit="openEditModal"
           @delete="handleDeleteGym"
           @open-trainers="openTrainersModal"
@@ -52,7 +52,7 @@
         <GymCard 
           :gym="gym"
           :trainers-count="trainersMap[gym.id]?.length || 0"
-          :members-count="membersMap[gym.id]?.length || 0"
+          :trainees-count="traineesMap[gym.id]?.length || 0"
           @edit="openEditModal"
           @delete="handleDeleteGym"
           @open-trainers="openTrainersModal"
@@ -208,7 +208,7 @@ const {
   loading,
   gym,
   gymsList,
-  membersMap,
+  traineesMap,
   trainersMap,
   isModalOpen,
   isEditing,

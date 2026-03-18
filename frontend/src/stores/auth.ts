@@ -20,15 +20,15 @@ export const useAuthStore = defineStore('auth', {
             ((state.user?.lvl || 0) >= 90 && state.user?.role !== 'SITE_ADMIN'),
         isManager: (state) => state.user?.role === 'MANAGER' || (state.user?.lvl || 0) >= 20,
         isTrainer: (state) => state.user?.role === 'TRAINER' || (state.user?.lvl || 0) >= 10,
-        isMember: (state) => (state.user?.lvl || 0) >= 5 || (state.user?.remainingSessions || 0) > 0,
+        isTrainee: (state) => (state.user?.lvl || 0) >= 5 || (state.user?.remainingSessions || 0) > 0,
         isObserver: (state) => (state.user?.lvl || 0) >= 1,
         isAdmin: (state) => (state.user?.lvl || 0) >= 20,
         /** Trainee/Observer(lvl<10) 이고 프로필 미완료 시 true → 추가 정보 입력 페이지로 유도 */
-        needsMemberProfile: (state) => {
+        needsTraineeProfile: (state) => {
             const u = state.user;
             if (!u) return false;
-            const isMemberOrObserver = (u.lvl || 0) < 10;
-            return isMemberOrObserver && u.profileComplete !== true;
+            const isTraineeOrObserver = (u.lvl || 0) < 10;
+            return isTraineeOrObserver && u.profileComplete !== true;
         },
     },
     actions: {
