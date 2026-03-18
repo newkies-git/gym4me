@@ -34,7 +34,7 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
 type KeyResolver<TItem> = keyof TItem | ((item: TItem, index: number) => string | number)
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   items: T[]
   loading?: boolean
   error?: string
@@ -42,7 +42,13 @@ const props = defineProps<{
   loadingText?: string
   dense?: boolean
   itemKey?: KeyResolver<T>
-}>()
+}>(), {
+  loading: false,
+  error: '',
+  emptyText: '—',
+  loadingText: 'Loading...',
+  dense: false
+})
 
 const resolveKey = (item: T, index: number) => {
   const key = props.itemKey

@@ -37,6 +37,44 @@ export default {
 
     // ── Auth ─────────────────────────────────────────────────────────
     auth: {
+        tabs: {
+            login: '로그인',
+            signup: '회원가입',
+        },
+        fields: {
+            email: { label: '이메일', placeholder: 'name(at)example.com' },
+            password: { label: '비밀번호', placeholder: '8자 이상 입력' },
+            passwordConfirm: { label: '비밀번호 확인', placeholder: '비밀번호를 다시 입력하세요' },
+        },
+        actions: {
+            processing: '처리 중...',
+            signIn: '로그인',
+            createAccount: '계정 만들기',
+        },
+        loginOptions: {
+            rememberEmail: '이메일 기억',
+        },
+        legal: {
+            agreeTerms: '이용약관에 동의합니다',
+            agreePrivacy: '개인정보 수집 및 이용에 동의합니다',
+            termsRequired: '이용약관 및 개인정보 수집·이용에 동의해 주세요.',
+        },
+        reset: {
+            link: '비밀번호를 잊으셨나요?',
+            emailRequired: '비밀번호를 초기화할 이메일을 입력해 주세요.',
+            emailSent: '비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.',
+            emailFailed: '비밀번호 재설정 메일 전송에 실패했습니다.',
+        },
+        toast: {
+            accountCreated: '계정이 생성됐습니다! 로그인하세요.',
+        },
+        errors: {
+            passwordMismatch: '비밀번호가 일치하지 않습니다.',
+            emailInUse: '이미 사용 중인 이메일입니다.',
+            invalidCredential: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        },
+
+        // Backward-compat (점진 전환용)
         login: '로그인',
         signup: '회원가입',
         email: '이메일',
@@ -630,6 +668,26 @@ export default {
     },
 
     gymTrainee: {
+        labels: {
+            title: '지점 트레이니 관리',
+            subtitle: '지점 전체 트레이니의 이용권 현황을 관리합니다.',
+            searchPlaceholder: '이름 또는 이메일로 검색...',
+            nickname: '닉네임',
+            email: '이메일',
+            remainingSessions: '잔여 PT',
+            expirationDate: '만료일',
+            actions: '관리',
+        },
+        buttons: {
+            creditHistory: '이력 조회',
+            addCredit: 'Credit 추가',
+            details: '상세',
+        },
+        empty: {
+            noTrainees: '트레이니가 없습니다.',
+        },
+
+        // Backward-compat (점진 전환용)
         title: '지점 트레이니 관리',
         subtitle: '지점 전체 트레이니의 이용권 현황을 관리합니다.',
         searchPlaceholder: '이름 또는 이메일로 검색...',
@@ -658,6 +716,39 @@ export default {
 
     // ── 수업/강좌 ───────────────────────────────────────────────────
     courses: {
+        detail: {
+            contentTitle: '강좌 내용',
+            registrantLabel: '등록자',
+            traineesTitle: '참석자',
+            applicationsTitle: '참석 신청 목록',
+        },
+        actions: {
+            addCourse: '강좌 추가',
+            apply: '참석 신청',
+            cancelApply: '참석 신청 취소',
+            approve: '승인',
+            edit: '수정',
+            delete: '삭제',
+            close: '닫기',
+            addAttendee: '참석자 추가',
+            removeAttendee: '참석자 제거',
+        },
+        placeholders: {
+            selectGym: '헬스장 선택',
+            selectGymFirst: '참석자를 선택하려면 먼저 헬스장을 선택하세요.',
+            noGymTrainees: '해당 헬스장에 등록된 트레이니가 없습니다.',
+            selectTraineeToAdd: '추가할 참석자를 선택하세요',
+        },
+        toast: {
+            createSuccess: '강좌가 등록되었습니다.',
+            updateSuccess: '강좌가 수정되었습니다.',
+            deleteSuccess: '강좌가 삭제되었습니다.',
+            applySuccess: '참석 신청이 완료되었습니다.',
+            cancelApplySuccess: '참석 신청이 취소되었습니다.',
+            approveSuccess: '참석이 승인되었습니다.',
+        },
+
+        // Backward-compat (점진 전환용)
         title: '수업/강좌',
         subtitle: '강좌 목록을 확인하고 참석을 신청하세요.',
         addCourse: '강좌 추가',

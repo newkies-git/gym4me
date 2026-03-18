@@ -4,7 +4,7 @@
 
     <div class="course-header-actions" v-if="canManage">
       <button class="btn btn-primary" @click="openCreateModal">
-        + {{ t('courses.addCourse') }}
+        + {{ t('courses.actions.addCourse') }}
       </button>
     </div>
 
@@ -47,16 +47,16 @@
           </div>
 
           <div v-if="selectedCourse.content" class="course-detail-block">
-            <h4 class="course-detail-block-title">{{ t('courses.content') }}</h4>
+            <h4 class="course-detail-block-title">{{ t('courses.detail.contentTitle') }}</h4>
             <p class="course-detail-content">{{ selectedCourse.content }}</p>
           </div>
 
           <p class="course-detail-registrant">
-            {{ t('courses.registrant') }}: {{ selectedCourse.createdByName || selectedCourse.createdBy }} · {{ formatDateTime(selectedCourse.createdAt) }}
+            {{ t('courses.detail.registrantLabel') }}: {{ selectedCourse.createdByName || selectedCourse.createdBy }} · {{ formatDateTime(selectedCourse.createdAt) }}
           </p>
 
           <div v-if="selectedCourse.traineeEmails?.length || (canManage && gymTraineesList.length)" class="course-detail-block">
-            <h4 class="course-detail-block-title">{{ t('courses.trainees') }}</h4>
+            <h4 class="course-detail-block-title">{{ t('courses.detail.traineesTitle') }}</h4>
             <div v-if="selectedCourse.traineeEmails?.length" class="course-detail-tags">
               <template v-if="canManage">
                 <div
@@ -71,8 +71,8 @@
                     <button
                       type="button"
                       class="course-detail-tag-x"
-                      :aria-label="t('courses.removeTrainee')"
-                      :title="t('courses.removeTrainee')"
+                      :aria-label="t('courses.actions.removeAttendee')"
+                      :title="t('courses.actions.removeAttendee')"
                       @click.stop="removeTraineeFromCourse(email)"
                     >
                       ×
@@ -95,7 +95,7 @@
               <BaseSelect
                 v-model="traineeToAdd"
                 :options="availableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
-                :placeholder="t('courses.selectTraineeToAdd')"
+              :placeholder="t('courses.placeholders.selectTraineeToAdd')"
               />
               <button
                 type="button"
@@ -103,33 +103,33 @@
                 :disabled="!traineeToAdd"
                 @click.stop="handleAddTrainee"
               >
-                {{ t('courses.addTrainee') }}
+              {{ t('courses.actions.addAttendee') }}
               </button>
             </div>
           </div>
 
           <div v-if="canManage && applicationList.length" class="course-detail-block">
-            <h4 class="course-detail-block-title">{{ t('courses.applications') }}</h4>
+          <h4 class="course-detail-block-title">{{ t('courses.detail.applicationsTitle') }}</h4>
             <ul class="application-list">
               <li v-for="app in applicationList" :key="app.id" class="application-row">
                 <span :title="app.traineeEmail">
                   {{ displayNameByEmail(app.traineeEmail) }}
                 </span>
-                <button type="button" class="btn btn-primary btn-sm" @click.stop="approveApp(app)">{{ t('courses.approve') }}</button>
+              <button type="button" class="btn btn-primary btn-sm" @click.stop="approveApp(app)">{{ t('courses.actions.approve') }}</button>
               </li>
             </ul>
           </div>
 
           <div class="course-detail-actions">
             <template v-if="canManage">
-              <button type="button" class="btn btn-primary" @click="openEditModal(selectedCourse)">{{ t('courses.edit') }}</button>
-              <button type="button" class="btn btn-danger" @click="confirmDelete(selectedCourse)">{{ t('courses.delete') }}</button>
+            <button type="button" class="btn btn-primary" @click="openEditModal(selectedCourse)">{{ t('courses.actions.edit') }}</button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete(selectedCourse)">{{ t('courses.actions.delete') }}</button>
             </template>
             <template v-else>
-              <button v-if="hasApplied" type="button" class="btn btn-ghost" @click="cancelApply">{{ t('courses.cancelApply') }}</button>
-              <button v-else type="button" class="btn btn-primary" @click="doApply">{{ t('courses.apply') }}</button>
+            <button v-if="hasApplied" type="button" class="btn btn-ghost" @click="cancelApply">{{ t('courses.actions.cancelApply') }}</button>
+            <button v-else type="button" class="btn btn-primary" @click="doApply">{{ t('courses.actions.apply') }}</button>
             </template>
-            <button type="button" class="btn btn-ghost" @click="isDetailOpen = false">{{ t('courses.close') }}</button>
+          <button type="button" class="btn btn-ghost" @click="isDetailOpen = false">{{ t('courses.actions.close') }}</button>
           </div>
         </div>
       </template>
@@ -137,7 +137,7 @@
     </BaseModal>
 
     <!-- 생성 모달 -->
-    <BaseModal v-model:isOpen="isCreateOpen" :title="t('courses.addCourse')" max-width="520px">
+    <BaseModal v-model:isOpen="isCreateOpen" :title="t('courses.actions.addCourse')" max-width="520px">
       <form @submit.prevent="submitCreate" class="course-form">
         <BaseFormField :label="t('courses.courseName')" :required="true">
           <BaseTextField v-model="form.title" />
@@ -146,7 +146,7 @@
           <BaseSelect
             v-model="form.gymId"
             :options="gymsList.map(g => ({ value: g.id, label: g.name }))"
-            :placeholder="t('courses.gymPlaceholder')"
+            :placeholder="t('courses.placeholders.selectGym')"
           />
         </BaseFormField>
         <div class="field date-time-row">
@@ -209,7 +209,7 @@
               <BaseSelect
                 v-model="formTraineeToAdd"
                 :options="formAvailableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
-                :placeholder="t('courses.selectTraineeToAdd')"
+                :placeholder="t('courses.placeholders.selectTraineeToAdd')"
                 :disabled="!form.gymId || formAvailableTraineeOptions.length === 0"
               />
               <button
@@ -218,13 +218,13 @@
                 :disabled="!formTraineeToAdd"
                 @click="handleFormAddTrainee"
               >
-                {{ t('courses.addTrainee') }}
+                {{ t('courses.actions.addAttendee') }}
               </button>
             </div>
 
-            <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
+            <p v-if="!form.gymId" class="field-hint">{{ t('courses.placeholders.selectGymFirst') }}</p>
             <p v-else-if="loadingGymTrainees" class="field-hint">{{ t('common.loading') }}...</p>
-            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.noGymTrainees') }}</p>
+            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.placeholders.noGymTrainees') }}</p>
           </div>
         </BaseFormField>
       </form>
@@ -244,7 +244,7 @@
           <BaseSelect
             v-model="form.gymId"
             :options="gymsList.map(g => ({ value: g.id, label: g.name }))"
-            :placeholder="t('courses.gymPlaceholder')"
+            :placeholder="t('courses.placeholders.selectGym')"
           />
         </BaseFormField>
         <div class="field date-time-row">
@@ -307,7 +307,7 @@
               <BaseSelect
                 v-model="formTraineeToAdd"
                 :options="formAvailableTraineeOptions.map(m => ({ value: m.email, label: `${m.nickname || m.email} (${m.email})` }))"
-                :placeholder="t('courses.selectTraineeToAdd')"
+                :placeholder="t('courses.placeholders.selectTraineeToAdd')"
                 :disabled="!form.gymId || formAvailableTraineeOptions.length === 0"
               />
               <button
@@ -316,13 +316,13 @@
                 :disabled="!formTraineeToAdd"
                 @click="handleFormAddTrainee"
               >
-                {{ t('courses.addTrainee') }}
+                {{ t('courses.actions.addAttendee') }}
               </button>
             </div>
 
-            <p v-if="!form.gymId" class="field-hint">{{ t('courses.selectGymFirst') }}</p>
+            <p v-if="!form.gymId" class="field-hint">{{ t('courses.placeholders.selectGymFirst') }}</p>
             <p v-else-if="loadingGymTrainees" class="field-hint">{{ t('common.loading') }}...</p>
-            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.noGymTrainees') }}</p>
+            <p v-else-if="form.gymId && !gymTraineesList.length" class="field-hint">{{ t('courses.placeholders.noGymTrainees') }}</p>
           </div>
         </BaseFormField>
       </form>

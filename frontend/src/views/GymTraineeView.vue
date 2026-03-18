@@ -1,8 +1,8 @@
 <template>
   <div class="gym-trainee-wrapper container">
     <PageHeader
-      :title="t('gymTrainee.title')"
-      :subtitle="t('gymTrainee.subtitle')"
+      :title="t('gymTrainee.labels.title')"
+      :subtitle="t('gymTrainee.labels.subtitle')"
       :showBack="true"
       back-url="/home"
     />
@@ -20,7 +20,7 @@
       <div class="search-bar-inner">
         <BaseSearchInput
           v-model="searchQuery"
-          :placeholder="t('gymTrainee.searchPlaceholder')"
+          :placeholder="t('gymTrainee.labels.searchPlaceholder')"
         />
       </div>
     </div>
@@ -29,35 +29,35 @@
     <div v-else class="trainee-list-container glass">
       <BaseListView
         :items="pagedTrainees"
-        :emptyText="t('gymTrainee.noTrainees') || t('common.na')"
+        :emptyText="t('gymTrainee.empty.noTrainees') || t('common.na')"
         :itemKey="'uid'"
         dense
       >
         <template #item="{ item: trainee }">
-          <div class="trainee-row">
-            <div class="trainee-main">
-              <div class="trainee-name">
+          <div class="gymTrainee__row">
+            <div class="gymTrainee__main">
+              <div class="gymTrainee__name">
                 {{ trainee.nickname || trainee.email }}
               </div>
-              <div class="trainee-sub">
-                <span class="trainee-email">{{ trainee.email }}</span>
+              <div class="gymTrainee__sub">
+                <span class="gymTrainee__email">{{ trainee.email }}</span>
               </div>
             </div>
 
-            <div class="trainee-metrics">
-              <div class="metric" :class="{ warn: (trainee.remainingSessions || 0) < 3 }">
-                <span class="metric-label">{{ t('gymTrainee.remainingSessions') }}</span>
-                <strong class="metric-value">{{ trainee.remainingSessions ?? 0 }}</strong>
+            <div class="gymTrainee__metrics">
+              <div class="gymTrainee__metric" :class="{ 'gymTrainee__metric--warn': (trainee.remainingSessions || 0) < 3 }">
+                <span class="gymTrainee__metricLabel">{{ t('gymTrainee.labels.remainingSessions') }}</span>
+                <strong class="gymTrainee__metricValue">{{ trainee.remainingSessions ?? 0 }}</strong>
               </div>
-              <div class="metric" :class="{ warn: isExpired(trainee.expirationDate) }">
-                <span class="metric-label">{{ t('gymTrainee.expirationDate') }}</span>
-                <strong class="metric-value">{{ trainee.expirationDate || t('common.na') }}</strong>
+              <div class="gymTrainee__metric" :class="{ 'gymTrainee__metric--warn': isExpired(trainee.expirationDate) }">
+                <span class="gymTrainee__metricLabel">{{ t('gymTrainee.labels.expirationDate') }}</span>
+                <strong class="gymTrainee__metricValue">{{ trainee.expirationDate || t('common.na') }}</strong>
               </div>
             </div>
 
-            <div v-if="showActions" class="trainee-actions" @click.stop>
+            <div v-if="showActions" class="gymTrainee__actions" @click.stop>
               <button class="btn btn-ghost btn-mini" @click="viewDetails(trainee)">
-                {{ t('common.details' as any) || 'Details' }}
+                {{ t('gymTrainee.buttons.details') }}
               </button>
             </div>
           </div>
@@ -91,22 +91,22 @@
     <BaseModal v-model:isOpen="isModalOpen" :title="selectedTrainee?.nickname || ''">
         <div v-if="selectedTrainee" class="trainee-info-details">
             <div class="detail-row">
-                <span>{{ t('gymTrainee.email') }}:</span>
+                <span>{{ t('gymTrainee.labels.email') }}:</span>
                 <strong>{{ selectedTrainee.email }}</strong>
             </div>
             <div class="detail-row">
-                <span>{{ t('gymTrainee.remainingSessions') }}:</span>
+                <span>{{ t('gymTrainee.labels.remainingSessions') }}:</span>
                 <strong class="sessions-count">{{ selectedTrainee.remainingSessions ?? 0 }}</strong>
             </div>
             <div class="detail-row">
-                <span>{{ t('gymTrainee.expirationDate') }}:</span>
+                <span>{{ t('gymTrainee.labels.expirationDate') }}:</span>
                 <strong>{{ selectedTrainee.expirationDate || t('common.na') }}</strong>
             </div>
         </div>
         <template #footer>
             <button class="btn btn-ghost" @click="isModalOpen = false">{{ t('common.close') }}</button>
-            <button class="btn btn-secondary" @click="openHistory">{{ t('gymTrainee.creditHistory') }}</button>
-            <button v-if="canManageCredit" class="btn btn-primary" @click="openAddCredit">{{ t('gymTrainee.addCredit') }}</button>
+            <button class="btn btn-secondary" @click="openHistory">{{ t('gymTrainee.buttons.creditHistory') }}</button>
+            <button v-if="canManageCredit" class="btn btn-primary" @click="openAddCredit">{{ t('gymTrainee.buttons.addCredit') }}</button>
         </template>
     </BaseModal>
 
@@ -284,7 +284,7 @@ const onCreditAdded = async () => {
   padding: 1rem;
 }
 
-.trainee-row {
+.gymTrainee__row {
   display: grid;
   grid-template-columns: 1.2fr 1fr auto;
   gap: 0.9rem;
@@ -296,23 +296,23 @@ const onCreditAdded = async () => {
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
-.trainee-row:hover {
+.gymTrainee__row:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.85);
 }
 
-.trainee-main {
+.gymTrainee__main {
   min-width: 0;
 }
 
-.trainee-name {
+.gymTrainee__name {
   font-weight: 800;
   color: var(--text-main);
   line-height: 1.2;
 }
 
-.trainee-sub {
+.gymTrainee__sub {
   margin-top: 0.25rem;
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -322,7 +322,7 @@ const onCreditAdded = async () => {
   align-items: baseline;
 }
 
-.trainee-email {
+.gymTrainee__email {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -330,13 +330,13 @@ const onCreditAdded = async () => {
   max-width: 260px;
 }
 
-.trainee-metrics {
+.gymTrainee__metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
 }
 
-.metric {
+.gymTrainee__metric {
   padding: 0.55rem 0.75rem;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -344,30 +344,30 @@ const onCreditAdded = async () => {
   min-width: 0;
 }
 
-.metric-label {
+.gymTrainee__metricLabel {
   display: block;
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
 }
 
-.metric-value {
+.gymTrainee__metricValue {
   display: block;
   margin-top: 0.15rem;
   font-size: 0.95rem;
   color: var(--text-main);
 }
 
-.metric.warn {
+.gymTrainee__metric--warn {
   border-color: rgba(244, 63, 94, 0.25);
   background: rgba(244, 63, 94, 0.06);
 }
 
-.metric.warn .metric-value {
+.gymTrainee__metric--warn .gymTrainee__metricValue {
   color: var(--accent);
 }
 
-.trainee-actions {
+.gymTrainee__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -377,16 +377,16 @@ const onCreditAdded = async () => {
 .sessions-count { font-size: 1.1rem; }
 
 @media (max-width: 640px) {
-  .trainee-row {
+  .gymTrainee__row {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
-  .trainee-actions {
+  .gymTrainee__actions {
     justify-content: flex-start;
   }
 
-  .trainee-email {
+  .gymTrainee__email {
     max-width: 100%;
   }
 }
@@ -424,10 +424,6 @@ const onCreditAdded = async () => {
 
 .search-bar-inner {
   flex: 1;
-}
-
-.glass-input {
-  width: 100%;
 }
 
 .pagination {

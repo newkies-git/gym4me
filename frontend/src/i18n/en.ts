@@ -37,6 +37,44 @@ export default {
 
     // ── Auth ─────────────────────────────────────────────────────────
     auth: {
+        tabs: {
+            login: 'Login',
+            signup: 'Sign Up',
+        },
+        fields: {
+            email: { label: 'Email', placeholder: 'name(at)example.com' },
+            password: { label: 'Password', placeholder: 'At least 8 characters' },
+            passwordConfirm: { label: 'Confirm Password', placeholder: 'Enter password again' },
+        },
+        actions: {
+            processing: 'Processing...',
+            signIn: 'Sign In',
+            createAccount: 'Create Account',
+        },
+        loginOptions: {
+            rememberEmail: 'Remember email',
+        },
+        legal: {
+            agreeTerms: 'I agree to the Terms of Service',
+            agreePrivacy: 'I agree to the collection and use of personal information',
+            termsRequired: 'Please agree to the Terms of Service and Privacy Policy.',
+        },
+        reset: {
+            link: 'Forgot your password?',
+            emailRequired: 'Please enter your email to reset your password.',
+            emailSent: 'Password reset email sent. Please check your inbox.',
+            emailFailed: 'Failed to send password reset email.',
+        },
+        toast: {
+            accountCreated: 'Account created! Please log in.',
+        },
+        errors: {
+            passwordMismatch: 'Passwords do not match.',
+            emailInUse: 'Email is already in use.',
+            invalidCredential: 'Invalid email or password.',
+        },
+
+        // Backward-compat (gradual migration)
         login: 'Login',
         signup: 'Sign Up',
         email: 'Email',
@@ -573,6 +611,39 @@ export default {
     },
 
     courses: {
+        detail: {
+            contentTitle: 'Content',
+            registrantLabel: 'Registrant',
+            traineesTitle: 'Attendees',
+            applicationsTitle: 'Applications',
+        },
+        actions: {
+            addCourse: 'Add Course',
+            apply: 'Apply',
+            cancelApply: 'Cancel Application',
+            approve: 'Approve',
+            edit: 'Edit',
+            delete: 'Delete',
+            close: 'Close',
+            addAttendee: 'Add attendee',
+            removeAttendee: 'Remove attendee',
+        },
+        placeholders: {
+            selectGym: 'Select gym',
+            selectGymFirst: 'Select a gym first to choose attendees.',
+            noGymTrainees: 'No trainees registered for this gym.',
+            selectTraineeToAdd: 'Select attendee to add',
+        },
+        toast: {
+            createSuccess: 'Course created.',
+            updateSuccess: 'Course updated.',
+            deleteSuccess: 'Course deleted.',
+            applySuccess: 'Application submitted.',
+            cancelApplySuccess: 'Application cancelled.',
+            approveSuccess: 'Application approved.',
+        },
+
+        // Backward-compat (gradual migration)
         title: 'Classes / Courses',
         subtitle: 'Browse courses and apply to attend.',
         addCourse: 'Add Course',
@@ -665,6 +736,26 @@ export default {
     },
 
     gymTrainee: {
+        labels: {
+            title: 'Gym Trainee Management',
+            subtitle: 'Manage PT ticket status for all gym trainees.',
+            searchPlaceholder: 'Search by name or email...',
+            nickname: 'Nickname',
+            email: 'Email',
+            remainingSessions: 'Remaining PT',
+            expirationDate: 'Expiration Date',
+            actions: 'Actions',
+        },
+        buttons: {
+            creditHistory: 'View History',
+            addCredit: 'Add Credit',
+            details: 'Details',
+        },
+        empty: {
+            noTrainees: 'No trainees found.',
+        },
+
+        // Backward-compat (gradual migration)
         title: 'Gym Trainee Management',
         subtitle: 'Manage PT ticket status for all gym trainees.',
         searchPlaceholder: 'Search by name or email...',

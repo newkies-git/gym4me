@@ -2,31 +2,41 @@
   <div class="container auth-container">
     <div class="glass auth-card">
       <div class="tabs">
-        <button :class="{ active: isLogin }" @click="isLogin = true">{{ t('auth.login') }}</button>
-        <button :class="{ active: !isLogin }" @click="isLogin = false">{{ t('auth.signup') }}</button>
+        <button :class="{ active: isLogin }" @click="isLogin = true">{{ t('auth.tabs.login') }}</button>
+        <button :class="{ active: !isLogin }" @click="isLogin = false">{{ t('auth.tabs.signup') }}</button>
       </div>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="field">
-          <label>{{ t('auth.email') }}</label>
-          <input v-model="form.email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
+          <label>{{ t('auth.fields.email.label') }}</label>
+          <input v-model="form.email" type="email" required :placeholder="t('auth.fields.email.placeholder')" />
         </div>
         <div class="field">
-          <label>{{ t('auth.password') }}</label>
-          <input v-model="form.password" type="password" required :placeholder="isLogin ? '' : t('auth.passwordPlaceholder')" />
+          <label>{{ t('auth.fields.password.label') }}</label>
+          <input
+            v-model="form.password"
+            type="password"
+            required
+            :placeholder="isLogin ? '' : t('auth.fields.password.placeholder')"
+          />
         </div>
         <div v-if="!isLogin" class="field">
-          <label>{{ t('auth.passwordConfirm') }}</label>
-          <input v-model="form.passwordConfirm" type="password" required :placeholder="t('auth.passwordConfirmPlaceholder')" />
+          <label>{{ t('auth.fields.passwordConfirm.label') }}</label>
+          <input
+            v-model="form.passwordConfirm"
+            type="password"
+            required
+            :placeholder="t('auth.fields.passwordConfirm.placeholder')"
+          />
         </div>
         <div v-if="isLogin" class="field field-checkbox">
           <div class="login-row">
             <label class="checkbox-label">
               <input v-model="rememberEmail" type="checkbox" />
-              <span>{{ t('auth.rememberEmail') }}</span>
+              <span>{{ t('auth.loginOptions.rememberEmail') }}</span>
             </label>
             <button type="button" class="link-btn" :disabled="loading || resetLoading" @click="handleResetPassword">
-              {{ t('auth.resetPassword') }}
+              {{ t('auth.reset.link') }}
             </button>
           </div>
         </div>
@@ -34,19 +44,19 @@
           <div class="field field-checkbox">
             <label class="checkbox-label">
               <input v-model="agreeTerms" type="checkbox" />
-              <span><router-link to="/terms" target="_blank" class="link">{{ t('auth.agreeTerms') }}</router-link></span>
+              <span><router-link to="/terms" target="_blank" class="link">{{ t('auth.legal.agreeTerms') }}</router-link></span>
             </label>
           </div>
           <div class="field field-checkbox">
             <label class="checkbox-label">
               <input v-model="agreePrivacy" type="checkbox" />
-              <span><router-link to="/privacy" target="_blank" class="link">{{ t('auth.agreePrivacy') }}</router-link></span>
+              <span><router-link to="/privacy" target="_blank" class="link">{{ t('auth.legal.agreePrivacy') }}</router-link></span>
             </label>
           </div>
         </template>
 
         <button type="submit" class="btn btn-primary" :disabled="loading" style="width: 100%; margin-top: 1rem;">
-          {{ loading ? t('auth.processing') : (isLogin ? t('auth.signIn') : t('auth.createAccount')) }}
+          {{ loading ? t('auth.actions.processing') : (isLogin ? t('auth.actions.signIn') : t('auth.actions.createAccount')) }}
         </button>
         <p v-if="error" class="error-text" style="margin-top: 1rem;">{{ error }}</p>
         <p v-if="success" class="success-text" style="margin-top: 0.75rem;">{{ success }}</p>
@@ -193,12 +203,12 @@ const handleSubmit = async () => {
       router.push('/home')
     } else {
       if (form.password !== form.passwordConfirm) {
-        error.value = t('auth.passwordMismatch')
+        error.value = t('auth.errors.passwordMismatch')
         loading.value = false
         return
       }
       if (!agreeTerms.value || !agreePrivacy.value) {
-        error.value = t('auth.termsRequired')
+        error.value = t('auth.legal.termsRequired')
         loading.value = false
         return
       }
@@ -220,14 +230,14 @@ const handleSubmit = async () => {
 
       isLogin.value = true
       form.passwordConfirm = ''
-      alert(t('auth.accountCreated'))
+      alert(t('auth.toast.accountCreated'))
     }
   } catch (e: any) {
     // Handle Firebase errors
     if (e.code === 'auth/email-already-in-use') {
-        error.value = t('auth.errEmailInUse')
+        error.value = t('auth.errors.emailInUse')
     } else if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
-        error.value = t('auth.errInvalidCredential')
+        error.value = t('auth.errors.invalidCredential')
     } else {
         error.value = e.message
     }
@@ -239,7 +249,7 @@ const handleSubmit = async () => {
 const handleResetPassword = async () => {
   const email = (form.email || '').trim()
   if (!email) {
-    error.value = t('auth.resetEmailRequired')
+    error.value = t('auth.reset.emailRequired')
     return
   }
   resetLoading.value = true
@@ -247,9 +257,9 @@ const handleResetPassword = async () => {
   success.value = ''
   try {
     await sendPasswordResetEmail(auth, email)
-    success.value = t('auth.resetEmailSent')
+    success.value = t('auth.reset.emailSent')
   } catch (e: any) {
-    error.value = t('auth.resetEmailFailed')
+    error.value = t('auth.reset.emailFailed')
   } finally {
     resetLoading.value = false
   }
