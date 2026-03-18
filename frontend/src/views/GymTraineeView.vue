@@ -26,40 +26,43 @@
     </div>
 
     <div v-if="loading" class="empty-state">{{ t('common.loading') }}</div>
-    <div v-else class="trainee-table-container glass">
-      <table class="trainee-table">
-        <thead>
-          <tr>
-            <th>{{ t('gymTrainee.nickname') }}</th>
-            <th>{{ t('gymTrainee.email') }}</th>
-            <th>{{ t('gymTrainee.remainingSessions') }}</th>
-            <th>{{ t('gymTrainee.expirationDate') }}</th>
-            <th v-if="showActions">{{ t('gymTrainee.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="trainee in pagedTrainees" :key="trainee.uid">
-            <td>{{ trainee.nickname }}</td>
-            <td>{{ trainee.email }}</td>
-            <td :class="{ 'warning-text': (trainee.remainingSessions || 0) < 3 }">
-                {{ trainee.remainingSessions }}
-            </td>
-            <td :class="{ 'warning-text': isExpired(trainee.expirationDate) }">
-                {{ trainee.expirationDate || t('common.na') }}
-            </td>
-            <td v-if="showActions">
+    <div v-else class="trainee-list-container glass">
+      <BaseListView
+        :items="pagedTrainees"
+        :emptyText="t('gymTrainee.noTrainees') || t('common.na')"
+        :itemKey="'uid'"
+        dense
+      >
+        <template #item="{ item: trainee }">
+          <div class="trainee-row">
+            <div class="trainee-main">
+              <div class="trainee-name">
+                {{ trainee.nickname || trainee.email }}
+              </div>
+              <div class="trainee-sub">
+                <span class="trainee-email">{{ trainee.email }}</span>
+              </div>
+            </div>
+
+            <div class="trainee-metrics">
+              <div class="metric" :class="{ warn: (trainee.remainingSessions || 0) < 3 }">
+                <span class="metric-label">{{ t('gymTrainee.remainingSessions') }}</span>
+                <strong class="metric-value">{{ trainee.remainingSessions ?? 0 }}</strong>
+              </div>
+              <div class="metric" :class="{ warn: isExpired(trainee.expirationDate) }">
+                <span class="metric-label">{{ t('gymTrainee.expirationDate') }}</span>
+                <strong class="metric-value">{{ trainee.expirationDate || t('common.na') }}</strong>
+              </div>
+            </div>
+
+            <div v-if="showActions" class="trainee-actions" @click.stop>
               <button class="btn btn-ghost btn-mini" @click="viewDetails(trainee)">
                 {{ t('common.details' as any) || 'Details' }}
               </button>
-            </td>
-          </tr>
-          <tr v-if="!pagedTrainees.length">
-            <td :colspan="showActions ? 5 : 4" class="empty-state">
-              {{ t('gymTrainee.noTrainees') || t('common.na') }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </template>
+      </BaseListView>
 
       <div class="pagination" v-if="totalPages > 1">
         <button
@@ -132,6 +135,7 @@ import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
+import BaseListView from '../components/ui/BaseListView.vue'
 import CreditAddModal from '../components/gym/CreditAddModal.vue'
 import CreditHistoryModal from '../components/gym/CreditHistoryModal.vue'
 import { getGymTrainees, getGyms } from '../services/firebaseService'
@@ -275,16 +279,120 @@ const onCreditAdded = async () => {
 .gym-trainee-wrapper {
   padding: 6rem 1rem 2rem 1rem;
 }
-.trainee-table-container { overflow-x: auto; }
-.trainee-table { width: 100%; border-collapse: collapse; text-align: left; }
-.trainee-table th, .trainee-table td { padding: 1rem; border-bottom: 1px solid var(--border); }
-.trainee-table th { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
-.trainee-table tr:last-child td { border-bottom: none; }
-.warning-text { color: var(--accent); font-weight: 600; }
-.detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
-.detail-row:last-child { border-bottom: none; }
+
+.trainee-list-container {
+  padding: 1rem;
+}
+
+.trainee-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.trainee-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.trainee-main {
+  min-width: 0;
+}
+
+.trainee-name {
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.trainee-sub {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.trainee-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.trainee-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.metric {
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-dark);
+  min-width: 0;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.metric-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.metric.warn {
+  border-color: rgba(244, 63, 94, 0.25);
+  background: rgba(244, 63, 94, 0.06);
+}
+
+.metric.warn .metric-value {
+  color: var(--accent);
+}
+
+.trainee-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .btn-mini { padding: 0.2rem 0.6rem; font-size: 0.75rem; }
 .sessions-count { font-size: 1.1rem; }
+
+@media (max-width: 640px) {
+  .trainee-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .trainee-actions {
+    justify-content: flex-start;
+  }
+
+  .trainee-email {
+    max-width: 100%;
+  }
+}
+.detail-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+.detail-row:last-child { border-bottom: none; }
+/* .btn-mini / .sessions-count moved above for list row styles */
 
 .filter-bar {
   margin: 1.5rem 0;
