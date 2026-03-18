@@ -6,7 +6,8 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "migrate:supervisor-to-site-admin": "node migrate_supervisor_to_site_admin.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.5.0",

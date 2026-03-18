@@ -36,7 +36,7 @@ export function useCourseList() {
   const gymTraineesList = ref<TraineeInfo[]>([])
   const loadingGymTrainees = ref(false)
 
-  const canManage = computed(() => auth.isTrainer || auth.isSupervisor)
+  const canManage = computed(() => auth.isTrainer || auth.isSiteAdmin)
 
   const form = ref({
     title: '',

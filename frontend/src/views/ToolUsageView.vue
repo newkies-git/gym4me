@@ -94,10 +94,14 @@
             <label>{{ t('toolUsage.mediaUrlLabel') }} ({{ t('toolUsage.multipleAllowed') }})</label>
             <div v-for="(item, idx) in form.media" :key="'add-' + idx" class="media-row">
                 <input type="text" v-model="item.url" :placeholder="'URL ' + (idx + 1)" class="media-url-input">
-                <select v-model="item.type" class="media-type-select">
-                    <option value="IMAGE">Image</option>
-                    <option value="VIDEO">Video</option>
-                </select>
+                <BaseSelect
+                  v-model="item.type"
+                  class="media-type-select"
+                  :options="[
+                    { value: 'IMAGE', label: 'Image' },
+                    { value: 'VIDEO', label: 'Video' }
+                  ]"
+                />
                 <button type="button" class="btn btn-ghost btn-sm media-remove" :disabled="form.media.length <= 1" @click="removeMedia(idx)">×</button>
             </div>
             <button type="button" class="btn btn-ghost btn-sm" style="margin-top: 0.5rem;" @click="addMediaRow">{{ t('toolUsage.addMedia') }}</button>
@@ -137,10 +141,14 @@
             <label>{{ t('toolUsage.mediaUrlLabel') }} ({{ t('toolUsage.multipleAllowed') }})</label>
             <div v-for="(item, idx) in form.media" :key="'edit-' + idx" class="media-row">
                 <input type="text" v-model="item.url" :placeholder="'URL ' + (idx + 1)" class="media-url-input">
-                <select v-model="item.type" class="media-type-select">
-                    <option value="IMAGE">Image</option>
-                    <option value="VIDEO">Video</option>
-                </select>
+                <BaseSelect
+                  v-model="item.type"
+                  class="media-type-select"
+                  :options="[
+                    { value: 'IMAGE', label: 'Image' },
+                    { value: 'VIDEO', label: 'Video' }
+                  ]"
+                />
                 <button type="button" class="btn btn-ghost btn-sm media-remove" :disabled="form.media.length <= 1" @click="removeMedia(idx)">×</button>
             </div>
             <button type="button" class="btn btn-ghost btn-sm" style="margin-top: 0.5rem;" @click="addMediaRow">{{ t('toolUsage.addMedia') }}</button>
@@ -177,6 +185,7 @@ import type { ToolUsage, ToolMediaItem } from '../types'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
 import { useUIStore } from '../stores/uiStore'
 
 const { t } = useI18n()

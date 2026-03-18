@@ -60,23 +60,34 @@
             <div v-if="selectedCourse.traineeEmails?.length" class="course-detail-tags">
               <template v-if="canManage">
                 <div
-                  v-for="email in selectedCourse.traineeEmails"
+                  v-for="(email, idx) in selectedCourse.traineeEmails"
                   :key="email"
                   class="course-detail-tag-row"
                 >
-                  <span class="course-detail-tag">{{ email }}</span>
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-sm"
-                    @click.stop="removeTraineeFromCourse(email)"
-                  >
-                    {{ t('courses.removeTrainee') }}
-                  </button>
+                  <div class="course-detail-tag-pill" :title="email">
+                    <span class="course-detail-tag-text">
+                      {{ displayNameByEmail(email) }}
+                    </span>
+                    <button
+                      type="button"
+                      class="course-detail-tag-x"
+                      :aria-label="t('courses.removeTrainee')"
+                      :title="t('courses.removeTrainee')"
+                      @click.stop="removeTraineeFromCourse(email)"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               </template>
               <template v-else>
-                <span v-for="email in selectedCourse.traineeEmails" :key="email" class="course-detail-tag">
-                  {{ email }}
+                <span
+                  v-for="(email, idx) in selectedCourse.traineeEmails"
+                  :key="email"
+                  class="course-detail-tag"
+                  :title="email"
+                >
+                  {{ displayNameByEmail(email) }}
                 </span>
               </template>
             </div>
@@ -101,7 +112,9 @@
             <h4 class="course-detail-block-title">{{ t('courses.applications') }}</h4>
             <ul class="application-list">
               <li v-for="app in applicationList" :key="app.id" class="application-row">
-                <span>{{ app.traineeEmail }}</span>
+                <span :title="app.traineeEmail">
+                  {{ displayNameByEmail(app.traineeEmail) }}
+                </span>
                 <button type="button" class="btn btn-primary btn-sm" @click.stop="approveApp(app)">{{ t('courses.approve') }}</button>
               </li>
             </ul>
@@ -322,7 +335,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import VueTimepicker from 'vue3-timepicker'
 import 'vue3-timepicker/dist/VueTimepicker.css'
 import { useRoute, useRouter } from 'vue-router'
@@ -334,6 +347,7 @@ import BaseFormField from '../components/ui/BaseFormField.vue'
 import BaseTextField from '../components/ui/BaseTextField.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
 import { useCourseList } from '../composables/course/useCourseList'
+import { searchUserByEmail } from '../services/firebaseService'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -382,6 +396,38 @@ const gymTraineesMap = computed(() =>
   }, {})
 )
 
+const extraUserMap = ref<Record<string, { nickname?: string; name?: string }>>({})
+
+const ensureProfilesByEmails = async (emails: string[]) => {
+  const unique = Array.from(new Set(emails.filter(Boolean)))
+  const missing = unique.filter((email) => !gymTraineesMap.value[email]?.nickname && !extraUserMap.value[email])
+  if (missing.length === 0) return
+
+  const results = await Promise.allSettled(missing.map((email) => searchUserByEmail(email)))
+  const next = { ...extraUserMap.value }
+  results.forEach((res, idx) => {
+    const email = missing[idx]
+    if (res.status !== 'fulfilled') return
+    const data = res.value?.data
+    if (!data) return
+    next[email] = {
+      nickname: typeof data.nickname === 'string' ? data.nickname : undefined,
+      name: typeof data.name === 'string' ? data.name : undefined
+    }
+  })
+  extraUserMap.value = next
+}
+
+const displayNameByEmail = (email: string) => {
+  const nickname = gymTraineesMap.value[email]?.nickname
+  if (nickname && nickname.trim()) return nickname
+  const extraNickname = extraUserMap.value[email]?.nickname
+  if (extraNickname && extraNickname.trim()) return extraNickname
+  const extraName = extraUserMap.value[email]?.name
+  if (extraName && extraName.trim()) return extraName
+  return email
+}
+
 const availableTraineeOptions = computed(() => {
   if (!selectedCourse.value) return []
   const current = selectedCourse.value.traineeEmails || []
@@ -410,6 +456,19 @@ const handleFormAddTrainee = () => {
 const removeTraineeFromForm = (email: string) => {
   form.value.traineeEmails = form.value.traineeEmails.filter((e) => e !== email)
 }
+
+watch(
+  () => [isDetailOpen.value, selectedCourse.value?.traineeEmails, applicationList.value.map((a) => a.traineeEmail)] as const,
+  ([open]) => {
+    if (!open) return
+    const emails = [
+      ...((selectedCourse.value?.traineeEmails || []) as string[]),
+      ...(applicationList.value.map((a) => a.traineeEmail) as string[])
+    ]
+    void ensureProfilesByEmails(emails)
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   if (route.query.create === '1') {
@@ -532,6 +591,9 @@ onMounted(() => {
 /* 강좌 상세 모달 */
 .course-detail-body {
   padding: 0.25rem 0;
+  max-height: 72vh;
+  overflow: auto;
+  padding-right: 0.25rem;
 }
 
 .course-detail-meta {
@@ -600,8 +662,8 @@ onMounted(() => {
 
 .course-detail-tags {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.55rem;
   margin-top: 0.5rem;
 }
 
@@ -615,9 +677,97 @@ onMounted(() => {
 }
 
 .course-detail-tag-row {
-  display: flex;
+  display: contents;
+}
+
+.course-detail-tag-row .course-detail-tag {
+  background: #ede9fe;
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-weight: 800;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-detail-tag-row .btn-sm {
+  height: 2.25rem;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+}
+
+.course-detail-tag-row .btn-icon {
+  width: 2.25rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 999px;
+  background: #efe8ff;
+  color: #6d28d9;
+  border: 1px solid rgba(109, 40, 217, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.course-detail-tag-row .btn-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.18);
+  background: #e9ddff;
+}
+
+.course-detail-tag-row .btn-icon:active {
+  transform: translateY(0);
+}
+
+.course-detail-tag-pill {
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  background: #ede9fe;
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  padding: 0.45rem 0.55rem 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-weight: 800;
+  max-width: 100%;
+}
+
+.course-detail-tag-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-detail-tag-x {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(109, 40, 217, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+  color: #6d28d9;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.course-detail-tag-x:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.16);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.course-detail-tag-x:active {
+  transform: translateY(0);
 }
 
 .course-detail-add-trainee {
@@ -639,12 +789,24 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+  margin-bottom: 0.5rem;
 }
 
 .application-row:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.application-row span {
+  font-weight: 700;
+  color: var(--text-main);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .course-detail-actions {

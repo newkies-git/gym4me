@@ -8,12 +8,11 @@
 - **회원가입**: 비밀번호 확인, 이용약관·개인정보 동의 체크, 가입 후 알림
 - **로그인**: ID 기억(선택), 로그인 성공 시 권한별 홈(`/home`) 이동
 - **최초 로그인(트레이니)**: `complete-profile`에서 이름·전화·Gym 필수 입력 후 `/home` 이동
-- **권한(RBAC)**: SITE_ADMIN(100), SUPERVISOR(90), MANAGER(20), TRAINER(10), MEMBER(5), OBSERVER(1)
+- **권한(RBAC)**: SITE_ADMIN(100), MANAGER(20), TRAINER(10), MEMBER(5), OBSERVER(1)
 
 ### 1.2 홈 (`/home`) 역할별 뷰
 
-- **SystemAdminHome**: Supervisor 생성 링크 등 최소 UI (System Admin 전용)
-- **SupervisorHome**: StatCard 2, Gym 관리·매니저 관리 링크
+- **SITE_ADMIN(Home)**: StatCard 2, Gym 관리·매니저 관리 링크
 - **ManagerHome**: StatCard 2, 트레이너 관리·지점 트레이니 링크
 - **TrainerHome**: TraineeManager(담당 트레이니)·ClassManager(그룹 클래스)
 - **TraineeHome**: 잔여 세션·만료일·다가오는 세션 StatCard, 과거 운동 검색(PastExerciseSearch), 캘린더·바디 프로필 링크
@@ -48,7 +47,7 @@
 - **Gym 관리**: 지점 등록·수정·삭제, PRIMARY/VICE 매니저
 - **트레이너 관리**: 역할 부여, 소속 Gym 지정
 - **지점 트레이니**: 해당 Gym 트레이니 목록·수강권 조정 (`/gym/trainees`, GymTraineeView)
-- **매니저/직원 관리**(Supervisor): AdminLayout 하위 managers, staff; **Supervisor 생성**(System Admin 전용): `/system/supervisors`
+- **매니저/직원 관리**(SITE_ADMIN): AdminLayout 하위 managers, staff
 
 ### 1.8 기타
 
@@ -56,7 +55,7 @@
 - **트레이너 프로필**: 소개·전문분야·경력 편집, profileHistory
 - **테마**: 8종 프리셋, localStorage 저장
 - **i18n**: 한국어/영어
-- **GNB**: 로그인 시 소속 Gym명 표시, 타이틀 클릭 시 Supervisor → `/manage-gym`, System Admin → `/system/supervisors`, 그 외 → `/home`
+- **GNB**: 로그인 시 소속 Gym명 표시, 타이틀 클릭 시 SITE_ADMIN → `/manage-gym`, 그 외 → `/home`
 - **이용약관/개인정보**: `/terms`, `/privacy` (profile 하위 뷰)
 
 ---

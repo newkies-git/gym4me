@@ -29,12 +29,13 @@
             {{ t('completeProfile.gym') }}
             <span class="required">*</span>
           </label>
-          <select v-model="form.gymId" required>
-            <option value="">{{ t('completeProfile.gymPlaceholder') }}</option>
-            <option v-for="g in gymsList" :key="g.id" :value="g.id">
-              {{ g.name }}
-            </option>
-          </select>
+          <BaseSelect
+            v-model="form.gymId"
+            :options="[
+              { value: '', label: t('completeProfile.gymPlaceholder') },
+              ...gymsList.map(g => ({ value: g.id, label: g.name }))
+            ]"
+          />
         </div>
         <div class="field">
           <label>{{ t('completeProfile.nickname') }}</label>
@@ -64,6 +65,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
 import { getGyms, updateTraineeProfile } from '../services/firebaseService'

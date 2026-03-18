@@ -8,7 +8,7 @@
     />
 
     <div class="filter-bar glass">
-      <div v-if="auth.isSupervisor" class="gym-filter">
+      <div v-if="auth.isSiteAdmin" class="gym-filter">
         <label class="filter-label">{{ t('gymMgt.title') }}</label>
         <BaseSelect
           v-model="selectedGymId"
@@ -153,12 +153,12 @@ const pageSize = 20
 const gyms = ref<{ id: string; name: string }[]>([])
 const selectedGymId = ref<string>('__all__')
 
-const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSupervisor))
-const canManageCredit = computed(() => !!(auth.isManager || auth.isSupervisor))
+const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSiteAdmin))
+const canManageCredit = computed(() => !!(auth.isManager || auth.isSiteAdmin))
 
 const filteredTrainees = computed(() => {
   let base = trainees.value
-  if (auth.isSupervisor && selectedGymId.value !== '__all__') {
+  if (auth.isSiteAdmin && selectedGymId.value !== '__all__') {
     base = base.filter((m) => m.gymId === selectedGymId.value)
   }
   if (!searchQuery.value) return base
@@ -183,7 +183,7 @@ onMounted(async () => {
   if (!auth.user) return
   loading.value = true
   try {
-    if (auth.isSupervisor) {
+    if (auth.isSiteAdmin) {
       gyms.value = await getGyms()
       const all: TraineeInfo[] = []
       for (const g of gyms.value) {
@@ -244,7 +244,7 @@ const onCreditAdded = async () => {
     loading.value = true
     try {
         let refreshed: TraineeInfo[] = []
-        if (auth.isSupervisor) {
+        if (auth.isSiteAdmin) {
             for (const g of gyms.value) {
                 const list = await getGymTrainees(g.id)
                 list.forEach((m) => refreshed.push({ ...m, gymId: g.id } as any))

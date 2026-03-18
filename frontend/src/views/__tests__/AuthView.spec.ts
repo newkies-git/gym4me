@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import i18n from '../../i18n'
 
 const pushMock = vi.fn()
@@ -7,10 +8,13 @@ const signInMock = vi.fn()
 const createUserMock = vi.fn()
 const setDocMock = vi.fn()
 const docMock = vi.fn()
+const getDocMock = vi.fn()
+const updateDocMock = vi.fn()
 const serverTimestampMock = vi.fn(() => 'mock-ts')
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: pushMock })
+  useRouter: () => ({ push: pushMock }),
+  useRoute: () => ({ query: {} })
 }))
 
 vi.mock('../../firebase/config', () => ({
@@ -26,6 +30,8 @@ vi.mock('firebase/auth', () => ({
 vi.mock('firebase/firestore', () => ({
   doc: (...args: unknown[]) => docMock(...args),
   setDoc: (...args: unknown[]) => setDocMock(...args),
+  getDoc: (...args: unknown[]) => getDocMock(...args),
+  updateDoc: (...args: unknown[]) => updateDocMock(...args),
   serverTimestamp: () => serverTimestampMock()
 }))
 
@@ -38,8 +44,11 @@ describe('AuthView.vue', () => {
     createUserMock.mockReset()
     setDocMock.mockReset()
     docMock.mockReset()
+    getDocMock.mockReset()
+    updateDocMock.mockReset()
     serverTimestampMock.mockClear()
     docMock.mockReturnValue({ path: 'users/mock' })
+    getDocMock.mockResolvedValue({ exists: () => false, data: () => ({}) })
     vi.stubGlobal('alert', vi.fn())
     vi.stubEnv('VITE_SITE_ADMIN_EMAIL', '')
     vi.stubEnv('VITE_SITE_ADMIN_INITIAL_PASSWORD', '')
@@ -53,7 +62,12 @@ describe('AuthView.vue', () => {
   it('logs in successfully and navigates to home', async () => {
     signInMock.mockResolvedValue({ user: { uid: 'u1' } })
     const { default: AuthView } = await import('../AuthView.vue')
-    const wrapper = mount(AuthView, { global: { plugins: [i18n] } })
+    const wrapper = mount(AuthView, {
+      global: {
+        plugins: [createPinia(), i18n],
+        stubs: { 'router-link': { template: '<a><slot /></a>' } }
+      }
+    })
 
     await wrapper.find('input[type="email"]').setValue('member@test.com')
     await wrapper.find('input[type="password"]').setValue('pw123456')
@@ -61,7 +75,7 @@ describe('AuthView.vue', () => {
     await flushPromises()
 
     expect(signInMock).toHaveBeenCalled()
-    expect(pushMock).toHaveBeenCalledWith('/')
+    expect(pushMock).toHaveBeenCalledWith('/home')
   })
 
   it('does not fail login when site-admin bootstrap update fails', async () => {
@@ -71,7 +85,12 @@ describe('AuthView.vue', () => {
     setDocMock.mockRejectedValue(new Error('permission-denied'))
 
     const { default: AuthView } = await import('../AuthView.vue')
-    const wrapper = mount(AuthView, { global: { plugins: [i18n] } })
+    const wrapper = mount(AuthView, {
+      global: {
+        plugins: [createPinia(), i18n],
+        stubs: { 'router-link': { template: '<a><slot /></a>' } }
+      }
+    })
 
     await wrapper.find('input[type="email"]').setValue('admin@test.com')
     await wrapper.find('input[type="password"]').setValue('init-pass')
@@ -80,7 +99,7 @@ describe('AuthView.vue', () => {
 
     expect(signInMock).toHaveBeenCalled()
     expect(setDocMock).toHaveBeenCalled()
-    expect(pushMock).toHaveBeenCalledWith('/')
+    expect(pushMock).toHaveBeenCalledWith('/home')
     expect(wrapper.text()).not.toContain('permission-denied')
   })
 
@@ -89,13 +108,21 @@ describe('AuthView.vue', () => {
     setDocMock.mockRejectedValue(new Error('permission-denied'))
 
     const { default: AuthView } = await import('../AuthView.vue')
-    const wrapper = mount(AuthView, { global: { plugins: [i18n] } })
+    const wrapper = mount(AuthView, {
+      global: {
+        plugins: [createPinia(), i18n],
+        stubs: { 'router-link': { template: '<a><slot /></a>' } }
+      }
+    })
 
     const tabButtons = wrapper.findAll('.tabs button')
     await tabButtons[1].trigger('click')
     await wrapper.find('input[type="email"]').setValue('new@test.com')
     await wrapper.find('input[type="password"]').setValue('pw123456')
-    await wrapper.find('input[type="text"]').setValue('newbie')
+    await wrapper.findAll('input[type="password"]')[1].setValue('pw123456') // confirm
+    const checkboxes = wrapper.findAll('input[type="checkbox"]')
+    await checkboxes[0].setValue(true) // agreeTerms
+    await checkboxes[1].setValue(true) // agreePrivacy
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
 
@@ -111,7 +138,12 @@ describe('AuthView.vue', () => {
     createUserMock.mockResolvedValue({ user: { uid: 'new-admin' } })
 
     const { default: AuthView } = await import('../AuthView.vue')
-    const wrapper = mount(AuthView, { global: { plugins: [i18n] } })
+    const wrapper = mount(AuthView, {
+      global: {
+        plugins: [createPinia(), i18n],
+        stubs: { 'router-link': { template: '<a><slot /></a>' } }
+      }
+    })
 
     await wrapper.find('input[type="email"]').setValue('admin@test.com')
     await wrapper.find('input[type="password"]').setValue('init-pass')
@@ -121,6 +153,6 @@ describe('AuthView.vue', () => {
     expect(signInMock).toHaveBeenCalled()
     expect(createUserMock).toHaveBeenCalled()
     expect(setDocMock).toHaveBeenCalled()
-    expect(pushMock).toHaveBeenCalledWith('/')
+    expect(pushMock).toHaveBeenCalledWith('/home')
   })
 })

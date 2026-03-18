@@ -43,6 +43,7 @@ export {
   updateTraineeSession,
   logTicketHistory,
   searchUserByEmail,
+  getTotalUsersCount,
   getTrainers,
   updateTrainerRole,
   updateTrainerInfo,
@@ -66,12 +67,10 @@ export {
   getStaffs,
   updateStaffData,
   createStaffAccount,
-  createSupervisorAccount,
   addTicketCredit,
   getTicketHistory,
   type ManagerType,
-  type CreateStaffPayload,
-  type CreateSupervisorPayload
+  type CreateStaffPayload
 } from './domain/userService'
 
 export type { AccessActor } from './core/access'

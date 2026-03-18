@@ -92,6 +92,6 @@
   - `gymService.ts`: getGyms, getGymById, createGym, updateGym, deleteGym, getGymTrainees, getGymTraineesAndObservers  
   - `profileService.ts`: getTrainerProfile, updateTrainerProfile, getProfileHistory, getBodyProfiles, addBodyProfile  
   - `classService.ts`: createClass, getClassesByTrainer, addTraineeToClass, removeTraineeFromClass  
-  - `userService.ts`: 트레이니/트레이너/매니저/스태프 CRUD (getTraineesByTrainer, assignTrainerToTrainee, updateTraineeSession 등), ManagerType, CreateStaffPayload, CreateSupervisorPayload, SearchUserResult 등  
+  - `userService.ts`: 트레이니/트레이너/매니저/스태프 CRUD (getTraineesByTrainer, assignTrainerToTrainee, updateTraineeSession 등), ManagerType, CreateStaffPayload, SearchUserResult 등
 
 - **타입·시그니처**: 도메인 서비스에 명시적 반환 타입 및 인터페이스 적용. `types/`는 schedule, user (User, TraineeInfo), gym, trainer, profile, tool, course 등으로 분리되어 `types/index.ts`에서 re-export.

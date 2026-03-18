@@ -165,7 +165,6 @@ const formatRole = (roleStr: string | undefined) => {
     case 'MANAGER': return t('role.manager')
   case 'SUB_MANAGER': return t('role.subManager')
     case 'SITE_ADMIN': return t('role.siteAdmin')
-    case 'SUPERVISOR': return t('role.supervisor')
     default: return roleStr
   }
 }

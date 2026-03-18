@@ -149,13 +149,13 @@ const {
 const traineeEmail = computed(() => {
     const requested = (route.query.trainee ?? route.query.client) as string | undefined
     if (!requested) return undefined
-    return auth.isTrainer || auth.isSupervisor ? requested : undefined
+    return auth.isTrainer || auth.isSiteAdmin ? requested : undefined
 })
 
 const classId = computed(() => {
     const requested = route.query.classId as string | undefined
     if (!requested) return undefined
-    return auth.isTrainer || auth.isTrainee || auth.isSupervisor ? requested : undefined
+    return auth.isTrainer || auth.isTrainee || auth.isSiteAdmin ? requested : undefined
 })
 
 const headerTitle = computed(() => {

@@ -13,8 +13,7 @@ export function useGnb() {
 
   const homePath = computed(() => {
     if (!auth.isAuthenticated) return '/'
-    if (auth.isSupervisor) return '/manage-gym'
-    if (auth.isSiteAdmin) return '/system/supervisors'
+    if (auth.isSiteAdmin) return '/manage-gym'
     return '/home'
   })
 

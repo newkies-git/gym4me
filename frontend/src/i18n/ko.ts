@@ -18,7 +18,6 @@ export default {
         loginSignup: '로그인 / 회원가입',
         logout: '로그아웃',
         staffMgt: '직원 관리',
-        createSupervisor: 'Supervisor 생성',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -57,6 +56,10 @@ export default {
         accountCreated: '계정이 생성됐습니다! 로그인하세요.',
         errEmailInUse: '이미 사용 중인 이메일입니다.',
         errInvalidCredential: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        resetPassword: '비밀번호를 잊으셨나요?',
+        resetEmailRequired: '비밀번호를 초기화할 이메일을 입력해 주세요.',
+        resetEmailSent: '비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.',
+        resetEmailFailed: '비밀번호 재설정 메일 전송에 실패했습니다.',
     },
 
     theme: {
@@ -110,9 +113,6 @@ export default {
     dashboard: {
         hello: '안녕하세요, {name}!',
         defaultName: '운동인',
-        supervisorDashboard: 'Supervisor 대시보드',
-        systemAdminDashboard: '시스템 관리자 대시보드',
-        systemAdminHelp: 'Supervisor 계정만 생성할 수 있습니다. GYM 운영은 Supervisor가 수행합니다.',
         siteAdminDashboard: '사이트 관리자 대시보드',
         totalGyms: '총 등록된 Gym',
         totalUsers: '총 앱 사용자',
@@ -698,6 +698,7 @@ export default {
         noTraineesSelected: '선택된 참석자가 없습니다.',
         selectTraineeToAdd: '추가할 참석자를 선택하세요',
         addTrainee: '참석자 추가',
+        removeTrainee: '참석자 제거',
     },
 
     // ── Tool Usage ──────────────────────────────────────────────────
@@ -786,7 +787,7 @@ export default {
         emailInUse: '이미 사용 중인 이메일입니다.',
         passwordTooShort: '비밀번호는 8자 이상이어야 합니다.',
         registeredBy: '등록자',
-        registeredAt: '등록일',
+        registeredAt: '등록일시',
     },
     staffDetail: {
         title: '직원 상세 정보',
@@ -807,7 +808,7 @@ export default {
             RESIGNED: '퇴사',
         },
         registeredBy: '등록자',
-        registeredAt: '등록일',
+        registeredAt: '등록일시',
         saveSuccess: '직원 정보가 저장되었습니다.',
         saveFailed: '저장 실패',
     },

@@ -3,44 +3,54 @@
     <PageHeader
       :title="t('staffMgt.title')"
       :subtitle="t('staffMgt.subtitle')"
+      :showBack="true"
+      back-url="/home"
     />
 
-    <!-- 툴바: 버튼 + 검색/필터 -->
-    <div class="toolbar">
-      <div class="filter-bar glass">
-        <div class="search-wrap">
-          <BaseSearchInput
-            v-model="searchQuery"
-            :placeholder="t('staffMgt.staffList')"
-          />
-        </div>
-        <div class="filter-chips">
-          <BaseSelect
-            v-model="roleFilter"
-            class="chip-select"
-            :options="[
-              { value: '', label: t('staffMgt.filterByRole') },
-              { value: 'MANAGER', label: t('staffMgt.roleManager') },
-              { value: 'SUB_MANAGER', label: t('staffMgt.roleSubManager') },
-              { value: 'TRAINER', label: t('staffMgt.roleTrainer') }
-            ]"
-          />
-          <BaseSelect
-            v-model="statusFilter"
-            class="chip-select"
-            :options="[
-              { value: '', label: t('staffMgt.filterByStatus') },
-              { value: 'ACTIVE', label: t('staffDetail.status.ACTIVE') },
-              { value: 'ON_LEAVE', label: t('staffDetail.status.ON_LEAVE') },
-              { value: 'RESIGNED', label: t('staffDetail.status.RESIGNED') }
-            ]"
-          />
-        </div>
-      </div>
-      <div class="toolbar-actions">
-        <button class="btn btn-ghost" @click="fetchStaffs">↺ {{ t('common.refresh') }}</button>
-        <button class="btn btn-primary" @click="openRegisterModal">+ {{ t('staffMgt.addStaff') }}</button>
-      </div>
+    <!-- 상단 액션: 검색 카드 위 -->
+    <div class="page-actions">
+      <button
+        class="btn btn-ghost toolbar-refresh"
+        type="button"
+        @click="fetchStaffs"
+        :aria-label="t('common.refresh')"
+        :title="t('common.refresh')"
+      >
+        ↺ {{ t('common.refresh') }}
+      </button>
+      <button class="btn btn-primary toolbar-register" @click="openRegisterModal">
+        {{ t('common.register') }}
+      </button>
+    </div>
+
+    <!-- 검색/필터 카드 -->
+    <div class="toolbar glass">
+      <BaseSearchInput
+        v-model="searchQuery"
+        class="toolbar-search"
+        :placeholder="t('staffMgt.staffList')"
+      />
+
+      <BaseSelect
+        v-model="roleFilter"
+        class="toolbar-select toolbar-select-role"
+        :options="[
+          { value: '', label: t('staffMgt.filterByRole') },
+          { value: 'MANAGER', label: t('staffMgt.roleManager') },
+          { value: 'SUB_MANAGER', label: t('staffMgt.roleSubManager') },
+          { value: 'TRAINER', label: t('staffMgt.roleTrainer') }
+        ]"
+      />
+      <BaseSelect
+        v-model="statusFilter"
+        class="toolbar-select toolbar-select-status"
+        :options="[
+          { value: '', label: t('staffMgt.filterByStatus') },
+          { value: 'ACTIVE', label: t('staffDetail.status.ACTIVE') },
+          { value: 'ON_LEAVE', label: t('staffDetail.status.ON_LEAVE') },
+          { value: 'RESIGNED', label: t('staffDetail.status.RESIGNED') }
+        ]"
+      />
     </div>
 
     <!-- 통계 바 -->
@@ -83,12 +93,21 @@
       >
         <!-- 카드 상단: 아바타 + 이름 + 뱃지 -->
         <div class="card-top">
-          <div class="avatar" :class="(staff.role || '').toLowerCase()">
+          <div
+            class="avatar"
+            :class="[(staff.role || '').toLowerCase(), { clickable: !!staff.profileImageUrl }]"
+            role="button"
+            :tabindex="staff.profileImageUrl ? 0 : -1"
+            :aria-label="staff.profileImageUrl ? 'Open profile image' : undefined"
+            @click="staff.profileImageUrl && openImagePreview(staff.profileImageUrl)"
+            @keydown.enter.prevent="staff.profileImageUrl && openImagePreview(staff.profileImageUrl)"
+            @keydown.space.prevent="staff.profileImageUrl && openImagePreview(staff.profileImageUrl)"
+          >
             <img v-if="staff.profileImageUrl" :src="staff.profileImageUrl" alt="Profile" />
             <span v-else class="avatar-letter">{{ (staff.name || staff.nickname || staff.email).charAt(0).toUpperCase() }}</span>
           </div>
           <div class="card-identity">
-            <h4 class="staff-name-link" @click="openProfileModal(staff)">{{ staff.name || staff.nickname || '—' }}</h4>
+            <h4 class="staff-name">{{ staff.name || staff.nickname || '—' }}</h4>
             <div class="badge-row">
               <span class="role-badge" :class="(staff.role || '').toLowerCase()">{{ getRoleLabel(staff.role) }}</span>
               <span class="status-badge" :class="(staff.employmentStatus || 'ACTIVE').toLowerCase()">
@@ -110,14 +129,37 @@
           <div class="info-row"><span class="info-icon">📧</span><span class="info-val">{{ staff.email }}</span></div>
           <div class="info-row"><span class="info-icon">🏢</span><span class="info-val">{{ gymNames[staff.gymId || ''] || '—' }}</span></div>
           <div class="info-row"><span class="info-icon">📅</span><span class="info-val">{{ staff.joinDate || '—' }}</span></div>
+          <div class="info-row"><span class="info-icon">📤</span><span class="info-val">{{ staff.leaveDate || '—' }}</span></div>
         </div>
 
         <!-- 카드 푸터: 등록자 -->
         <div class="card-footer">
-          <span class="reg-by">{{ t('staffMgt.registeredBy') }}: {{ staff.registeredByEmail || '—' }}</span>
+          <span class="reg-by">
+            {{ t('staffMgt.registeredBy') }}: {{ formatRegistrant(staff.registeredByEmail) }}
+            <span class="reg-sep">·</span>
+            {{ t('staffMgt.registeredAt') }}: {{ formatDateTime(staff.registeredAt) }}
+          </span>
         </div>
       </BaseCard>
     </div>
+
+    <!-- ── 이미지 미리보기 모달 ── -->
+    <BaseModal
+      :is-open="showImageModal"
+      :title="t('common.details' as any) || 'Image'"
+      max-width="720px"
+      @close="closeImagePreview"
+    >
+      <div class="image-preview-modal">
+        <img v-if="previewImageUrl" :src="previewImageUrl" alt="Profile" class="image-preview" />
+        <div v-else class="empty-state">{{ t('common.na') }}</div>
+      </div>
+      <template #footer>
+        <button class="btn btn-primary btn-sm" type="button" @click="closeImagePreview">
+          {{ t('common.close') }}
+        </button>
+      </template>
+    </BaseModal>
 
     <!-- ── 프로필 뷰 모달 ── -->
     <BaseModal
@@ -224,18 +266,24 @@
           <div class="field-grid">
             <div class="form-field">
               <label>{{ t('staffMgt.roleLabel') }} <span class="req">*</span></label>
-              <select v-model="registerForm.role" required>
-                <option value="MANAGER">{{ t('staffMgt.roleManager') }}</option>
-                <option value="SUB_MANAGER">{{ t('staffMgt.roleSubManager') }}</option>
-                <option value="TRAINER">{{ t('staffMgt.roleTrainer') }}</option>
-              </select>
+              <BaseSelect
+                v-model="registerForm.role"
+                :options="[
+                  { value: 'MANAGER', label: t('staffMgt.roleManager') },
+                  { value: 'SUB_MANAGER', label: t('staffMgt.roleSubManager') },
+                  { value: 'TRAINER', label: t('staffMgt.roleTrainer') }
+                ]"
+              />
             </div>
             <div class="form-field">
               <label>{{ t('staffMgt.gymLabel') }}</label>
-              <select v-model="registerForm.gymId">
-                <option value="">{{ t('staffMgt.gymNone') }}</option>
-                <option v-for="gym in gyms" :key="gym.id" :value="gym.id">{{ gym.name }}</option>
-              </select>
+              <BaseSelect
+                v-model="registerForm.gymId"
+                :options="[
+                  { value: '', label: t('staffMgt.gymNone') },
+                  ...gyms.map(gym => ({ value: gym.id, label: gym.name }))
+                ]"
+              />
             </div>
             <div class="form-field">
               <label>{{ t('staffDetail.joinDate') }}</label>
@@ -243,11 +291,14 @@
             </div>
             <div class="form-field">
               <label>{{ t('staffDetail.status.label') }}</label>
-              <select v-model="registerForm.employmentStatus">
-                <option value="ACTIVE">{{ t('staffDetail.status.ACTIVE') }}</option>
-                <option value="ON_LEAVE">{{ t('staffDetail.status.ON_LEAVE') }}</option>
-                <option value="RESIGNED">{{ t('staffDetail.status.RESIGNED') }}</option>
-              </select>
+              <BaseSelect
+                v-model="registerForm.employmentStatus"
+                :options="[
+                  { value: 'ACTIVE', label: t('staffDetail.status.ACTIVE') },
+                  { value: 'ON_LEAVE', label: t('staffDetail.status.ON_LEAVE') },
+                  { value: 'RESIGNED', label: t('staffDetail.status.RESIGNED') }
+                ]"
+              />
             </div>
           </div>
         </div>
@@ -301,18 +352,24 @@
           <div class="field-grid">
             <div class="form-field">
               <label>{{ t('staffMgt.roleLabel') }}</label>
-              <select v-model="editForm.role">
-                <option value="MANAGER">{{ t('staffMgt.roleManager') }}</option>
-                <option value="SUB_MANAGER">{{ t('staffMgt.roleSubManager') }}</option>
-                <option value="TRAINER">{{ t('staffMgt.roleTrainer') }}</option>
-              </select>
+              <BaseSelect
+                v-model="editForm.role"
+                :options="[
+                  { value: 'MANAGER', label: t('staffMgt.roleManager') },
+                  { value: 'SUB_MANAGER', label: t('staffMgt.roleSubManager') },
+                  { value: 'TRAINER', label: t('staffMgt.roleTrainer') }
+                ]"
+              />
             </div>
             <div class="form-field">
               <label>{{ t('staffMgt.gymLabel') }}</label>
-              <select v-model="editForm.gymId">
-                <option value="">{{ t('staffMgt.gymNone') }}</option>
-                <option v-for="gym in gyms" :key="gym.id" :value="gym.id">{{ gym.name }}</option>
-              </select>
+              <BaseSelect
+                v-model="editForm.gymId"
+                :options="[
+                  { value: '', label: t('staffMgt.gymNone') },
+                  ...gyms.map(gym => ({ value: gym.id, label: gym.name }))
+                ]"
+              />
             </div>
             <div class="form-field">
               <label>{{ t('staffDetail.joinDate') }}</label>
@@ -324,11 +381,14 @@
             </div>
             <div class="form-field">
               <label>{{ t('staffDetail.status.label') }}</label>
-              <select v-model="editForm.employmentStatus">
-                <option value="ACTIVE">{{ t('staffDetail.status.ACTIVE') }}</option>
-                <option value="ON_LEAVE">{{ t('staffDetail.status.ON_LEAVE') }}</option>
-                <option value="RESIGNED">{{ t('staffDetail.status.RESIGNED') }}</option>
-              </select>
+              <BaseSelect
+                v-model="editForm.employmentStatus"
+                :options="[
+                  { value: 'ACTIVE', label: t('staffDetail.status.ACTIVE') },
+                  { value: 'ON_LEAVE', label: t('staffDetail.status.ON_LEAVE') },
+                  { value: 'RESIGNED', label: t('staffDetail.status.RESIGNED') }
+                ]"
+              />
             </div>
           </div>
         </div>
@@ -336,7 +396,7 @@
         <!-- 등록자 읽기 전용 -->
         <div class="readonly-meta">
           <span class="meta-lbl">{{ t('staffMgt.registeredBy') }}</span>
-          <span class="meta-val">{{ editingStaff?.registeredByEmail || t('common.na') }}</span>
+          <span class="meta-val">{{ formatRegistrant(editingStaff?.registeredByEmail) }}</span>
         </div>
 
         <div class="form-actions">
@@ -372,6 +432,8 @@ const submitting = ref(false)
 const showRegisterModal = ref(false)
 const showEditModal = ref(false)
 const showProfileModal = ref(false)
+const showImageModal = ref(false)
+const previewImageUrl = ref<string>('')
 const viewingStaff = ref<User | null>(null)
 const viewingTrainerProfile = ref<TrainerProfile | null>(null)
 const loadingTrainerProfile = ref(false)
@@ -397,11 +459,65 @@ const editForm = reactive<Partial<User>>({})
 let selectedStaffUid = ''
 const editingStaff = ref<User | null>(null)
 
+const displayNameByEmail = computed(() => {
+  const map = new Map<string, string>()
+  const me = authStore.user
+  if (me?.email) {
+    map.set(me.email.toLowerCase(), (me.name || me.nickname || me.email).trim())
+  }
+  staffs.value.forEach((u) => {
+    const email = (u.email || '').trim().toLowerCase()
+    if (!email) return
+    const label = (u.name || u.nickname || u.email).trim()
+    if (!map.has(email)) map.set(email, label)
+  })
+  return map
+})
+
+const formatRegistrant = (email?: string) => {
+  const e = (email || '').trim()
+  if (!e) return '—'
+  return displayNameByEmail.value.get(e.toLowerCase()) || e
+}
+
+const openImagePreview = (url: string) => {
+  previewImageUrl.value = url
+  showImageModal.value = true
+}
+
+const closeImagePreview = () => {
+  showImageModal.value = false
+  previewImageUrl.value = ''
+}
+
 const getRoleLabel = (role: string) => {
   if (role === 'MANAGER') return t('staffMgt.roleManager')
   if (role === 'SUB_MANAGER') return t('staffMgt.roleSubManager')
   if (role === 'TRAINER') return t('staffMgt.roleTrainer')
   return role
+}
+
+const formatDateTime = (value: unknown): string => {
+  if (value == null) return '—'
+  try {
+    if (typeof (value as any).toDate === 'function') {
+      return (value as any).toDate().toLocaleString()
+    }
+    if (typeof (value as any).toMillis === 'function') {
+      return new Date((value as any).toMillis()).toLocaleString()
+    }
+    if (typeof value === 'number') {
+      return new Date(value).toLocaleString()
+    }
+    if (typeof value === 'string') {
+      // ISO string or already formatted
+      const d = new Date(value)
+      return isNaN(d.getTime()) ? value : d.toLocaleString()
+    }
+    return String(value)
+  } catch {
+    return '—'
+  }
 }
 
 const countByRole = (role: string) =>
@@ -536,55 +652,64 @@ onMounted(fetchStaffs)
 }
 
 /* ── 툴바 ── */
-.toolbar {
+.page-actions {
   display: flex;
-  gap: 0.75rem;
-  align-items: stretch;
-  flex-wrap: wrap;
-}
-
-.toolbar .filter-bar {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-}
-
-.toolbar-actions {
-  display: flex;
+  justify-content: flex-end;
   gap: 0.6rem;
-  align-items: center;
-  flex-shrink: 0;
+  margin-top: 0.25rem;
 }
 
-/* ── 필터 바 ── */
-.filter-bar {
-  display: flex;
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "search search"
+    "role  status";
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  column-gap: 0.875rem;
+  row-gap: 0.75rem;
+  padding: 0.9rem 1rem;
   border-radius: 0.875rem;
-  flex-wrap: wrap;
 }
 
-.search-wrap {
-  flex: 1;
-  min-width: 200px;
+.toolbar-search {
+  grid-area: search;
+  min-width: 0;
 }
 
-.filter-chips {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.toolbar-select-role { grid-area: role; }
+.toolbar-select-status { grid-area: status; }
+
+.toolbar-select {
+  width: 100%;
+  min-width: 0;
 }
 
-.chip-select {
-  padding: 0.35rem 0.65rem;
-  border-radius: 0.5rem;
-  font-size: 0.82rem;
-  border: 1px solid var(--border);
-  background: var(--bg-dark);
-  color: var(--text-main);
-  cursor: pointer;
+.toolbar-register {
+  width: fit-content;
+  min-width: 96px;
+  padding-inline: 0.85rem;
+}
+
+.toolbar-refresh {
+  width: fit-content;
+  min-width: 44px;
+  padding-inline: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "search search"
+      "role status";
+    column-gap: 0.6rem;
+    row-gap: 0.6rem;
+    padding: 0.8rem 0.9rem;
+  }
+  .page-actions {
+    margin-top: 0.25rem;
+  }
 }
 
 /* ── 통계 ── */
@@ -679,6 +804,19 @@ onMounted(fetchStaffs)
   font-weight: 700;
 }
 
+.avatar.clickable {
+  cursor: pointer;
+}
+
+.avatar.clickable:hover {
+  filter: brightness(0.98);
+}
+
+.avatar.clickable:focus-visible {
+  outline: 2px solid rgba(129, 140, 248, 0.55);
+  outline-offset: 2px;
+}
+
 .avatar.manager   { background: #fae8ff; color: #d946ef; }
 .avatar.sub_manager { background: #fff7ed; color: #f97316; }
 .avatar.trainer   { background: #ede9fe; color: #8b5cf6; }
@@ -739,18 +877,33 @@ onMounted(fetchStaffs)
 }
 
 .staff-card:hover .edit-fab { opacity: 1; }
+.staff-card:focus-within .edit-fab { opacity: 1; }
+
+/* 터치 디바이스(hover 없음)에서는 항상 노출 */
+@media (hover: none) and (pointer: coarse) {
+  .edit-fab { opacity: 1; }
+}
 
 /* 카드 본문 */
 .card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem 0.9rem;
   font-size: 0.85rem;
 }
 
 .info-row { display: flex; gap: 0.6rem; align-items: center; }
 .info-icon { width: 18px; text-align: center; font-size: 0.85rem; }
 .info-val { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 520px) {
+  .card-body {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.65rem;
+  }
+  .info-row { gap: 0.45rem; }
+  .info-icon { width: 16px; }
+}
 
 /* 카드 푸터 */
 .card-footer {
@@ -759,6 +912,23 @@ onMounted(fetchStaffs)
 }
 
 .reg-by { font-size: 0.75rem; color: var(--text-muted); }
+.reg-sep { margin: 0 0.35rem; opacity: 0.7; }
+
+.image-preview-modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  object-fit: contain;
+}
 
 /* ── 모달 내부 ── */
 .modal-form {
@@ -946,15 +1116,14 @@ onMounted(fetchStaffs)
   gap: 0.75rem;
 }
 
-/* 이름 링크 */
-.staff-name-link {
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.staff-name-link:hover {
-  color: var(--primary);
-  text-decoration: underline;
+/* 이름 텍스트 */
+.staff-name {
+  margin: 0 0 0.3rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 트레이너 프로필 섹션 */

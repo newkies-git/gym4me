@@ -20,12 +20,6 @@
 
     <div class="nav-right">
       <template v-if="auth.isAuthenticated">
-        <router-link
-          v-if="auth.isSiteAdmin"
-          to="/system/supervisors"
-          class="header-supervisor-link"
-          @click="closeMenu"
-        >{{ t('nav.createSupervisor') }}</router-link>
         <div class="user-display">
           <RoleNickname />
         </div>
@@ -144,20 +138,6 @@ const onLogout = () => {
   font-weight: 700;
   color: var(--primary);
   text-decoration: none;
-}
-
-.header-supervisor-link {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.5rem;
-  margin-right: 0.5rem;
-}
-.header-supervisor-link:hover {
-  background: var(--bg-dark);
-  color: var(--primary);
 }
 
 .user-display {

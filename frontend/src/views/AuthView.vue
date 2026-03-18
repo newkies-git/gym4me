@@ -20,10 +20,15 @@
           <input v-model="form.passwordConfirm" type="password" required :placeholder="t('auth.passwordConfirmPlaceholder')" />
         </div>
         <div v-if="isLogin" class="field field-checkbox">
-          <label class="checkbox-label">
-            <input v-model="rememberEmail" type="checkbox" />
-            <span>{{ t('auth.rememberEmail') }}</span>
-          </label>
+          <div class="login-row">
+            <label class="checkbox-label">
+              <input v-model="rememberEmail" type="checkbox" />
+              <span>{{ t('auth.rememberEmail') }}</span>
+            </label>
+            <button type="button" class="link-btn" :disabled="loading || resetLoading" @click="handleResetPassword">
+              {{ t('auth.resetPassword') }}
+            </button>
+          </div>
         </div>
         <template v-if="!isLogin">
           <div class="field field-checkbox">
@@ -44,6 +49,7 @@
           {{ loading ? t('auth.processing') : (isLogin ? t('auth.signIn') : t('auth.createAccount')) }}
         </button>
         <p v-if="error" class="error-text" style="margin-top: 1rem;">{{ error }}</p>
+        <p v-if="success" class="success-text" style="margin-top: 0.75rem;">{{ success }}</p>
       </form>
     </div>
   </div>
@@ -54,7 +60,7 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { auth, db } from '../firebase/config'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { useAuthStore } from '../stores/auth'
 
@@ -62,7 +68,9 @@ const router = useRouter()
 const route = useRoute()
 const isLogin = ref(true)
 const loading = ref(false)
+const resetLoading = ref(false)
 const error = ref('')
+const success = ref('')
 const { t } = useI18n()
 const authStore = useAuthStore()
 
@@ -158,6 +166,7 @@ const signInOrBootstrapInitialSiteAdmin = async (email: string, password: string
 const handleSubmit = async () => {
   loading.value = true
   error.value = ''
+  success.value = ''
   try {
     if (isLogin.value) {
       // Firebase Login
@@ -224,6 +233,25 @@ const handleSubmit = async () => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+const handleResetPassword = async () => {
+  const email = (form.email || '').trim()
+  if (!email) {
+    error.value = t('auth.resetEmailRequired')
+    return
+  }
+  resetLoading.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    await sendPasswordResetEmail(auth, email)
+    success.value = t('auth.resetEmailSent')
+  } catch (e: any) {
+    error.value = t('auth.resetEmailFailed')
+  } finally {
+    resetLoading.value = false
   }
 }
 </script>
@@ -300,5 +328,33 @@ const handleSubmit = async () => {
 .error-text {
   color: var(--accent);
   font-size: 0.9rem;
+}
+
+.success-text {
+  color: #2e7d32;
+  font-size: 0.9rem;
+}
+
+.login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

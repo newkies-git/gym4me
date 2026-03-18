@@ -18,7 +18,6 @@ export default {
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',
         staffMgt: 'Staff Mgt',
-        createSupervisor: 'Create Supervisor',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -59,6 +58,10 @@ export default {
         agreeTerms: 'I agree to the Terms of Service',
         agreePrivacy: 'I agree to the collection and use of personal information',
         termsRequired: 'Please agree to the Terms of Service and Privacy Policy.',
+        resetPassword: 'Forgot your password?',
+        resetEmailRequired: 'Please enter your email to reset your password.',
+        resetEmailSent: 'Password reset email sent. Please check your inbox.',
+        resetEmailFailed: 'Failed to send password reset email.',
     },
 
     theme: {
@@ -103,9 +106,6 @@ export default {
     dashboard: {
         hello: 'Hello, {name}!',
         defaultName: 'Athlete',
-        supervisorDashboard: 'Supervisor Dashboard',
-        systemAdminDashboard: 'System Admin Dashboard',
-        systemAdminHelp: 'You can only create Supervisor accounts. GYM operations are performed by Supervisors.',
         siteAdminDashboard: 'Site Admin Dashboard',
         totalGyms: 'Total Gyms',
         totalUsers: 'Total App Users',
@@ -610,6 +610,9 @@ export default {
         applySuccess: 'Application submitted.',
         cancelApplySuccess: 'Application cancelled.',
         approveSuccess: 'Application approved.',
+        selectTraineeToAdd: 'Select attendee to add',
+        addTrainee: 'Add attendee',
+        removeTrainee: 'Remove attendee',
     },
 
     toolUsage: {
@@ -752,7 +755,7 @@ export default {
         emailInUse: 'This email is already in use.',
         passwordTooShort: 'Password must be at least 8 characters.',
         registeredBy: 'Registered By',
-        registeredAt: 'Registered Date',
+        registeredAt: 'Registered At',
     },
     staffDetail: {
         title: 'Staff Details',
@@ -773,7 +776,7 @@ export default {
             RESIGNED: 'Resigned',
         },
         registeredBy: 'Registered By',
-        registeredAt: 'Registered Date',
+        registeredAt: 'Registered At',
         saveSuccess: 'Staff information saved.',
         saveFailed: 'Failed to save information.',
     },

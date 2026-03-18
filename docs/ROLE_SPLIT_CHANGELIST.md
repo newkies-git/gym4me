@@ -1,10 +1,11 @@
-# 역할 분리 변경 목록: System Admin vs Supervisor
+# (DEPRECATED) 역할 분리 변경 목록: System Admin vs Supervisor
 
-## 목표
-- **현재**: `SITE_ADMIN` = 기술(시스템/권한) + 업무(GYM 운영 총괄) 결합
-- **변경 후**:
-  - **System Admin** (`SITE_ADMIN`): 기술·운영, **Supervisor 계정 생성만** 관여
-  - **Supervisor** (`SUPERVISOR`, 신규): 업무 최상위, **전체 GYM 운영** (정책, 총괄, 최종 승인)
+> 이 문서는 과거에 `SITE_ADMIN`과 `SUPERVISOR`를 분리하려던 설계 기록입니다.  
+> 현재 프로젝트는 **`SUPERVISOR` 역할을 제거하고 기능을 `SITE_ADMIN`으로 재통합**했습니다.
+
+## 목표(과거)
+- **과거 목표**: `SITE_ADMIN`을 “System Admin”과 “업무 운영자(Supervisor)”로 분리
+- **현재 상태**: 분리안은 롤백되었고, 운영 기능은 `SITE_ADMIN`이 수행
 
 ---
 

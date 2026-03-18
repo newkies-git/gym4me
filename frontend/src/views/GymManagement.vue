@@ -9,7 +9,7 @@
     <div v-if="loading" class="glass" style="padding: 2rem; margin-top: 2rem;">{{ t('gymMgt.loadingInfo') }}</div>
 
     <!-- SITE ADMIN VIEW (List All Gyms) -->
-    <template v-else-if="auth.isSupervisor">
+    <template v-else-if="auth.isSiteAdmin">
       <div class="flex-between" style="margin-top: 2rem; gap: 1rem;">
         <h3>{{ t('gymMgt.allGyms') }}</h3>
         <button class="btn btn-primary btn-sm" @click="openCreateModal">{{ t('gymMgt.addGym') }}</button>
@@ -83,7 +83,7 @@
         <label>{{ t('gymMgt.openDateLabel') }}</label>
         <input v-model="modalGym.openDate" type="date" />
       </div>
-      <div class="field" v-if="auth.isSupervisor">
+      <div class="field" v-if="auth.isSiteAdmin">
         <label>{{ t('gymMgt.managerLabel') }}</label>
         <input v-model="modalGym.managerEmail" type="email" :placeholder="t('gymMgt.managerPlaceholder')" />
       </div>

@@ -11,7 +11,7 @@ import {
   runTransaction
 } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { assertCanAccessUserData, assertCanAccessClassData, isSupervisorActor, type AccessActor } from '../core/access'
+import { assertCanAccessUserData, assertCanAccessClassData, isSiteAdminActor, type AccessActor } from '../core/access'
 import { chunkByTen } from '../core/utils'
 import type { CalendarEvent, ExerciseRecord } from '../../types'
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'
@@ -123,7 +123,7 @@ export async function completeSession(eventId: string, signatureUrl: string, act
   const eventSnap = await getDoc(eventRef)
   if (!eventSnap.exists()) throw new Error('Event not found')
   const eventData = eventSnap.data() as CalendarEvent & { date?: string }
-  if (!isSupervisorActor(actor) && actor.email !== eventData.trainerEmail) {
+  if (!isSiteAdminActor(actor) && actor.email !== eventData.trainerEmail) {
     throw new Error('Forbidden')
   }
 
@@ -176,8 +176,9 @@ export async function completeSession(eventId: string, signatureUrl: string, act
           const historyRef = doc(collection(db, 'ticketHistory'))
           transaction.set(historyRef, {
             memberUid: userSnap.id,
-            action: 'USE',
+            action: 'DEDUCT',
             amountChanged: -1,
+            remainingSessions: currentSessions - 1,
             remainingSessionsBefore: currentSessions,
             remainingSessionsAfter: currentSessions - 1,
             reason: `PT Session Completed: ${eventData.title}`,

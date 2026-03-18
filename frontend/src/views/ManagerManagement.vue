@@ -1,8 +1,10 @@
 <template>
-  <div class="management-wrapper container">
+  <div class="management-wrapper">
     <PageHeader
       :title="t('managerMgt.pageTitle')"
       :subtitle="t('managerMgt.ruleSummary')"
+      :showBack="true"
+      back-url="/home"
     />
 
     <div class="field gym-filter">
@@ -61,10 +63,13 @@
 
         <div class="field">
           <label>{{ t('managerMgt.managerTypeLabel') }}</label>
-          <select v-model="selectedManagerType">
-            <option value="PRIMARY">{{ t('managerMgt.primary') }}</option>
-            <option value="VICE">{{ t('managerMgt.vice') }}</option>
-          </select>
+          <BaseSelect
+            v-model="selectedManagerType"
+            :options="[
+              { value: 'PRIMARY', label: t('managerMgt.primary') },
+              { value: 'VICE', label: t('managerMgt.vice') }
+            ]"
+          />
         </div>
 
         <button class="btn btn-primary" style="width: 100%;" :disabled="saving" @click="assignManager">
@@ -96,10 +101,13 @@
       </div>
       <div class="field">
         <label>{{ t('managerMgt.managerTypeLabel') }}</label>
-        <select v-model="editForm.managerType">
-          <option value="PRIMARY">{{ t('managerMgt.primary') }}</option>
-          <option value="VICE">{{ t('managerMgt.vice') }}</option>
-        </select>
+        <BaseSelect
+          v-model="editForm.managerType"
+          :options="[
+            { value: 'PRIMARY', label: t('managerMgt.primary') },
+            { value: 'VICE', label: t('managerMgt.vice') }
+          ]"
+        />
       </div>
       <template #footer>
         <button class="btn btn-ghost" @click="editModalOpen = false">{{ t('common.cancel') }}</button>
@@ -114,6 +122,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import BaseSelect from '../components/ui/BaseSelect.vue'
 import { assignManagerFromTrainerWithAudit, deleteManagerCompletelyWithAudit, demoteManagerToTrainerWithAudit, getManagerCandidates, getManagers, setManagerDeletedFlagWithAudit, type ManagerType, updateManagerInfoWithAudit } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
 import { useUIStore } from '../stores/uiStore'
@@ -309,7 +318,7 @@ async function hardDeleteManager(manager: any) {
 </script>
 
 <style scoped>
-.management-wrapper { padding: 6rem 1rem 2rem 1rem; }
+.management-wrapper { padding: 0; }
 .header { margin-bottom: 1rem; }
 .sm-text { font-size: 0.85rem; color: var(--text-muted); margin: 0.35rem 0 0; }
 .gym-filter {
