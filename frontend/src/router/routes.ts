@@ -70,6 +70,7 @@ export const routes: RouteRecordRaw[] = [
   },
   {
     path: '/system/supervisors',
+    name: 'SystemSupervisors',
     component: () => import('../views/SystemSupervisorView.vue'),
     meta: { requiresAuth: true, requiresSiteAdmin: true }
   },

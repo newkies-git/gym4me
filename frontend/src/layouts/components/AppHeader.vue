@@ -20,12 +20,21 @@
 
     <div class="nav-right">
       <template v-if="auth.isAuthenticated">
+        <router-link
+          v-if="auth.isSiteAdmin"
+          to="/system/supervisors"
+          class="header-supervisor-link"
+          @click="closeMenu"
+        >{{ t('nav.createSupervisor') }}</router-link>
         <div class="user-display">
-          <span class="nickname-text">{{ auth.user?.nickname || auth.user?.email }}</span>
+          <RoleNickname />
         </div>
         <div class="settings-wrapper">
-          <button @click="toggleSettings" class="icon-btn" :title="t('nav.settings')">
-            <span class="icon">⚙️</span>
+          <button @click="toggleSettings" class="icon-btn" :title="t('nav.settings')" aria-label="Settings">
+            <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
           </button>
 
           <div v-if="isSettingsOpen" class="settings-dropdown glass">
@@ -50,6 +59,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useI18n } from 'vue-i18n'
 import { useGnb } from '../../composables/useGnb'
 import ThemeSwitcher from '../../components/ThemeSwitcher.vue'
+import RoleNickname from '../../components/ui/RoleNickname.vue'
 
 defineProps<{
   toggleMenu: () => void
@@ -136,20 +146,30 @@ const onLogout = () => {
   text-decoration: none;
 }
 
+.header-supervisor-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  margin-right: 0.5rem;
+}
+.header-supervisor-link:hover {
+  background: var(--bg-dark);
+  color: var(--primary);
+}
+
 .user-display {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.nickname-text {
-  font-size: 0.9rem;
-  font-weight: 600;
+.settings-icon {
+  width: 1.25rem;
+  height: 1.25rem;
   color: var(--text-main);
-  max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (min-width: 768px) {
@@ -157,13 +177,6 @@ const onLogout = () => {
     padding-right: 0.8rem;
     border-right: 1px solid var(--border);
   }
-  .nickname-text {
-    max-width: 150px;
-  }
-}
-
-@media (max-width: 480px) {
-  .nickname-text { display: none; }
 }
 
 .icon-btn {
