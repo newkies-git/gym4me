@@ -1,5 +1,5 @@
 <template>
-  <div class="member-home">
+  <div class="trainee-home">
     <div class="stats-grid">
       <StatCard 
         :value="myRemainingSessions"

@@ -20,7 +20,7 @@
     <SiteAdminHome v-if="auth.isSiteAdmin" />
     <ManagerHome v-else-if="auth.isManager" />
     <TrainerHome v-else-if="auth.isTrainer" />
-    <MemberHome v-else-if="auth.isMember" />
+    <TraineeHome v-else-if="auth.isMember" />
 
   </div>
 </template>
@@ -34,7 +34,7 @@ import PageHeader from '../components/ui/PageHeader.vue'
 import SiteAdminHome from '../components/home/SiteAdminHome.vue'
 import ManagerHome from '../components/home/ManagerHome.vue'
 import TrainerHome from '../components/home/TrainerHome.vue'
-import MemberHome from '../components/home/MemberHome.vue'
+import TraineeHome from '../components/home/TraineeHome.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()

@@ -180,7 +180,7 @@ const handleSubmit = async () => {
       // 라우터 가드에서 정확한 권한으로 확인될 수 있도록 로그인 정보를 강제 동기화
       await authStore.fetchUserRole(userCredential.user)
 
-      // 권한에 맞는 홈(대시보드)으로 이동. DashboardView가 MemberHome/TrainerHome 등 역할별 뷰 표시
+      // 권한에 맞는 홈(대시보드)으로 이동. DashboardView가 TraineeHome/TrainerHome 등 역할별 뷰 표시
       router.push('/home')
     } else {
       if (form.password !== form.passwordConfirm) {
