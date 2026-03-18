@@ -11,7 +11,7 @@ import {
   runTransaction
 } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { assertCanAccessUserData, assertCanAccessClassData, isSiteAdminActor, type AccessActor } from '../core/access'
+import { assertCanAccessUserData, assertCanAccessClassData, isSupervisorActor, type AccessActor } from '../core/access'
 import { chunkByTen } from '../core/utils'
 import type { CalendarEvent, ExerciseRecord } from '../../types'
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'
@@ -123,7 +123,7 @@ export async function completeSession(eventId: string, signatureUrl: string, act
   const eventSnap = await getDoc(eventRef)
   if (!eventSnap.exists()) throw new Error('Event not found')
   const eventData = eventSnap.data() as CalendarEvent & { date?: string }
-  if (!isSiteAdminActor(actor) && actor.email !== eventData.trainerEmail) {
+  if (!isSupervisorActor(actor) && actor.email !== eventData.trainerEmail) {
     throw new Error('Forbidden')
   }
 

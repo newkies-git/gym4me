@@ -1,13 +1,13 @@
 <template>
-  <div class="site-admin-home">
+  <div class="supervisor-home">
     <div class="stats-grid">
-      <StatCard 
-        :value="'Loading...'" 
-        :label="t('dashboard.totalGyms', '총 등록된 Gym')" 
+      <StatCard
+        :value="'Loading...'"
+        :label="t('dashboard.totalGyms', '총 등록된 Gym')"
       />
-      <StatCard 
-        :value="'Loading...'" 
-        :label="t('dashboard.totalUsers', '총 앱 사용자')" 
+      <StatCard
+        :value="'Loading...'"
+        :label="t('dashboard.totalUsers', '총 앱 사용자')"
       />
     </div>
 

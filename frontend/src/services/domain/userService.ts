@@ -380,6 +380,69 @@ export async function createStaffAccount(payload: CreateStaffPayload): Promise<s
   }
 }
 
+const SUPERVISOR_LVL = 90
+
+export interface CreateSupervisorPayload {
+  email: string
+  password: string
+  name?: string
+  nickname?: string
+  registeredByEmail: string
+}
+
+/** System Admin 전용. Supervisor 계정 생성. */
+export async function createSupervisorAccount(payload: CreateSupervisorPayload): Promise<string> {
+  const secondaryApp = initializeApp(
+    {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID
+    },
+    `secondary-supervisor-${Date.now()}`
+  )
+  const secondaryAuth = getAuth(secondaryApp)
+  let newUid = ''
+  try {
+    const credential = await createUserWithEmailAndPassword(secondaryAuth, payload.email, payload.password)
+    newUid = credential.user.uid
+    await firebaseSignOut(secondaryAuth)
+    await setDoc(doc(db, 'users', newUid), {
+      email: payload.email,
+      name: (payload.name || '').trim() || null,
+      nickname: (payload.nickname || '').trim() || payload.email.split('@')[0],
+      role: 'SUPERVISOR',
+      lvl: SUPERVISOR_LVL,
+      registeredByEmail: payload.registeredByEmail,
+      registeredAt: serverTimestamp(),
+      mustChangePassword: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+    await writeAuditLog({
+      actorEmail: payload.registeredByEmail,
+      action: 'CREATE_SUPERVISOR_ACCOUNT',
+      targetUid: newUid,
+      targetEmail: payload.email,
+      metadata: { role: 'SUPERVISOR' }
+    })
+    return newUid
+  } catch (err) {
+    if (newUid) {
+      console.warn('Orphaned Firebase Auth account may exist for uid:', newUid)
+    }
+    throw err
+  } finally {
+    try {
+      await deleteApp(secondaryApp)
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export async function addTicketCredit(
   memberUid: string,
   payload: {

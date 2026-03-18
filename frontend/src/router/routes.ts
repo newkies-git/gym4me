@@ -55,7 +55,7 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
-    meta: { requiresAuth: true, requiresSiteAdmin: true },
+    meta: { requiresAuth: true, requiresSupervisor: true },
     children: [
       { path: '', redirect: '/admin/managers' },
       {
@@ -67,6 +67,11 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('../views/StaffManagement.vue')
       }
     ]
+  },
+  {
+    path: '/system/supervisors',
+    component: () => import('../views/SystemSupervisorView.vue'),
+    meta: { requiresAuth: true, requiresSiteAdmin: true }
   },
   { path: '/manage-managers', redirect: '/admin/managers' },
   {

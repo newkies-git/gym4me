@@ -8,7 +8,7 @@
         <div class="flex-between" style="margin-bottom: 1rem;">
           <h3 style="margin: 0;">{{ t('trainerMgt.currentTrainers') }}</h3>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <div v-if="auth.isSiteAdmin" style="display: flex; gap: 0.5rem; align-items: center;">
+            <div v-if="auth.isSupervisor" style="display: flex; gap: 0.5rem; align-items: center;">
               <input type="text" v-model="filterGymId" :placeholder="t('trainerMgt.filterByGymId')" class="field" style="margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" @keyup.enter="fetchTrainers" />
               <button class="btn btn-primary btn-sm" @click="fetchTrainers">{{ t('search.searchBtn') }}</button>
             </div>
@@ -70,7 +70,7 @@
           <p><strong>{{ t('trainerMgt.found') }}</strong> {{ foundUser.data.nickname || foundUser.data.email }}</p>
           <p class="sm-text">{{ t('trainerMgt.currentLevel', { lvl: foundUser.data.lvl }) }}</p>
           
-          <div v-if="auth.isSiteAdmin" class="field" style="margin-top: 1rem;">
+          <div v-if="auth.isSupervisor" class="field" style="margin-top: 1rem;">
             <label>{{ t('trainerMgt.assignGymIdLabel') }}</label>
             <input type="text" v-model="assignGymId" :placeholder="t('trainerMgt.assignGymIdPlaceholder')" />
           </div>
@@ -88,7 +88,7 @@
         <label>{{ t('trainerMgt.nicknameLabel') }}</label>
         <input v-model="editForm.nickname" type="text" :placeholder="t('trainerMgt.nicknamePlaceholder')" />
       </div>
-      <div class="field" v-if="auth.isSiteAdmin">
+      <div class="field" v-if="auth.isSupervisor">
         <label>{{ t('trainerMgt.gymIdLabel') }}</label>
         <input v-model="editForm.gymId" type="text" :placeholder="t('trainerMgt.gymIdPlaceholder')" />
       </div>
@@ -141,7 +141,7 @@ onMounted(fetchTrainers)
 async function fetchTrainers() {
   loading.value = true
   try {
-    const queryGymId = auth.isSiteAdmin ? filterGymId.value.trim() || undefined : auth.user?.gymId
+    const queryGymId = auth.isSupervisor ? filterGymId.value.trim() || undefined : auth.user?.gymId
     trainers.value = await getTrainers(queryGymId, true)
   } catch (e: any) {
     ui.showToast(t('trainerMgt.fetchFailed') + ': ' + e.message, 'error')
@@ -169,11 +169,11 @@ async function promoteUser() {
   if (!foundUser.value) return
   
   let targetGymId = auth.user?.gymId
-  if (auth.isSiteAdmin) {
+  if (auth.isSupervisor) {
     targetGymId = assignGymId.value.trim()
   }
 
-  if (!targetGymId && !auth.isSiteAdmin) {
+  if (!targetGymId && !auth.isSupervisor) {
     ui.showToast(t('trainerMgt.gymRequired'), 'warning')
     return
   }
@@ -213,7 +213,7 @@ async function saveTrainerEdit() {
   try {
     const updates: { nickname?: string; gymId?: string } = {}
     updates.nickname = editForm.value.nickname.trim()
-    if (auth.isSiteAdmin) {
+    if (auth.isSupervisor) {
       updates.gymId = editForm.value.gymId.trim() || undefined
     }
     await updateTrainerInfo(editingTrainer.value.uid, updates)

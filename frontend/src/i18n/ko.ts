@@ -18,6 +18,7 @@ export default {
         loginSignup: '로그인 / 회원가입',
         logout: '로그아웃',
         staffMgt: '직원 관리',
+        createSupervisor: 'Supervisor 생성',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -107,7 +108,12 @@ export default {
     dashboard: {
         hello: '안녕하세요, {name}!',
         defaultName: '운동인',
+        supervisorDashboard: 'Supervisor 대시보드',
+        systemAdminDashboard: '시스템 관리자 대시보드',
+        systemAdminHelp: 'Supervisor 계정만 생성할 수 있습니다. GYM 운영은 Supervisor가 수행합니다.',
         siteAdminDashboard: '사이트 관리자 대시보드',
+        totalGyms: '총 등록된 Gym',
+        totalUsers: '총 앱 사용자',
         managerDashboard: '매니저 대시보드',
         trainerDashboard: '트레이너 대시보드',
         memberDashboard: '멤버 대시보드',
@@ -587,7 +593,8 @@ export default {
         trainer: '트레이너',
         manager: '매니저',
         subManager: '부매니저',
-        siteAdmin: '사이트 관리자',
+        siteAdmin: '시스템 관리자',
+        supervisor: 'Supervisor',
     },
 
     // ── Gym Member Management ───────────────────────────────────────
@@ -772,5 +779,25 @@ export default {
         registeredAt: '등록일',
         saveSuccess: '직원 정보가 저장되었습니다.',
         saveFailed: '저장 실패',
+    },
+
+    systemSupervisor: {
+        title: 'Supervisor 계정 생성',
+        subtitle: '시스템 관리자 전용. GYM 운영 권한을 가진 Supervisor를 생성합니다.',
+        email: '이메일',
+        emailPlaceholder: 'supervisor@example.com',
+        password: '비밀번호',
+        passwordPlaceholder: '8자 이상',
+        passwordConfirm: '비밀번호 확인',
+        passwordConfirmPlaceholder: '비밀번호 재입력',
+        name: '이름',
+        namePlaceholder: '이름 (선택)',
+        nickname: '닉네임',
+        nicknamePlaceholder: '닉네임 (선택)',
+        create: 'Supervisor 생성',
+        createSuccess: 'Supervisor 계정이 생성되었습니다.',
+        emailInUse: '이미 사용 중인 이메일입니다.',
+        passwordTooShort: '비밀번호는 8자 이상이어야 합니다.',
+        passwordMismatch: '비밀번호가 일치하지 않습니다.',
     },
 }

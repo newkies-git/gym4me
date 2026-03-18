@@ -13,7 +13,9 @@ export function useGnb() {
 
   const homePath = computed(() => {
     if (!auth.isAuthenticated) return '/'
-    return auth.isSiteAdmin ? '/manage-gym' : '/home'
+    if (auth.isSupervisor) return '/manage-gym'
+    if (auth.isSiteAdmin) return '/system/supervisors'
+    return '/home'
   })
 
   async function loadGymName() {

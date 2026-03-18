@@ -14,6 +14,10 @@ export const useAuthStore = defineStore('auth', {
         isAuthenticated: (state) => !!state.user,
         userLvl: (state) => state.user?.lvl || 0,
         isSiteAdmin: (state) => (state.user?.lvl || 0) >= 100 || state.user?.role === 'SITE_ADMIN',
+        /** Supervisor: 업무 최상위, 전체 GYM 운영. System Admin(SITE_ADMIN)은 제외. */
+        isSupervisor: (state) =>
+            state.user?.role === 'SUPERVISOR' ||
+            ((state.user?.lvl || 0) >= 90 && state.user?.role !== 'SITE_ADMIN'),
         isManager: (state) => state.user?.role === 'MANAGER' || (state.user?.lvl || 0) >= 20,
         isTrainer: (state) => state.user?.role === 'TRAINER' || (state.user?.lvl || 0) >= 10,
         isMember: (state) => (state.user?.lvl || 0) >= 5 || (state.user?.remainingSessions || 0) > 0,

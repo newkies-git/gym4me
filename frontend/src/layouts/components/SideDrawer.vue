@@ -13,18 +13,19 @@
 
         <div class="drawer-divider"></div>
 
-        <router-link v-if="auth.isTrainer && !auth.isSiteAdmin" to="/trainer-profile" class="drawer-link" @click="emit('close')">{{ t('nav.trainerBio') }}</router-link>
-        <router-link v-if="auth.user?.role === 'MANAGER' && !auth.isSiteAdmin" to="/manage-trainers" class="drawer-link" @click="emit('close')">{{ t('nav.trainerMgt') }}</router-link>
+        <router-link v-if="auth.isTrainer && !auth.isSupervisor" to="/trainer-profile" class="drawer-link" @click="emit('close')">{{ t('nav.trainerBio') }}</router-link>
+        <router-link v-if="auth.user?.role === 'MANAGER' && !auth.isSupervisor" to="/manage-trainers" class="drawer-link" @click="emit('close')">{{ t('nav.trainerMgt') }}</router-link>
         <router-link
-          v-if="(auth.isTrainer || auth.isManager || auth.isSiteAdmin)"
+          v-if="(auth.isTrainer || auth.isManager || auth.isSupervisor)"
           to="/gym/members"
           class="drawer-link"
           @click="emit('close')"
         >
           {{ t('nav.gymMember') }}
         </router-link>
-        <router-link v-if="auth.isSiteAdmin" to="/manage-gym" class="drawer-link" @click="emit('close')">{{ t('nav.gymMgt') }}</router-link>
-        <router-link v-if="auth.isSiteAdmin" to="/admin/staff" class="drawer-link" @click="emit('close')">{{ t('nav.staffMgt') }}</router-link>
+        <router-link v-if="auth.isSupervisor" to="/manage-gym" class="drawer-link" @click="emit('close')">{{ t('nav.gymMgt') }}</router-link>
+        <router-link v-if="auth.isSupervisor" to="/admin/staff" class="drawer-link" @click="emit('close')">{{ t('nav.staffMgt') }}</router-link>
+        <router-link v-if="auth.isSiteAdmin" to="/system/supervisors" class="drawer-link" @click="emit('close')">{{ t('nav.createSupervisor') }}</router-link>
 
         <div class="drawer-divider"></div>
         <router-link to="/tool-usage" class="drawer-link" @click="emit('close')">{{ t('nav.toolUsage') }}</router-link>

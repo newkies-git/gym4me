@@ -30,7 +30,11 @@ export function setupRouterGuard(router: Router): void {
       next('/home')
       return
     }
-    if (to.meta.requiresManager && !auth.isManager && !auth.isSiteAdmin) {
+    if (to.meta.requiresSupervisor && !auth.isSupervisor) {
+      next('/home')
+      return
+    }
+    if (to.meta.requiresManager && !auth.isManager && !auth.isSupervisor) {
       next('/home')
       return
     }

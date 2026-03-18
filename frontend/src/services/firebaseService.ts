@@ -66,10 +66,12 @@ export {
   getStaffs,
   updateStaffData,
   createStaffAccount,
+  createSupervisorAccount,
   addTicketCredit,
   getTicketHistory,
   type ManagerType,
-  type CreateStaffPayload
+  type CreateStaffPayload,
+  type CreateSupervisorPayload
 } from './domain/userService'
 
 export type { AccessActor } from './core/access'

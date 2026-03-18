@@ -18,6 +18,7 @@ export default {
         loginSignup: 'Login / Sign Up',
         logout: 'Logout',
         staffMgt: 'Staff Mgt',
+        createSupervisor: 'Create Supervisor',
     },
 
     // ── Home ─────────────────────────────────────────────────────────
@@ -100,7 +101,12 @@ export default {
     dashboard: {
         hello: 'Hello, {name}!',
         defaultName: 'Athlete',
+        supervisorDashboard: 'Supervisor Dashboard',
+        systemAdminDashboard: 'System Admin Dashboard',
+        systemAdminHelp: 'You can only create Supervisor accounts. GYM operations are performed by Supervisors.',
         siteAdminDashboard: 'Site Admin Dashboard',
+        totalGyms: 'Total Gyms',
+        totalUsers: 'Total App Users',
         managerDashboard: 'Manager Dashboard',
         trainerDashboard: 'Trainer Dashboard',
         memberDashboard: 'Member Dashboard',
@@ -652,6 +658,16 @@ export default {
         noMembers: 'No members found.',
     },
 
+    role: {
+        member: 'Member',
+        observer: 'Observer',
+        trainer: 'Trainer',
+        manager: 'Manager',
+        subManager: 'Sub Manager',
+        siteAdmin: 'System Admin',
+        supervisor: 'Supervisor',
+    },
+
     // ── Common ───────────────────────────────────────────────────────
     common: {
         na: 'N/A',
@@ -730,5 +746,25 @@ export default {
         registeredAt: 'Registered Date',
         saveSuccess: 'Staff information saved.',
         saveFailed: 'Failed to save information.',
+    },
+
+    systemSupervisor: {
+        title: 'Create Supervisor Account',
+        subtitle: 'System Admin only. Creates a Supervisor with full GYM operation permissions.',
+        email: 'Email',
+        emailPlaceholder: 'supervisor@example.com',
+        password: 'Password',
+        passwordPlaceholder: 'Min. 8 characters',
+        passwordConfirm: 'Confirm Password',
+        passwordConfirmPlaceholder: 'Re-enter password',
+        name: 'Name',
+        namePlaceholder: 'Name (optional)',
+        nickname: 'Nickname',
+        nicknamePlaceholder: 'Nickname (optional)',
+        create: 'Create Supervisor',
+        createSuccess: 'Supervisor account created successfully.',
+        emailInUse: 'This email is already in use.',
+        passwordTooShort: 'Password must be at least 8 characters.',
+        passwordMismatch: 'Passwords do not match.',
     },
 }

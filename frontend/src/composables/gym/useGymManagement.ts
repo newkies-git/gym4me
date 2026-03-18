@@ -67,7 +67,7 @@ export function useGymManagement() {
       gymsList.value = gyms
       gym.value = gyms.find((g) => g.id === auth.user?.gymId) || null
 
-      const gymsToCount = auth.isSiteAdmin ? gymsList.value : gym.value ? [gym.value] : []
+      const gymsToCount = auth.isSupervisor ? gymsList.value : gym.value ? [gym.value] : []
       for (const g of gymsToCount) {
         if (!g.id) continue
         const [members, trainers] = await Promise.all([
@@ -93,7 +93,7 @@ export function useGymManagement() {
     modalGym.phone = ''
     modalGym.openDate = ''
     modalGym.notes = ''
-    modalGym.managerEmail = auth.isSiteAdmin ? '' : (auth.user?.email || '')
+    modalGym.managerEmail = auth.isSupervisor ? '' : (auth.user?.email || '')
     isModalOpen.value = true
   }
 

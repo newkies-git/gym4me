@@ -43,7 +43,7 @@ const { t } = useI18n()
 const clientEmail = computed(() => {
     const requested = route.query.client as string | undefined
     if (!requested) return undefined
-    return auth.isTrainer || auth.isSiteAdmin ? requested : undefined
+    return auth.isTrainer || auth.isSupervisor ? requested : undefined
 })
 const targetEmail = computed(() => clientEmail.value || auth.user?.email)
 const records = computed(() => profileStore.getProfilesByEmail(targetEmail.value || ''))

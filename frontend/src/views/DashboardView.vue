@@ -7,7 +7,7 @@
 
     <!-- Observer Warning -->
     <div
-      v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSiteAdmin && !auth.isManager"
+      v-if="auth.isObserver && !auth.isMember && !auth.isTrainer && !auth.isSupervisor && !auth.isManager"
       class="glass alert-banner"
     >
       <p v-html="t('dashboard.observerMsg')"></p>
@@ -17,7 +17,8 @@
     </div>
 
     <!-- Dynamic Role-Based View -->
-    <SiteAdminHome v-if="auth.isSiteAdmin" />
+    <SupervisorHome v-if="auth.isSupervisor" />
+    <SystemAdminHome v-else-if="auth.isSiteAdmin" />
     <ManagerHome v-else-if="auth.isManager" />
     <TrainerHome v-else-if="auth.isTrainer" />
     <TraineeHome v-else-if="auth.isMember" />
@@ -31,7 +32,8 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useSimulatePurchase } from '../composables/useSimulatePurchase'
 import PageHeader from '../components/ui/PageHeader.vue'
-import SiteAdminHome from '../components/home/SiteAdminHome.vue'
+import SupervisorHome from '../components/home/SupervisorHome.vue'
+import SystemAdminHome from '../components/home/SystemAdminHome.vue'
 import ManagerHome from '../components/home/ManagerHome.vue'
 import TrainerHome from '../components/home/TrainerHome.vue'
 import TraineeHome from '../components/home/TraineeHome.vue'
@@ -40,7 +42,8 @@ const auth = useAuthStore()
 const { t } = useI18n()
 
 const dashboardSubtitle = computed(() => {
-  if (auth.isSiteAdmin) return t('dashboard.siteAdminDashboard')
+  if (auth.isSupervisor) return t('dashboard.supervisorDashboard')
+  if (auth.isSiteAdmin) return t('dashboard.systemAdminDashboard')
   if (auth.isManager) return t('dashboard.managerDashboard')
   if (auth.isTrainer) return t('dashboard.trainerDashboard')
   if (auth.isMember) return t('dashboard.memberDashboard')

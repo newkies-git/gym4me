@@ -8,8 +8,16 @@ export function isSiteAdminActor(actor: AccessActor): boolean {
   return (actor.lvl || 0) >= 100 || actor.role === 'SITE_ADMIN'
 }
 
+/** Supervisor: 업무 최상위, 전체 GYM 데이터 접근. SITE_ADMIN(시스템 관리자) 제외. */
+export function isSupervisorActor(actor: AccessActor): boolean {
+  return (
+    actor.role === 'SUPERVISOR' ||
+    ((actor.lvl || 0) >= 90 && actor.role !== 'SITE_ADMIN')
+  )
+}
+
 export async function assertCanAccessUserData(targetEmail: string, actor: AccessActor): Promise<void> {
-  if (actor.email === targetEmail || isSiteAdminActor(actor)) return
+  if (actor.email === targetEmail || isSupervisorActor(actor)) return
 
   const isTrainer = (actor.lvl || 0) >= 10
   if (!isTrainer) throw new Error('Forbidden')
@@ -25,7 +33,7 @@ export async function assertCanAccessUserData(targetEmail: string, actor: Access
 }
 
 export async function assertCanAccessClassData(classId: string, actor: AccessActor): Promise<void> {
-  if (isSiteAdminActor(actor)) return
+  if (isSupervisorActor(actor)) return
 
   const classSnap = await getDoc(doc(db, 'classes', classId))
   if (!classSnap.exists()) throw new Error('Class not found')
