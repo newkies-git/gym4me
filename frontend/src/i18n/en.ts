@@ -62,6 +62,8 @@ export default {
     },
 
     theme: {
+        light: 'Light',
+        dark: 'Dark',
         berry: 'Berry (default)',
         ocean: 'Ocean Blue',
         forest: 'Forest Green',

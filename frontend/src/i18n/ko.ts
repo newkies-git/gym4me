@@ -60,6 +60,8 @@ export default {
     },
 
     theme: {
+        light: '라이트',
+        dark: '다크',
         berry: '베리 (기본)',
         ocean: '오션 블루',
         forest: '포레스트 그린',

@@ -13,6 +13,15 @@
   --accent: #f44336;
 }
 
+/* Dark mode overrides (applied via data-color-mode="dark") */
+[data-color-mode="dark"] {
+  --bg-dark: #1a1d24;
+  --bg-card: #252830;
+  --text-main: #e6e8ec;
+  --text-muted: #9ca3af;
+  --border: #374151;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -113,6 +122,15 @@ button {
   background-color: #d1c4e9;
 }
 
+[data-color-mode="dark"] .btn-ghost {
+  background-color: rgba(129, 140, 248, 0.2);
+  color: #a5b4fc;
+}
+
+[data-color-mode="dark"] .btn-ghost:hover {
+  background-color: rgba(129, 140, 248, 0.3);
+}
+
 .btn-danger {
   background-color: var(--accent);
   color: white;
@@ -154,6 +172,25 @@ button {
   border-color: var(--primary);
   background-color: #fff;
   box-shadow: 0 0 0 2px rgba(94, 53, 177, 0.1);
+}
+
+[data-color-mode="dark"] .field input,
+[data-color-mode="dark"] .field select,
+[data-color-mode="dark"] .field textarea,
+[data-color-mode="dark"] .form-field input,
+[data-color-mode="dark"] .form-field select,
+[data-color-mode="dark"] .form-field textarea {
+  background-color: var(--bg-card);
+}
+
+[data-color-mode="dark"] .field input:focus,
+[data-color-mode="dark"] .field select:focus,
+[data-color-mode="dark"] .field textarea:focus,
+[data-color-mode="dark"] .form-field input:focus,
+[data-color-mode="dark"] .form-field select:focus,
+[data-color-mode="dark"] .form-field textarea:focus {
+  background-color: #2d3139;
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
 }
 
 .flex-between {
