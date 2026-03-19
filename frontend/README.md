@@ -77,6 +77,6 @@ src/
 ## 관련 문서
 
 - 프로젝트 전체: [../README.md](../README.md)
-- 기능 명세·요구사항 대비: [../FUNCTIONS.md](../FUNCTIONS.md)
-- 할 일: [../TO-DO.md](../TO-DO.md)
-- 모바일 배포: [../Deployment_Mobile.md](../Deployment_Mobile.md)
+- 기능 명세·요구사항 대비: [../docs/요구사항정의서.md](../docs/요구사항정의서.md) (섹션 4)
+- 할 일: [../to-do.md](../to-do.md)
+- 모바일 배포: [../docs/Deployment_Mobile.md](../docs/Deployment_Mobile.md)

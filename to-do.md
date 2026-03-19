@@ -42,7 +42,7 @@
 
 ## 8. 아키텍처·구조 개선 (도메인/기능 중심 + 책임 분리)
 
-Vue 공식 권장(컴포넌트 = 독립·재사용 단위, Composition API + composable로 로직 캡슐화, TypeScript 병행)에 맞춘 개선 방향. 상세는 **docs/ARCHITECTURE.md** 참고.
+Vue 공식 권장(컴포넌트 = 독립·재사용 단위, Composition API + composable로 로직 캡슐화, TypeScript 병행)에 맞춘 개선 방향. 상세는 **docs/시스템아키텍처설계서.md** 섹션 2.5 참고.
 
 - [x] **서비스 레이어 도메인 분리 (1차)**: `services/core/`(access, audit, utils), `services/domain/scheduleService.ts` 추가, `firebaseService`는 schedule·core 재사용 및 re-export. 나머지 gym/user/profile 등은 추후 분리
 - [x] **Composable 추출**: useCalendarPeriod, useGymManagement, useCourseList, useEventDetails 적용 완료

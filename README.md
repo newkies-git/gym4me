@@ -87,6 +87,11 @@ npm run dev
 
 ## 7. 관련 문서
 
-- **FUNCTIONS.md**: 구현 기능 상세 및 요구사항 대비 비교
-- **TO-DO.md**: 향후 구현·보완 할 일
-- **Deployment_Mobile.md**: 모바일 배포 가이드
+- **docs/PRD_서비스기획서.md**: 서비스 기획서 (Product Requirement Document)
+- **docs/요구사항정의서.md**: 요구사항 정의서 (Requirement Specification)
+- **docs/화면정의서.md**: 화면 정의서 (Wireframe / UI Flow)
+- **docs/시스템아키텍처설계서.md**: 시스템 아키텍처 설계서
+- **docs/코드규칙_개발가이드.md**: 코드 규칙 및 개발 가이드
+- **docs/요구사항정의서.md**: 구현 기능 상세 및 요구사항 대비 비교 (섹션 4)
+- **to-do.md**: 향후 구현·보완 할 일
+- **docs/Deployment_Mobile.md**: 모바일 배포 가이드
