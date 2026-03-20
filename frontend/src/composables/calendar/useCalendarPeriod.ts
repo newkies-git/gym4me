@@ -15,16 +15,29 @@ function getSunday(d: Date): Date {
   return x
 }
 
+function getMonday(d: Date): Date {
+  const x = new Date(d)
+  // Monday-based offset: Monday=0, Sunday=6
+  const day = x.getDay()
+  const offset = (day + 6) % 7
+  x.setDate(x.getDate() - offset)
+  return x
+}
+
 /**
  * 2주(14일) 캘린더 기간·네비게이션 로직.
  * Vue 컴포넌트에서 기간 표시와 주 이동을 재사용하기 위한 composable.
  */
-export function useCalendarPeriod() {
+export function useCalendarPeriod(weekStartsOn: 'sunday' | 'monday' = 'sunday') {
   const { t, tm } = useI18n()
   const today = new Date()
-  const currentPeriodStart = ref(getSunday(today))
+  const currentPeriodStart = ref(weekStartsOn === 'monday' ? getMonday(today) : getSunday(today))
 
-  const dayNames = computed(() => (tm('calendar.dayNames') as string[]).slice(0, 7))
+  const dayNames = computed(() => {
+    const base = tm('calendar.dayNames') as string[]
+    if (weekStartsOn === 'monday') return [...base.slice(1, 7), base[0]]
+    return base.slice(0, 7)
+  })
 
   const weekDays = computed<DayCell[]>(() => {
     const names = tm('calendar.dayNames') as string[]
@@ -84,7 +97,7 @@ export function useCalendarPeriod() {
   }
 
   function goToToday() {
-    currentPeriodStart.value = getSunday(today)
+    currentPeriodStart.value = weekStartsOn === 'monday' ? getMonday(today) : getSunday(today)
   }
 
   return {

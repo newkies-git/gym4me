@@ -104,7 +104,7 @@ const repeatExercise = async (record: ExerciseRecord) => {
       });
       
       alert(t('search.addedToday', { name: record.name }));
-      router.push('/calendar');
+      router.push('/calendar/trainee');
   } catch (e: any) {
       alert(t('common.errorWithMessage', { msg: e.message }))
   }

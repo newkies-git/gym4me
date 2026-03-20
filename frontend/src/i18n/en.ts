@@ -37,12 +37,31 @@ export default {
 
     // ── Auth ─────────────────────────────────────────────────────────
     auth: {
+        loginView: {
+            title: 'Welcome Back',
+            subtitle: 'Sign in to continue your kinetic journey.',
+        },
+        signupView: {
+            title: 'Ignite Your Journey.',
+            subtitle: 'Join the elite community of Gym4Me.',
+        },
+        social: {
+            orContinueWith: 'OR CONTINUE WITH',
+            google: 'GOOGLE',
+            facebook: 'FACEBOOK',
+        },
+        cta: {
+            noAccountPrefix: "Don't have an account?",
+            signupButton: 'REGISTER NOW',
+            hasAccountPrefix: 'Already have an account?',
+            loginButton: 'SIGN IN',
+        },
         tabs: {
             login: 'Login',
             signup: 'Sign Up',
         },
         fields: {
-            email: { label: 'Email', placeholder: 'name(at)example.com' },
+            email: { label: 'Email', placeholder: 'user＠gym4me.com' },
             password: { label: 'Password', placeholder: 'At least 8 characters' },
             passwordConfirm: { label: 'Confirm Password', placeholder: 'Enter password again' },
         },
@@ -61,6 +80,7 @@ export default {
         },
         reset: {
             link: 'Forgot your password?',
+            forgotShort: 'FORGOT?',
             emailRequired: 'Please enter your email to reset your password.',
             emailSent: 'Password reset email sent. Please check your inbox.',
             emailFailed: 'Failed to send password reset email.',
@@ -160,11 +180,15 @@ export default {
         quickActions: 'Quick Actions',
         viewCalendar: 'View Calendar',
         myBodyProfile: 'My Body Profile',
+        lastSync: 'LAST SYNC:',
+        viewAll: 'VIEW ALL',
+        viewLess: 'VIEW LESS',
         testPurchaseSuccess: '1 trial session was added. Refreshing for sync.',
     },
 
     // ── Calendar ─────────────────────────────────────────────────────
     calendar: {
+        currentWeek: 'CURRENT WEEK',
         classSchedule: 'Class Training Schedule',
         scheduleFor: 'Schedule for {email}',
         mySchedule: 'My Training Schedule',
@@ -191,6 +215,8 @@ export default {
         next2Weeks: 'Next 2 weeks',
         twoWeeksLabel: '(2 weeks)',
         today: 'Today',
+        tomorrow: 'Tomorrow',
+        upcomingToday: 'UPCOMING TODAY',
         yearMonth: '{month}/{year}',
         dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     },

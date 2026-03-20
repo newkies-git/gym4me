@@ -37,12 +37,31 @@ export default {
 
     // ── Auth ─────────────────────────────────────────────────────────
     auth: {
+        loginView: {
+            title: '다시 오신 걸 환영합니다',
+            subtitle: 'Kinetic 여정을 이어가려면 로그인하세요.',
+        },
+        signupView: {
+            title: '여정을 점화하세요.',
+            subtitle: 'Gym4Me 엘리트 커뮤니티에 합류하세요.',
+        },
+        social: {
+            orContinueWith: '또는 다음으로 계속',
+            google: '구글',
+            facebook: '페이스북',
+        },
+        cta: {
+            noAccountPrefix: '계정이 없으신가요?',
+            signupButton: 'REGISTER NOW',
+            hasAccountPrefix: '이미 계정이 있으신가요?',
+            loginButton: 'SIGN IN',
+        },
         tabs: {
             login: '로그인',
             signup: '회원가입',
         },
         fields: {
-            email: { label: '이메일', placeholder: 'name(at)example.com' },
+            email: { label: '이메일', placeholder: 'user＠gym4me.com' },
             password: { label: '비밀번호', placeholder: '8자 이상 입력' },
             passwordConfirm: { label: '비밀번호 확인', placeholder: '비밀번호를 다시 입력하세요' },
         },
@@ -61,6 +80,7 @@ export default {
         },
         reset: {
             link: '비밀번호를 잊으셨나요?',
+            forgotShort: 'FORGOT?',
             emailRequired: '비밀번호를 초기화할 이메일을 입력해 주세요.',
             emailSent: '비밀번호 재설정 메일을 보냈습니다. 메일함을 확인해 주세요.',
             emailFailed: '비밀번호 재설정 메일 전송에 실패했습니다.',
@@ -167,11 +187,15 @@ export default {
         quickActions: '빠른 실행',
         viewCalendar: '캘린더 보기',
         myBodyProfile: '내 신체 프로필',
+        lastSync: 'LAST SYNC:',
+        viewAll: '전체보기',
+        viewLess: '접기',
         testPurchaseSuccess: '체험 PT 1회가 추가되었습니다. 동기화를 위해 새로고침합니다.',
     },
 
     // ── Calendar ─────────────────────────────────────────────────────
     calendar: {
+        currentWeek: 'CURRENT WEEK',
         classSchedule: '클래스 트레이닝 일정',
         scheduleFor: '{email} 일정',
         mySchedule: '내 트레이닝 일정',
@@ -185,6 +209,8 @@ export default {
         next2Weeks: '다음 2주',
         twoWeeksLabel: '(2주)',
         today: '오늘',
+        tomorrow: '내일',
+        upcomingToday: 'UPCOMING TODAY',
         yearMonth: '{year}년 {month}월',
         status: {
             pending: '승인 대기',

@@ -1,6 +1,8 @@
 export interface ToolMediaItem {
   url: string
   type: 'VIDEO' | 'IMAGE'
+  /** optional: duration in seconds (when known/stored) */
+  durationSec?: number
 }
 
 export interface ToolUsage {
@@ -15,5 +17,17 @@ export interface ToolUsage {
   trainerNickname?: string
   isPrivate: boolean
   targetTraineeEmail?: string
+  createdAt: unknown
+  /** optional: number of views */
+  viewsCount?: number
+  /** optional: number of comments */
+  commentsCount?: number
+}
+
+export interface ToolComment {
+  id: string
+  content: string
+  authorEmail: string
+  authorNickname?: string
   createdAt: unknown
 }

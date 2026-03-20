@@ -40,9 +40,7 @@
           <div v-if="isSettingsOpen" class="dropdown-overlay" @click="closeSettings"></div>
         </div>
       </template>
-      <template v-else>
-        <router-link to="/auth" class="btn btn-primary btn-sm">{{ t('nav.loginSignup') }}</router-link>
-      </template>
+      <template v-else />
     </div>
   </header>
 </template>

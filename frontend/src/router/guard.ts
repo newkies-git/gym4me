@@ -38,6 +38,10 @@ export function setupRouterGuard(router: Router): void {
       next('/home')
       return
     }
+    if (to.meta.requiresTrainee && !(auth.isTrainee && !auth.isTrainer) && !auth.isSiteAdmin) {
+      next('/home')
+      return
+    }
     if (to.path === '/auth' && auth.isAuthenticated) {
       next('/home')
       return

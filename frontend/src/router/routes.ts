@@ -30,6 +30,16 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/calendar/trainee',
+    component: () => import('../views/CalendarView.vue'),
+    meta: { requiresAuth: true, requiresTrainee: true, calendarMode: 'trainee' }
+  },
+  {
+    path: '/calendar/trainer',
+    component: () => import('../views/CalendarView.vue'),
+    meta: { requiresAuth: true, requiresTrainer: true, calendarMode: 'trainer' }
+  },
+  {
     path: '/profile',
     component: () => import('../views/BodyProfileView.vue'),
     meta: { requiresAuth: true }

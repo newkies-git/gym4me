@@ -96,7 +96,7 @@ const isExpiringSoon = (dateStr?: string) => {
 }
 
 const viewTraineeSchedule = (trainee: TraineeInfo) => {
-  router.push(`/calendar?trainee=${trainee.email}`)
+  router.push(`/calendar/trainer?trainee=${trainee.email}`)
 }
 
 // Session Editing

@@ -143,7 +143,7 @@ const handleInvite = async () => {
 }
 
 const viewClassSchedule = (cls: GymClass) => {
-  router.push(`/calendar?classId=${cls.id}`)
+  router.push(`/calendar/trainer?classId=${cls.id}`)
 }
 
 const goToCourseCreate = () => {

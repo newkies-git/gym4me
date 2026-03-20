@@ -8,7 +8,13 @@
       </div>
       <nav class="drawer-nav">
         <router-link to="/home" class="drawer-link" @click="emit('close')">{{ t('nav.home') }}</router-link>
-        <router-link to="/calendar" class="drawer-link" @click="emit('close')">{{ t('nav.calendar') }}</router-link>
+        <router-link
+          :to="auth.isTrainer || auth.isSiteAdmin ? '/calendar/trainer' : '/calendar/trainee'"
+          class="drawer-link"
+          @click="emit('close')"
+        >
+          {{ t('nav.calendar') }}
+        </router-link>
         <router-link to="/courses" class="drawer-link" @click="emit('close')">{{ t('nav.courses') }}</router-link>
 
         <div class="drawer-divider"></div>
