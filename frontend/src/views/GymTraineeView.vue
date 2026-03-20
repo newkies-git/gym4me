@@ -34,31 +34,58 @@
         dense
       >
         <template #item="{ item: trainee }">
-          <div class="gymTrainee__row">
-            <div class="gymTrainee__main">
-              <div class="gymTrainee__name">
-                {{ trainee.nickname || trainee.email }}
+          <div
+            class="gymTrainee__card"
+            role="button"
+            tabindex="0"
+            @click="showActions ? viewDetails(trainee) : null"
+            @keydown.enter.prevent="showActions ? viewDetails(trainee) : null"
+          >
+            <div class="gymTrainee__cardTop">
+              <div class="gymTrainee__identity">
+                <div class="gymTrainee__avatar" aria-hidden="true">
+                  <img
+                    v-if="trainee.profileImageUrl"
+                    :src="trainee.profileImageUrl"
+                    alt="Avatar"
+                    class="gymTrainee__avatarImg"
+                  />
+                  <span v-else class="gymTrainee__avatarInitial">{{ getAvatarInitial(trainee.nickname || trainee.email) }}</span>
+                </div>
+
+                <div class="gymTrainee__texts">
+                  <div class="gymTrainee__name">{{ trainee.nickname || trainee.email }}</div>
+                  <div class="gymTrainee__email">{{ trainee.email }}</div>
+                </div>
               </div>
-              <div class="gymTrainee__sub">
-                <span class="gymTrainee__email">{{ trainee.email }}</span>
+
+              <div class="gymTrainee__proBadgeWrap">
+                <span v-if="isPro(trainee)" class="gymTrainee__proBadge">PRO</span>
               </div>
             </div>
 
-            <div class="gymTrainee__metrics">
-              <div class="gymTrainee__metric" :class="{ 'gymTrainee__metric--warn': (trainee.remainingSessions || 0) < 3 }">
-                <span class="gymTrainee__metricLabel">{{ t('gymTrainee.labels.remainingSessions') }}</span>
-                <strong class="gymTrainee__metricValue">{{ trainee.remainingSessions ?? 0 }}</strong>
-              </div>
-              <div class="gymTrainee__metric" :class="{ 'gymTrainee__metric--warn': isExpired(trainee.expirationDate) }">
-                <span class="gymTrainee__metricLabel">{{ t('gymTrainee.labels.expirationDate') }}</span>
-                <strong class="gymTrainee__metricValue">{{ trainee.expirationDate || t('common.na') }}</strong>
-              </div>
-            </div>
+            <div class="gymTrainee__metricsGrid">
+              <div class="gymTrainee__metricCard">
+                <div class="gymTrainee__metricLabel">PT SESSIONS</div>
+                <div class="gymTrainee__metricMain">
+                  <span class="gymTrainee__metricValue">{{ trainee.remainingSessions ?? 0 }}</span>
+                  <span class="gymTrainee__metricSuffix">/ {{ sessionsTotal }} LEFT</span>
+                </div>
 
-            <div v-if="showActions" class="gymTrainee__actions" @click.stop>
-              <button class="btn btn-ghost btn-mini" @click="viewDetails(trainee)">
-                {{ t('gymTrainee.buttons.details') }}
-              </button>
+                <div class="gymTrainee__progressTrack" aria-hidden="true">
+                  <div class="gymTrainee__progressFill" :style="{ width: `${sessionsProgressPercent(trainee.remainingSessions)}%` }" />
+                </div>
+              </div>
+
+              <div class="gymTrainee__metricCard">
+                <div class="gymTrainee__metricLabel">MEMBERSHIP</div>
+                <div class="gymTrainee__metricMain">
+                  <span class="gymTrainee__metricValue">{{ daysLeft(trainee.expirationDate) }}</span>
+                  <span class="gymTrainee__metricSuffix">DAYS LEFT</span>
+                </div>
+
+                <div class="gymTrainee__expLine">EXP: {{ formatExpiry(trainee.expirationDate) }}</div>
+              </div>
             </div>
           </div>
         </template>
@@ -159,6 +186,40 @@ const selectedGymId = ref<string>('__all__')
 
 const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSiteAdmin))
 const canManageCredit = computed(() => !!(auth.isManager || auth.isSiteAdmin))
+
+// 스티치 디자인 기준: 카드 내 PT sessions "LEFT"는 고정 총량(20)으로 표시
+const sessionsTotal = 20
+
+function getAvatarInitial(value: string): string {
+  const s = (value || '').trim()
+  if (!s) return '?'
+  return s[0].toUpperCase()
+}
+
+function sessionsProgressPercent(remainingSessions?: number): number {
+  const r = remainingSessions ?? 0
+  if (sessionsTotal <= 0) return 0
+  return Math.max(0, Math.min(100, Math.round((r / sessionsTotal) * 100)))
+}
+
+function daysLeft(dateStr?: string): number {
+  if (!dateStr) return 0
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return 0
+  const diffMs = d.getTime() - Date.now()
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+}
+
+function formatExpiry(dateStr?: string): string {
+  if (!dateStr) return t('common.na')
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return t('common.na')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()
+}
+
+function isPro(trainee: TraineeInfo): boolean {
+  return (trainee.remainingSessions ?? 0) > 0 || daysLeft(trainee.expirationDate) > 0
+}
 
 const filteredTrainees = computed(() => {
   let base = trainees.value
@@ -281,7 +342,183 @@ const onCreditAdded = async () => {
 }
 
 .trainee-list-container {
-  padding: 1rem;
+  padding: 0;
+}
+
+:deep(.base-list-view .list) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  gap: 1rem;
+}
+
+:deep(.base-list-view.dense .list) {
+  gap: 1rem;
+}
+
+.gymTrainee__card {
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(25, 22, 43, 0.95), rgba(10, 10, 20, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 0.95rem 1.05rem;
+  color: #fff;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.gymTrainee__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 46px rgba(124, 58, 237, 0.18);
+}
+
+.gymTrainee__card:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35), 0 18px 46px rgba(124, 58, 237, 0.18);
+}
+
+.gymTrainee__cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gymTrainee__identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.gymTrainee__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.gymTrainee__avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gymTrainee__avatarInitial {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+}
+
+.gymTrainee__texts {
+  min-width: 0;
+}
+
+.gymTrainee__name {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gymTrainee__email {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.gymTrainee__proBadgeWrap {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.gymTrainee__proBadge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.25);
+  border: 1px solid rgba(124, 58, 237, 0.6);
+  color: rgba(196, 181, 253, 0.95);
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.gymTrainee__metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.gymTrainee__metricCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 0.65rem 0.65rem;
+}
+
+.gymTrainee__metricLabel {
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.gymTrainee__metricMain {
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.gymTrainee__metricValue {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: rgba(167, 139, 250, 1);
+}
+
+.gymTrainee__metricSuffix {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.gymTrainee__progressTrack {
+  margin-top: 0.45rem;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gymTrainee__progressFill {
+  height: 100%;
+  background: rgba(167, 139, 250, 1);
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.gymTrainee__expLine {
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 .gymTrainee__row {
@@ -307,9 +544,13 @@ const onCreditAdded = async () => {
 }
 
 .gymTrainee__name {
-  font-weight: 800;
-  color: var(--text-main);
-  line-height: 1.2;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
 }
 
 .gymTrainee__sub {
@@ -323,11 +564,15 @@ const onCreditAdded = async () => {
 }
 
 .gymTrainee__email {
-  min-width: 0;
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 260px;
+  max-width: 320px;
+  min-width: 0;
 }
 
 .gymTrainee__metrics {
@@ -346,16 +591,18 @@ const onCreditAdded = async () => {
 
 .gymTrainee__metricLabel {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .gymTrainee__metricValue {
   display: block;
-  margin-top: 0.15rem;
-  font-size: 0.95rem;
-  color: var(--text-main);
+  margin-top: 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: rgba(167, 139, 250, 1);
 }
 
 .gymTrainee__metric--warn {
@@ -384,6 +631,27 @@ const onCreditAdded = async () => {
 
   .gymTrainee__actions {
     justify-content: flex-start;
+  }
+
+  .gymTrainee__email {
+    max-width: 100%;
+  }
+
+  :deep(.base-list-view .list) {
+    grid-template-columns: 1fr;
+  }
+
+  .gymTrainee__card {
+    padding: 0.95rem 1rem;
+  }
+
+  .gymTrainee__name {
+    font-size: 1.25rem;
+  }
+
+  .gymTrainee__metricsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
   }
 
   .gymTrainee__email {

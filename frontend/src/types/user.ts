@@ -24,6 +24,7 @@ export interface TraineeInfo {
   uid: string
   email: string
   nickname?: string
+  profileImageUrl?: string
   remainingSessions?: number
   expirationDate?: string
   gymId?: string

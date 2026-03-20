@@ -51,6 +51,7 @@ export async function getGymTrainees(gymId: string): Promise<TraineeInfo[]> {
     uid: docSnap.id,
     email: docSnap.data().email,
     nickname: docSnap.data().nickname,
+    profileImageUrl: docSnap.data().profileImageUrl,
     remainingSessions: docSnap.data().remainingSessions,
     expirationDate: docSnap.data().expirationDate
   }))
@@ -67,6 +68,7 @@ export async function getGymTraineesAndObservers(gymId: string): Promise<Trainee
     uid: docSnap.id,
     email: docSnap.data().email,
     nickname: docSnap.data().nickname,
+    profileImageUrl: docSnap.data().profileImageUrl,
     remainingSessions: docSnap.data().remainingSessions,
     expirationDate: docSnap.data().expirationDate
   }))
