@@ -718,6 +718,7 @@ export default {
         addTool: 'Add Guide',
         editTool: 'Edit',
         noTools: 'No guides found.',
+        searchPlaceholder: 'Search by title / category / registrant...',
         titleLabel: 'Title',
         titlePlaceholder: 'e.g. Leg press guide',
         categoryLabel: 'Category',

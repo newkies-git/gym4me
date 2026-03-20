@@ -7,8 +7,18 @@
       back-url="/home"
     />
 
-    <div v-if="auth.isTrainer" class="tool-header-actions">
-      <button class="btn btn-primary" @click="isAddModalOpen = true">
+    <div class="tool-header-actions">
+      <div class="tool-header-search">
+        <BaseSearchInput
+          v-model="searchQuery"
+          :placeholder="t('toolUsage.searchPlaceholder')"
+        />
+      </div>
+      <button
+        v-if="auth.isTrainer"
+        class="btn btn-primary tool-header-add-btn"
+        @click="isAddModalOpen = true"
+      >
         + {{ t('toolUsage.addTool') }}
       </button>
     </div>
@@ -280,6 +290,7 @@ import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
+import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import { useUIStore } from '../stores/uiStore'
 import { searchUserByEmail } from '../services/domain/userService'
 
@@ -290,6 +301,7 @@ const ui = useUIStore()
 const loading = ref(true)
 const tools = ref<ToolUsage[]>([])
 const selectedCategory = ref('All')
+const searchQuery = ref('')
 
 const categories = computed(() => {
     const cats = new Set(['All'])
@@ -297,7 +309,23 @@ const categories = computed(() => {
     return Array.from(cats)
 })
 
-const filteredTools = computed(() => tools.value.filter(tool => selectedCategory.value === 'All' || tool.category === selectedCategory.value))
+const normalizedSearch = computed(() => searchQuery.value.trim().toLowerCase())
+
+const filteredTools = computed(() => {
+  const q = normalizedSearch.value
+  return tools.value.filter((tool) => {
+    const categoryOk = selectedCategory.value === 'All' || tool.category === selectedCategory.value
+    if (!categoryOk) return false
+    if (!q) return true
+
+    const title = (tool.title || '').toLowerCase()
+    const category = (tool.category || '').toLowerCase()
+    const registrant = trainerDisplayNameByTool(tool).toLowerCase()
+    const email = (tool.trainerEmail || '').toLowerCase()
+
+    return [title, category, registrant, email].some((v) => v.includes(q))
+  })
+})
 
 const trainerNicknameByEmail = ref<Record<string, string>>({})
 
@@ -683,8 +711,20 @@ const handleUpdate = async () => {
 .tool-usage-wrapper { padding: 6rem 1rem 2rem 1rem; }
 .tool-header-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
     margin-bottom: 1rem;
+}
+
+.tool-header-search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 520px;
+}
+
+.tool-header-add-btn {
+  white-space: nowrap;
 }
 .tool-grid {
     display: grid;
@@ -817,7 +857,8 @@ const handleUpdate = async () => {
 
 .tool-footer--compact {
   border-top: none !important;
-  padding-top: 0 !important;
+  /* 요청: 기존 여백의 1/2 */
+  padding: 0.45rem 0.55rem 0.5rem 0.55rem !important;
   gap: 0 !important;
 }
 .tool-meta-line {

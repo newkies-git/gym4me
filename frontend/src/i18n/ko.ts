@@ -825,6 +825,7 @@ export default {
         addTool: '가이드 추가',
         editTool: '수정',
         noTools: '검색된 운동 가이드가 없습니다.',
+        searchPlaceholder: '제목 / 카테고리 / 등록자로 검색...',
         titleLabel: '제목',
         titlePlaceholder: '예: 레그 프레스 사용법',
         categoryLabel: '카테고리',
