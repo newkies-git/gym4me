@@ -60,6 +60,19 @@ export function useGymManagement() {
     managerEmail: ''
   })
 
+  function normalizeOpenDate(input: unknown): string {
+    if (!input) return ''
+    if (typeof input === 'string') return input
+    // Firestore Timestamp / Date 변환 대응
+    const maybeTs = input as any
+    if (maybeTs?.toDate && typeof maybeTs.toDate === 'function') {
+      const d = maybeTs.toDate() as Date
+      if (d instanceof Date && !Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+    }
+    if (input instanceof Date && !Number.isNaN(input.getTime())) return input.toISOString().slice(0, 10)
+    return ''
+  }
+
   async function fetchGymsData() {
     loading.value = true
     try {
@@ -127,7 +140,7 @@ export function useGymManagement() {
     modalGym.name = g.name || ''
     modalGym.location = g.location || ''
     modalGym.phone = g.phone || ''
-    modalGym.openDate = g.openDate || ''
+    modalGym.openDate = normalizeOpenDate(g.openDate)
     modalGym.notes = g.notes || ''
     modalGym.managerEmail = g.managerEmail || ''
     isModalOpen.value = true
@@ -138,12 +151,13 @@ export function useGymManagement() {
     saving.value = true
     const payload: Partial<Gym> = {
       name: modalGym.name,
-      location: modalGym.location,
-      phone: modalGym.phone,
-      openDate: modalGym.openDate,
-      notes: modalGym.notes,
+      location: modalGym.location || undefined,
+      phone: modalGym.phone || undefined,
+      notes: modalGym.notes || undefined,
       managerEmail: modalGym.managerEmail
     }
+    // 빈 문자열은 Firestore에 그대로 쓰지 않도록 조건부로 포함
+    if (modalGym.openDate) payload.openDate = modalGym.openDate
     try {
       if (isEditing.value && modalGym.id) {
         await updateGym(modalGym.id, payload)
@@ -182,7 +196,9 @@ export function useGymManagement() {
       await createGym({
         name: newGym.name,
         location: newGym.location,
-        managerEmail: auth.user?.email || ''
+        managerEmail: auth.user?.email || '',
+        // 매니저 생성 시, email 매칭 실패해도 uid로 사용자 role/gymId를 확실히 연결하기 위함
+        managerUid: auth.user?.uid
       })
       ui.showToast(t('gymMgt.createSuccess'), 'success')
       location.reload()

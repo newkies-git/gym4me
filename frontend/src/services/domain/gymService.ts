@@ -13,13 +13,28 @@ export async function getGymById(id: string): Promise<Gym | null> {
   return { id: snap.id, ...snap.data() } as Gym
 }
 
-export async function createGym(gymData: Partial<Gym>) {
+export async function createGym(gymData: Partial<Gym> & { managerUid?: string }) {
+  // `managerUid`는 gyms 컬렉션에 저장하지 않고, 유저 role/gymId 할당용으로만 사용한다.
+  const { managerUid, ...gymFields } = gymData
+
   const docRef = await addDoc(collection(db, 'gyms'), {
-    ...gymData,
+    ...gymFields,
     createdAt: serverTimestamp()
   })
-  if (gymData.managerEmail) {
-    const q = query(collection(db, 'users'), where('email', '==', gymData.managerEmail))
+
+  // 1) managerUid가 있으면 uid로 바로 매니저 유저를 연결한다.
+  if (managerUid) {
+    await updateDoc(doc(db, 'users', managerUid), {
+      gymId: docRef.id,
+      role: 'MANAGER',
+      lvl: 20
+    })
+    return docRef
+  }
+
+  // 2) managerEmail 기반 매칭(기존 동작)
+  if (gymFields.managerEmail) {
+    const q = query(collection(db, 'users'), where('email', '==', gymFields.managerEmail))
     const snap = await getDocs(q)
     if (!snap.empty) {
       await updateDoc(doc(db, 'users', snap.docs[0].id), {
@@ -29,6 +44,7 @@ export async function createGym(gymData: Partial<Gym>) {
       })
     }
   }
+
   return docRef
 }
 
