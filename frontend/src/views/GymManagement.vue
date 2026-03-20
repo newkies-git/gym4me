@@ -8,61 +8,67 @@
 
     <div v-if="loading" class="glass" style="padding: 2rem; margin-top: 2rem;">{{ t('gymMgt.loadingInfo') }}</div>
 
-    <!-- SITE ADMIN VIEW (List All Gyms) -->
-    <template v-else-if="auth.isSiteAdmin">
-      <div class="flex-between" style="margin-top: 2rem; gap: 1rem;">
-        <h3>{{ t('gymMgt.allGyms') }}</h3>
-        <button class="btn btn-primary btn-sm" @click="openCreateModal">{{ t('gymMgt.addGym') }}</button>
-      </div>
-
-      <div v-if="gymsList.length === 0" class="glass" style="padding: 2rem; margin-top: 1rem;">
-        <p>{{ t('gymMgt.noGym') }}</p>
-      </div>
-
-      <ul v-else class="gym-list" style="margin-top: 1rem; list-style: none; padding: 0;">
-        <GymCard 
-          v-for="g in gymsList" 
-          :key="g.id" 
-          :gym="g"
-          :trainers-count="trainersMap[g.id]?.length || 0"
-          :trainees-count="traineesMap[g.id]?.length || 0"
-          @edit="openEditModal"
-          @delete="handleDeleteGym"
-          @open-trainers="openTrainersModal"
-        />
-      </ul>
-    </template>
-
-    <!-- MANAGER VIEW (Single Gym) -->
     <template v-else>
-      <div v-if="!gym" class="glass" style="padding: 2rem; margin-top: 2rem;">
-        <p>{{ t('gymMgt.noGymAssigned') }}</p>
-        <div class="field" style="margin-top: 1rem;">
-          <label>{{ t('gymMgt.nameLabel') }}</label>
-          <input v-model="newGym.name" type="text" :placeholder="t('gymMgt.namePlaceholder')" />
+      <!-- SITE ADMIN VIEW (List All Gyms) -->
+      <template v-if="auth.isSiteAdmin">
+        <div class="flex-between" style="margin-top: 2rem; gap: 1rem;">
+          <h3>{{ t('gymMgt.allGyms') }}</h3>
+          <button class="btn btn-primary btn-sm" @click="openCreateModal">{{ t('gymMgt.addGym') }}</button>
         </div>
-        <div class="field">
-          <label>{{ t('gymMgt.locationLabel') }}</label>
-          <input v-model="newGym.location" type="text" :placeholder="t('gymMgt.locationPlaceholder')" />
-        </div>
-        <button class="btn btn-primary" style="margin-top: 1rem;" @click="handleCreateGym">{{ t('gymMgt.createMyGym') }}</button>
-      </div>
 
-      <div v-else>
-        <GymCard 
-          :gym="gym"
-          :trainers-count="trainersMap[gym.id]?.length || 0"
-          :trainees-count="traineesMap[gym.id]?.length || 0"
-          @edit="openEditModal"
-          @delete="handleDeleteGym"
-          @open-trainers="openTrainersModal"
-          style="margin-top: 2rem;"
-        />
-        
-        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
-          <router-link to="/manage-trainers" class="btn btn-secondary" style="flex: 1;">{{ t('gymMgt.hireManageTrainers') }}</router-link>
+        <div v-if="gymsList.length === 0" class="glass" style="padding: 2rem; margin-top: 1rem;">
+          <p>{{ t('gymMgt.noGym') }}</p>
         </div>
-      </div>
+
+        <ul v-else class="gym-list" style="margin-top: 1rem; list-style: none; padding: 0;">
+          <GymCard
+            v-for="g in gymsList"
+            :key="g.id"
+            :gym="g"
+            :trainers-count="trainersMap[g.id]?.length || 0"
+            :trainees-count="traineesMap[g.id]?.length || 0"
+            @edit="openEditModal"
+            @delete="handleDeleteGym"
+            @open-trainers="openTrainersModal"
+          />
+        </ul>
+      </template>
+
+        <!-- MANAGER VIEW (Single Gym) -->
+        <template v-else>
+          <div v-if="!gym" class="glass" style="padding: 2rem; margin-top: 2rem;">
+            <p>{{ t('gymMgt.noGymAssigned') }}</p>
+            <div class="field" style="margin-top: 1rem;">
+              <label>{{ t('gymMgt.nameLabel') }}</label>
+              <input v-model="newGym.name" type="text" :placeholder="t('gymMgt.namePlaceholder')" />
+            </div>
+            <div class="field">
+              <label>{{ t('gymMgt.locationLabel') }}</label>
+              <input v-model="newGym.location" type="text" :placeholder="t('gymMgt.locationPlaceholder')" />
+            </div>
+            <button class="btn btn-primary" style="margin-top: 1rem;" @click="handleCreateGym">{{ t('gymMgt.createMyGym') }}</button>
+          </div>
+
+          <div v-else>
+            <GymCard
+              :gym="gym"
+              :trainers-count="trainersMap[gym.id]?.length || 0"
+              :trainees-count="traineesMap[gym.id]?.length || 0"
+              @edit="openEditModal"
+              @delete="handleDeleteGym"
+              @open-trainers="openTrainersModal"
+              style="margin-top: 2rem;"
+            />
+
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+              <router-link
+                to="/manage-trainers"
+                class="btn btn-secondary"
+                style="flex: 1;"
+              >{{ t('gymMgt.hireManageTrainers') }}</router-link>
+            </div>
+          </div>
+        </template>
     </template>
 
     <!-- Create/Edit Gym Modal -->
@@ -194,6 +200,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import PageHeader from '../components/ui/PageHeader.vue'
