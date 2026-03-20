@@ -357,11 +357,12 @@ const onCreditAdded = async () => {
 
 .gymTrainee__card {
   cursor: pointer;
-  background: linear-gradient(180deg, rgba(25, 22, 43, 0.95), rgba(10, 10, 20, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 0.95rem 1.05rem;
-  color: #fff;
+  color: var(--text-main);
+  box-shadow: 1px 0 20px rgba(0, 0, 0, 0.08);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
@@ -393,8 +394,8 @@ const onCreditAdded = async () => {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(124, 58, 237, 0.2);
-  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -411,7 +412,7 @@ const onCreditAdded = async () => {
 .gymTrainee__avatarInitial {
   font-weight: 900;
   font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-main);
   letter-spacing: 0.02em;
 }
 
@@ -426,11 +427,12 @@ const onCreditAdded = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-main);
 }
 
 .gymTrainee__email {
   margin-top: 0.25rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   font-weight: 700;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -447,9 +449,9 @@ const onCreditAdded = async () => {
 .gymTrainee__proBadge {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  background: rgba(124, 58, 237, 0.25);
-  border: 1px solid rgba(124, 58, 237, 0.6);
-  color: rgba(196, 181, 253, 0.95);
+  background: rgba(94, 53, 177, 0.12);
+  border: 1px solid rgba(94, 53, 177, 0.35);
+  color: var(--primary);
   font-weight: 900;
   font-size: 0.85rem;
   letter-spacing: 0.03em;
@@ -463,8 +465,8 @@ const onCreditAdded = async () => {
 }
 
 .gymTrainee__metricCard {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 0.65rem 0.65rem;
 }
@@ -473,7 +475,7 @@ const onCreditAdded = async () => {
   font-weight: 900;
   font-size: 0.8rem;
   letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--text-muted);
 }
 
 .gymTrainee__metricMain {
@@ -486,11 +488,11 @@ const onCreditAdded = async () => {
 .gymTrainee__metricValue {
   font-size: 1.4rem;
   font-weight: 900;
-  color: rgba(167, 139, 250, 1);
+  color: var(--primary);
 }
 
 .gymTrainee__metricSuffix {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-weight: 900;
   font-size: 0.8rem;
   letter-spacing: 0.02em;
@@ -499,10 +501,10 @@ const onCreditAdded = async () => {
 .gymTrainee__progressTrack {
   margin-top: 0.45rem;
   height: 4px;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--bg-dark);
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
 }
 
 .gymTrainee__progressFill {
@@ -515,7 +517,7 @@ const onCreditAdded = async () => {
 
 .gymTrainee__expLine {
   margin-top: 0.35rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   font-weight: 900;
   font-size: 0.75rem;
   letter-spacing: 0.02em;
@@ -550,7 +552,7 @@ const onCreditAdded = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .gymTrainee__sub {
@@ -565,7 +567,7 @@ const onCreditAdded = async () => {
 
 .gymTrainee__email {
   margin-top: 0.25rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   font-weight: 700;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -594,7 +596,7 @@ const onCreditAdded = async () => {
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--text-muted);
 }
 
 .gymTrainee__metricValue {
@@ -602,7 +604,7 @@ const onCreditAdded = async () => {
   margin-top: 0;
   font-size: 1.4rem;
   font-weight: 900;
-  color: rgba(167, 139, 250, 1);
+  color: var(--primary);
 }
 
 .gymTrainee__metric--warn {
