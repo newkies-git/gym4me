@@ -4,6 +4,8 @@ import { onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getToken } from 'firebase/messaging'
 import type { User } from '../types'
+import { useUIStore } from './uiStore'
+import { extractErrorMessage } from '../utils/error'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -76,8 +78,9 @@ export const useAuthStore = defineStore('auth', {
                     };
                     // optionally save to db here: await setDoc(doc(db, 'users', firebaseUser.uid), this.user)
                 }
-            } catch (error) {
-                console.error("Error fetching user role:", error);
+            } catch (error: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(error, '사용자 정보를 불러오지 못했습니다.'), 'error')
                 this.user = null;
             }
         },
@@ -89,18 +92,25 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await signOut(auth);
                 this.user = null;
-            } catch (error) {
-                console.error("Error signing out:", error);
+            } catch (error: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(error, '로그아웃에 실패했습니다.'), 'error')
             }
         },
         async requestAndSaveFCMToken(uid: string) {
             if (!messaging) return;
             try {
+                const vapidKey = (import.meta.env.VITE_FIREBASE_VAPID_KEY || '').trim()
+                if (!vapidKey) return
+                const swReg = typeof navigator !== 'undefined' && navigator.serviceWorker
+                  ? await navigator.serviceWorker.ready
+                  : undefined
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     // You should replace VAPID_KEY with your actual web push certificate key from Firebase Console
                     const currentToken = await getToken(messaging, {
-                         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+                         vapidKey,
+                         serviceWorkerRegistration: swReg as any
                     });
                     if (currentToken) {
                         await updateDoc(doc(db, 'users', uid), { fcmToken: currentToken });
@@ -108,8 +118,9 @@ export const useAuthStore = defineStore('auth', {
                         console.log('No registration token available. Request permission to generate one.');
                     }
                 }
-            } catch (error) {
-                console.error('An error occurred while retrieving token. ', error);
+            } catch (error: unknown) {
+                // best-effort; avoid spamming UI on background failures
+                console.warn('FCM token retrieval failed:', error)
             }
         }
     }

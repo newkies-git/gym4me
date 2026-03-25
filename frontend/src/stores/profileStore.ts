@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { getBodyProfiles, addBodyProfile } from '../services/firebaseService'
 import type { BodyRecord } from '../types'
 import { useAuthStore } from './auth'
+import { useUIStore } from './uiStore'
+import { extractErrorMessage } from '../utils/error'
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -28,8 +30,9 @@ export const useProfileStore = defineStore('profile', {
                 results.sort((a, b) => a.date.localeCompare(b.date));
                 this.profiles[targetEmail] = results;
                 this.lastFetch[targetEmail] = Date.now();
-            } catch (e) {
-                console.error("Failed to fetch profiles for", targetEmail, e);
+            } catch (e: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(e, `Failed to fetch profiles for ${targetEmail}`), 'error')
             } finally {
                 this.loading = false;
             }

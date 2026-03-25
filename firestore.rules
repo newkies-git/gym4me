@@ -5,6 +5,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function authEmail() {
+      return request.auth.token.email;
+    }
+
     function userDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
@@ -25,10 +29,23 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isOwnerEmail(email) {
+      return isSignedIn() && email == authEmail();
+    }
+
+    function isTrainerOfUserDoc(userData) {
+      return isTrainer()
+        && userData.trainerEmail is string
+        && userData.trainerEmail == authEmail();
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if isOwner(userId) || isSiteAdmin() || isManager();
+      allow update: if isOwner(userId)
+        || isSiteAdmin()
+        || isManager()
+        || isTrainerOfUserDoc(resource.data);
       allow delete: if isOwner(userId) || isSiteAdmin();
     }
 
@@ -38,26 +55,51 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /adminJobs/{jobId} {
+      allow read: if isSiteAdmin()
+        || (isManager() && resource.data.actorEmail == authEmail());
+      allow create: if isSiteAdmin() || isManager()
+        && request.resource.data.actorEmail == authEmail();
+      allow update, delete: if false;
+    }
+
     match /ticketHistory/{docId} {
       allow read: if isSignedIn();
-      allow create: if isTrainer() || isSiteAdmin();
+      allow create: if isTrainer() || isManager() || isSiteAdmin();
       allow update, delete: if isSiteAdmin();
     }
 
     match /classes/{classId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isTrainer() || isManager() || isSiteAdmin();
+      allow create: if isTrainer() || isManager() || isSiteAdmin();
+      allow update, delete: if isSiteAdmin()
+        || isManager()
+        || (isTrainer() && resource.data.trainerEmail == authEmail());
     }
 
     match /schedules/{scheduleId} {
-      allow read: if isSignedIn();
-      allow create: if isTrainer() || isSiteAdmin()
+      allow read: if isSignedIn()
+        && (
+          isSiteAdmin()
+          || isManager()
+          || resource.data.userEmail == authEmail()
+          || resource.data.clientEmail == authEmail()
+          || resource.data.trainerEmail == authEmail()
+        );
+
+      allow create: if isSiteAdmin()
+        || isTrainer()
         || (request.resource.data.type == 'PERSONAL'
-            && request.resource.data.userEmail == request.auth.token.email);
-      allow update: if isTrainer() || isSiteAdmin()
-        || (resource.data.userEmail == request.auth.token.email);
+          && request.resource.data.userEmail == authEmail());
+
+      allow update: if isSiteAdmin()
+        || isManager()
+        || (resource.data.userEmail == authEmail())
+        || (isTrainer() && resource.data.trainerEmail == authEmail());
+
       allow delete: if isSiteAdmin()
-        || resource.data.userEmail == request.auth.token.email;
+        || isManager()
+        || resource.data.userEmail == authEmail();
     }
 
     match /workoutLogs/{logId} {
@@ -73,12 +115,105 @@ service cloud.firestore {
 
     match /courses/{courseId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isTrainer() || isSiteAdmin();
+      allow create: if isTrainer() || isSiteAdmin();
+      allow update, delete: if isSiteAdmin()
+        || (isTrainer() && resource.data.trainerEmail == authEmail());
     }
     match /courseApplications/{appId} {
+      allow read: if isSignedIn()
+        && (
+          isSiteAdmin()
+          || isManager()
+          || resource.data.traineeEmail == authEmail()
+          || (isTrainer()
+            && resource.data.courseId is string
+            && get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.trainerEmail == authEmail())
+        );
+      allow create: if isSignedIn() && request.resource.data.traineeEmail == authEmail();
+      allow delete: if isSignedIn()
+        && (
+          resource.data.traineeEmail == authEmail()
+          || (isTrainer()
+            && resource.data.courseId is string
+            && get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.trainerEmail == authEmail())
+          || isManager()
+          || isSiteAdmin()
+        );
+    }
+
+    match /trainerProfiles/{email} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.traineeEmail == request.auth.token.email;
-      allow delete: if isSignedIn() && (resource.data.traineeEmail == request.auth.token.email || isTrainer() || isSiteAdmin());
+      allow create, update: if isSiteAdmin()
+        || isManager()
+        || (isTrainer() && isOwnerEmail(email));
+      allow delete: if isSiteAdmin();
+    }
+
+    match /profileHistory/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSiteAdmin()
+        || isManager()
+        || (isTrainer() && request.resource.data.trainerEmail == authEmail());
+      allow update, delete: if isSiteAdmin();
+    }
+
+    match /bodyProfiles/{docId} {
+      allow read: if isSignedIn()
+        && (
+          isSiteAdmin()
+          || isManager()
+          || request.auth.token.email == resource.data.userEmail
+          || isTrainer()
+        );
+      allow create: if isSignedIn()
+        && (
+          isSiteAdmin()
+          || isManager()
+          || isTrainer()
+          || request.resource.data.userEmail == authEmail()
+        );
+      allow update, delete: if isSiteAdmin()
+        || isManager()
+        || resource.data.userEmail == authEmail();
+    }
+
+    match /toolUsage/{toolId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.isPrivate != true
+          || isSiteAdmin()
+          || isManager()
+          || resource.data.trainerEmail == authEmail()
+          || resource.data.targetTraineeEmail == authEmail()
+        );
+      allow create: if isSiteAdmin()
+        || isManager()
+        || (isTrainer() && request.resource.data.trainerEmail == authEmail());
+      allow update, delete: if isSiteAdmin()
+        || isManager()
+        || (isTrainer() && resource.data.trainerEmail == authEmail());
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn()
+          && (
+            get(/databases/$(database)/documents/toolUsage/$(toolId)).data.isPrivate != true
+            || isSiteAdmin()
+            || isManager()
+            || get(/databases/$(database)/documents/toolUsage/$(toolId)).data.trainerEmail == authEmail()
+            || get(/databases/$(database)/documents/toolUsage/$(toolId)).data.targetTraineeEmail == authEmail()
+          );
+        allow create: if isSignedIn()
+          && request.resource.data.authorEmail == authEmail();
+        allow update, delete: if isSiteAdmin()
+          || isManager()
+          || resource.data.authorEmail == authEmail();
+      }
+
+      match /views/{viewerEmail} {
+        allow read: if isSiteAdmin() || isManager();
+        allow create: if isSignedIn() && viewerEmail == authEmail();
+        allow update, delete: if false;
+      }
     }
 
     match /{document=**} {

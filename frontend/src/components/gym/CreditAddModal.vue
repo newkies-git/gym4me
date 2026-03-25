@@ -35,6 +35,8 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from '../ui/BaseModal.vue'
 import { addTicketCredit } from '../../services/firebaseService'
 import { useAuthStore } from '../../stores/auth'
+import { useUIStore } from '../../stores/uiStore'
+import { extractErrorMessage } from '../../utils/error'
 
 const props = defineProps<{
   isOpen: boolean
@@ -45,6 +47,7 @@ const emit = defineEmits(['update:isOpen', 'success'])
 
 const { t } = useI18n()
 const auth = useAuthStore()
+const ui = useUIStore()
 const loading = ref(false)
 
 const form = ref({
@@ -80,8 +83,7 @@ async function handleSubmit() {
     emit('success')
     emit('update:isOpen', false)
   } catch (err) {
-    console.error('Failed to add credit:', err)
-    alert('Failed to add credit')
+    ui.showToast(extractErrorMessage(err, t('common.saveFailed')), 'error')
   } finally {
     loading.value = false
   }

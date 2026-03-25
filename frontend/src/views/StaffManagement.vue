@@ -420,10 +420,13 @@ import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import BaseSelect from '../components/ui/BaseSelect.vue'
 import { getStaffs, updateStaffData, getGyms, createStaffAccount, getTrainerProfile } from '../services/firebaseService'
 import { useAuthStore } from '../stores/auth'
+import { useUIStore } from '../stores/uiStore'
 import type { User, Gym, TrainerProfile } from '../types'
+import { extractErrorMessage } from '../utils/error'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const ui = useUIStore()
 
 const staffs = ref<User[]>([])
 const gyms = ref<Gym[]>([])
@@ -531,7 +534,7 @@ const fetchStaffs = async () => {
     gyms.value = gymsData
     gymsData.forEach((g: Gym) => { gymNames.value[g.id] = g.name })
   } catch (e) {
-    console.error(e)
+    ui.showToast(extractErrorMessage(e, t('common.loadFailed' as any) || '불러오기에 실패했습니다.'), 'error')
   } finally {
     loading.value = false
   }
@@ -627,8 +630,7 @@ const handleUpdateStaff = async () => {
     await fetchStaffs()
     showEditModal.value = false
   } catch (e) {
-    console.error(e)
-    alert(t('staffDetail.saveFailed'))
+    ui.showToast(extractErrorMessage(e, t('staffDetail.saveFailed')), 'error')
   } finally {
     submitting.value = false
   }

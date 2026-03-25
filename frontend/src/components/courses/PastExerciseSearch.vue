@@ -27,14 +27,17 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
+import { useUIStore } from '../../stores/uiStore'
 import { getSchedules, addSchedule, updateSchedule } from '../../services/firebaseService'
 import { arrayUnion } from 'firebase/firestore'
 import type { ExerciseRecord } from '../../types'
 import { DEFAULT_SCHEDULE_TIME } from '../../constants/schedule'
+import { extractErrorMessage } from '../../utils/error'
 
 const auth = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
+const ui = useUIStore()
 
 // Search & Repeat Logic
 const searchExerciseQuery = ref('')
@@ -66,8 +69,8 @@ const searchPastExercises = async () => {
       
       // Sort by dates descending
       searchResults.value.sort((a,b) => b.date.localeCompare(a.date))
-  } catch(e) {
-      console.error(e)
+  } catch (e: unknown) {
+      ui.showToast(extractErrorMessage(e, t('common.loadFailed' as any) || '불러오기에 실패했습니다.'), 'error')
   }
 }
 
@@ -103,10 +106,10 @@ const repeatExercise = async (record: ExerciseRecord) => {
           status: 'COMPLETED'
       });
       
-      alert(t('search.addedToday', { name: record.name }));
+      ui.showToast(t('search.addedToday', { name: record.name }), 'success')
       router.push('/calendar/trainee');
-  } catch (e: any) {
-      alert(t('common.errorWithMessage', { msg: e.message }))
+  } catch (e: unknown) {
+      ui.showToast(extractErrorMessage(e, t('common.errorWithMessage', { msg: '' })), 'error')
   }
 }
 </script>

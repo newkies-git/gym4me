@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { getTraineesByTrainer, searchUserByEmail, assignTrainerToTrainee, updateTraineeSession } from '../services/firebaseService'
 import type { TraineeInfo } from '../types'
 import { useAuthStore } from './auth'
+import { useUIStore } from './uiStore'
+import { extractErrorMessage } from '../utils/error'
 
 export const useTraineeStore = defineStore('trainee', {
     state: () => ({
@@ -23,8 +25,9 @@ export const useTraineeStore = defineStore('trainee', {
             try {
                 this.trainees = await getTraineesByTrainer(authStore.user.email);
                 this.lastFetch = Date.now();
-            } catch (e) {
-                console.error("Failed to fetch trainees", e);
+            } catch (e: unknown) {
+                const ui = useUIStore()
+                ui.showToast(extractErrorMessage(e, '트레이니 목록을 불러오지 못했습니다.'), 'error')
             } finally {
                 this.loading = false;
             }

@@ -56,6 +56,7 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from '../ui/BaseModal.vue'
 import { getTicketHistory } from '../../services/firebaseService'
 import type { TicketHistoryEntry } from '../../types'
+import { extractErrorMessage } from '../../utils/error'
 
 const props = defineProps<{
   isOpen: boolean
@@ -74,8 +75,7 @@ watch(() => props.isOpen, async (newVal) => {
     try {
       history.value = await getTicketHistory(props.traineeUid)
     } catch (err: any) {
-      console.error('Failed to fetch history:', err)
-      errorMessage.value = err.message || 'Failed to fetch history'
+      errorMessage.value = extractErrorMessage(err, 'Failed to fetch history')
     } finally {
       loading.value = false
     }

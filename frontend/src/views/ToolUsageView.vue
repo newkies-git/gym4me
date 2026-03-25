@@ -293,6 +293,7 @@ import BaseSelect from '../components/ui/BaseSelect.vue'
 import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
 import { useUIStore } from '../stores/uiStore'
 import { searchUserByEmail } from '../services/domain/userService'
+import { extractErrorMessage } from '../utils/error'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -352,9 +353,8 @@ async function openCommentModal(tool: ToolUsage) {
   commentsLoading.value = true
   try {
     toolComments.value = await getToolComments(tool.id)
-  } catch (e: any) {
-    console.error('Failed to load tool comments', e)
-    ui.showToast(e?.message || t('toolUsage.noTools'), 'error')
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('toolUsage.loadFailed')), 'error')
   } finally {
     commentsLoading.value = false
   }
@@ -387,9 +387,8 @@ async function submitToolComment() {
 
     commentDraft.value = ''
     isCommentModalOpen.value = false
-  } catch (e: any) {
-    console.error('Failed to add tool comment', e)
-    ui.showToast(e?.message || t('common.saveFailed'), 'error')
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, t('common.saveFailed')), 'error')
   }
 }
 
@@ -555,8 +554,7 @@ const fetchTools = async () => {
           )
         }
     } catch (e: any) {
-        console.error('Failed to fetch tools:', e)
-        ui.showToast(e?.message || t('toolUsage.loadFailed'), 'error')
+        ui.showToast(extractErrorMessage(e, t('toolUsage.loadFailed')), 'error')
         tools.value = []
     } finally {
         loading.value = false

@@ -17,6 +17,64 @@
         />
       </div>
 
+      <div v-if="canSendLowCreditAlert" class="alert-filter">
+        <label class="filter-label">{{ t('common.notification' as any) || '알림' }}</label>
+        <div class="alert-filter-row">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            :disabled="!targetGymIdForAlert"
+            @click="sendLowCreditAlertNow"
+          >
+            저잔여 알림 발송
+          </button>
+          <button
+            v-if="canViewLowCreditAlertHistory"
+            type="button"
+            class="btn btn-ghost btn-sm"
+            @click="openJobHistory"
+          >
+            발송 기록
+          </button>
+        </div>
+        <div class="sm-hint" v-if="auth.isSiteAdmin && !targetGymIdForAlert">
+          Gym을 선택하면 발송할 수 있습니다.
+        </div>
+      </div>
+
+      <div class="credit-filter">
+        <label class="filter-label">{{ t('gymTrainee.labels.remainingSessions') }}</label>
+        <div class="credit-filter-row">
+          <input
+            v-model.number="creditThreshold"
+            class="credit-threshold-input"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            :aria-label="t('gymTrainee.labels.remainingSessions')"
+          />
+          <label class="credit-only-toggle">
+            <input type="checkbox" v-model="onlyLowCredits" />
+            <span>{{ t('common.filter' as any) || '필터' }}: ≤ {{ creditThreshold }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sort-filter">
+        <label class="filter-label">{{ t('common.sort' as any) || '정렬' }}</label>
+        <BaseSelect
+          v-model="sortKey"
+          class="gym-select"
+          :options="[
+            { value: 'sessionsAsc', label: (t('gymTrainee.labels.remainingSessions') as any) ? `${t('gymTrainee.labels.remainingSessions')} ↑` : '잔여횟수 ↑' },
+            { value: 'sessionsDesc', label: (t('gymTrainee.labels.remainingSessions') as any) ? `${t('gymTrainee.labels.remainingSessions')} ↓` : '잔여횟수 ↓' },
+            { value: 'expiryAsc', label: '만료일 ↑' },
+            { value: 'expiryDesc', label: '만료일 ↓' }
+          ]"
+        />
+      </div>
+
       <div class="search-bar-inner">
         <BaseSearchInput
           v-model="searchQuery"
@@ -65,7 +123,7 @@
             </div>
 
             <div class="gymTrainee__metricsGrid">
-              <div class="gymTrainee__metricCard">
+              <div class="gymTrainee__metricCard" :class="{ 'gymTrainee__metricCard--warn': isLowCredit(trainee) }">
                 <div class="gymTrainee__metricLabel">PT SESSIONS</div>
                 <div class="gymTrainee__metricMain">
                   <span class="gymTrainee__metricValue">{{ trainee.remainingSessions ?? 0 }}</span>
@@ -77,7 +135,7 @@
                 </div>
               </div>
 
-              <div class="gymTrainee__metricCard">
+              <div class="gymTrainee__metricCard" :class="{ 'gymTrainee__metricCard--warn': isExpired(trainee.expirationDate) }">
                 <div class="gymTrainee__metricLabel">MEMBERSHIP</div>
                 <div class="gymTrainee__metricMain">
                   <span class="gymTrainee__metricValue">{{ daysLeft(trainee.expirationDate) }}</span>
@@ -151,13 +209,50 @@
       v-model:isOpen="isCreditHistoryOpen"
       :traineeUid="selectedTrainee.uid"
     />
+
+    <!-- Low credit alert job history -->
+    <BaseModal v-model:isOpen="isJobHistoryOpen" title="발송 기록">
+      <div v-if="jobsLoading" class="empty-state">{{ t('common.loading') }}</div>
+      <div v-else class="job-history">
+        <div v-if="!recentJobs.length" class="empty-state">{{ t('common.noData') }}</div>
+        <div v-else class="job-list">
+          <div v-for="job in recentJobs" :key="job.id" class="job-item">
+            <div class="job-top">
+              <div class="job-type">{{ job.type }}</div>
+              <div class="job-status" :class="`st-${(job.status || 'PENDING').toLowerCase()}`">
+                {{ job.status || 'PENDING' }}
+              </div>
+            </div>
+            <div class="job-meta">
+              <div>gymId: <strong>{{ job.gymId || '—' }}</strong></div>
+              <div>threshold: <strong>{{ job.threshold ?? '—' }}</strong></div>
+              <div>created: <strong>{{ formatDateTime(job.createdAt) }}</strong></div>
+              <div>processed: <strong>{{ formatDateTime(job.processedAt) }}</strong></div>
+            </div>
+            <div v-if="job.result" class="job-result">
+              결과:
+              managers={{ job.result.managers ?? '—' }},
+              trainees={{ job.result.trainees ?? '—' }},
+              success={{ job.result.sentSuccess ?? job.result.sent ?? '—' }},
+              failure={{ job.result.sentFailure ?? '—' }}
+            </div>
+            <div v-if="job.error" class="job-error">error: {{ job.error }}</div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-ghost" @click="isJobHistoryOpen = false">{{ t('common.close') }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useRoute, useRouter } from 'vue-router'
+import { useUIStore } from '../stores/uiStore'
 import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import BaseSearchInput from '../components/ui/BaseSearchInput.vue'
@@ -168,9 +263,15 @@ import CreditHistoryModal from '../components/gym/CreditHistoryModal.vue'
 import { getGymTrainees, getGyms } from '../services/firebaseService'
 import { getCoursesForUser } from '../services/courseService'
 import type { TraineeInfo } from '../types'
+import { db } from '../firebase/config'
+import { addDoc, collection, serverTimestamp, query, where, orderBy, limit, onSnapshot, type Unsubscribe } from 'firebase/firestore'
+import { extractErrorMessage } from '../utils/error'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const ui = useUIStore()
 
 const loading = ref(true)
 const trainees = ref<TraineeInfo[]>([])
@@ -186,6 +287,10 @@ const selectedGymId = ref<string>('__all__')
 
 const showActions = computed(() => !!(auth.isTrainer || auth.isManager || auth.isSiteAdmin))
 const canManageCredit = computed(() => !!(auth.isManager || auth.isSiteAdmin))
+
+const creditThreshold = ref<number>(3)
+const onlyLowCredits = ref<boolean>(false)
+const sortKey = ref<'sessionsAsc' | 'sessionsDesc' | 'expiryAsc' | 'expiryDesc'>('sessionsAsc')
 
 // 스티치 디자인 기준: 카드 내 PT sessions "LEFT"는 고정 총량(20)으로 표시
 const sessionsTotal = 20
@@ -221,18 +326,48 @@ function isPro(trainee: TraineeInfo): boolean {
   return (trainee.remainingSessions ?? 0) > 0 || daysLeft(trainee.expirationDate) > 0
 }
 
+function isLowCredit(trainee: TraineeInfo): boolean {
+  const r = trainee.remainingSessions ?? 0
+  return Number.isFinite(creditThreshold.value) && r <= creditThreshold.value
+}
+
 const filteredTrainees = computed(() => {
   let base = trainees.value
   if (auth.isSiteAdmin && selectedGymId.value !== '__all__') {
     base = base.filter((m) => m.gymId === selectedGymId.value)
   }
-  if (!searchQuery.value) return base
-  const q = searchQuery.value.toLowerCase()
-  return base.filter(
-    (m) =>
-      m.nickname?.toLowerCase().includes(q) ||
-      m.email.toLowerCase().includes(q)
-  )
+  if (onlyLowCredits.value) {
+    base = base.filter((m) => (m.remainingSessions ?? 0) <= creditThreshold.value)
+  }
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    base = base.filter(
+      (m) =>
+        m.nickname?.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q)
+    )
+  }
+
+  const toExpiryMs = (dateStr?: string): number => {
+    if (!dateStr) return 0
+    const d = new Date(dateStr)
+    return Number.isNaN(d.getTime()) ? 0 : d.getTime()
+  }
+
+  const sorted = [...base]
+  sorted.sort((a, b) => {
+    const ar = a.remainingSessions ?? 0
+    const br = b.remainingSessions ?? 0
+    const ae = toExpiryMs(a.expirationDate)
+    const be = toExpiryMs(b.expirationDate)
+    if (sortKey.value === 'sessionsAsc') return ar - br
+    if (sortKey.value === 'sessionsDesc') return br - ar
+    if (sortKey.value === 'expiryAsc') return ae - be
+    return be - ae
+  })
+
+  return sorted
 })
 
 const totalPages = computed(() =>
@@ -242,6 +377,170 @@ const totalPages = computed(() =>
 const pagedTrainees = computed(() => {
   const start = (page.value - 1) * pageSize
   return filteredTrainees.value.slice(start, start + pageSize)
+})
+
+watch(
+  () => [selectedGymId.value, searchQuery.value, creditThreshold.value, onlyLowCredits.value, sortKey.value],
+  () => {
+    page.value = 1
+  }
+)
+
+watch(
+  () => route.query.threshold,
+  (raw) => {
+    const v = Array.isArray(raw) ? raw[0] : raw
+    const n = typeof v === 'string' ? Number(v) : typeof v === 'number' ? v : NaN
+    if (Number.isFinite(n) && n >= 0) {
+      creditThreshold.value = Math.floor(n)
+      onlyLowCredits.value = true
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => route.query.onlyLow,
+  (raw) => {
+    const v = Array.isArray(raw) ? raw[0] : raw
+    if (v === '1' || v === 'true') onlyLowCredits.value = true
+  },
+  { immediate: true }
+)
+
+watch(
+  () => [creditThreshold.value, onlyLowCredits.value],
+  () => {
+    const query = { ...route.query } as Record<string, any>
+    if (onlyLowCredits.value) {
+      query.threshold = String(Math.max(0, Math.floor(creditThreshold.value || 0)))
+      query.onlyLow = '1'
+    } else {
+      delete query.threshold
+      delete query.onlyLow
+    }
+    router.replace({ query }).catch(() => {})
+  }
+)
+
+const canSendLowCreditAlert = computed(() => !!(auth.isManager || auth.isSiteAdmin))
+const canViewLowCreditAlertHistory = computed(() => !!(auth.isManager || auth.isSiteAdmin))
+
+type AdminJobStatus = 'PENDING' | 'DONE' | 'FAILED'
+type AdminJobType = 'MANAGER_LOW_CREDITS'
+
+type AdminJob = {
+  id: string
+  type: AdminJobType
+  gymId?: string
+  actorEmail?: string
+  threshold?: number
+  status?: AdminJobStatus
+  createdAt?: unknown
+  processedAt?: unknown
+  result?: {
+    managers?: number
+    trainees?: number
+    sentSuccess?: number
+    sentFailure?: number
+    sent?: number
+  }
+  error?: string
+}
+
+const isJobHistoryOpen = ref(false)
+const jobsLoading = ref(false)
+const recentJobs = ref<AdminJob[]>([])
+let jobsUnsub: Unsubscribe | null = null
+
+const targetGymIdForAlert = computed(() => {
+  if (auth.isSiteAdmin) {
+    return selectedGymId.value !== '__all__' ? selectedGymId.value : ''
+  }
+  if (auth.isManager) {
+    return auth.user?.gymId || ''
+  }
+  return ''
+})
+
+async function sendLowCreditAlertNow() {
+  if (!canSendLowCreditAlert.value) return
+  const gymId = targetGymIdForAlert.value
+  if (!gymId) {
+    ui.showToast('Gym을 선택하세요.', 'warning')
+    return
+  }
+
+  try {
+    await addDoc(collection(db, 'adminJobs'), {
+      type: 'MANAGER_LOW_CREDITS',
+      gymId,
+      threshold: Math.max(0, Math.floor(Number(creditThreshold.value || 0))),
+      actorEmail: auth.user?.email || '',
+      createdAt: serverTimestamp(),
+      status: 'PENDING'
+    })
+    ui.showToast('알림 발송 요청을 등록했습니다.', 'success')
+  } catch (e: unknown) {
+    ui.showToast(extractErrorMessage(e, '알림 발송 요청에 실패했습니다.'), 'error')
+  }
+}
+
+function formatDateTime(value: unknown): string {
+  if (value == null) return '—'
+  try {
+    if (typeof (value as any).toDate === 'function') return (value as any).toDate().toLocaleString()
+    if (typeof (value as any).toMillis === 'function') return new Date((value as any).toMillis()).toLocaleString()
+    if (typeof value === 'number') return new Date(value).toLocaleString()
+    if (typeof value === 'string') {
+      const d = new Date(value)
+      return isNaN(d.getTime()) ? value : d.toLocaleString()
+    }
+    return String(value)
+  } catch {
+    return '—'
+  }
+}
+
+async function openJobHistory() {
+  if (!canViewLowCreditAlertHistory.value) return
+  isJobHistoryOpen.value = true
+  if (!auth.user?.email) return
+
+  // reset previous subscription (if any)
+  if (jobsUnsub) {
+    jobsUnsub()
+    jobsUnsub = null
+  }
+
+  jobsLoading.value = true
+  const q = query(
+    collection(db, 'adminJobs'),
+    where('actorEmail', '==', auth.user.email),
+    orderBy('createdAt', 'desc'),
+    limit(20)
+  )
+
+  jobsUnsub = onSnapshot(
+    q,
+    (snap) => {
+      recentJobs.value = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AdminJob, 'id'>) }))
+      jobsLoading.value = false
+    },
+    (e) => {
+      jobsLoading.value = false
+      ui.showToast(extractErrorMessage(e, '발송 기록을 불러오지 못했습니다.'), 'error')
+      recentJobs.value = []
+    }
+  )
+}
+
+watch(isJobHistoryOpen, (open) => {
+  if (open) return
+  if (jobsUnsub) {
+    jobsUnsub()
+    jobsUnsub = null
+  }
 })
 
 onMounted(async () => {
@@ -673,6 +972,18 @@ const onCreditAdded = async () => {
   align-items: flex-end;
 }
 
+.alert-filter-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sm-hint {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .gym-filter {
   min-width: 220px;
 }
@@ -707,5 +1018,76 @@ const onCreditAdded = async () => {
 .page-indicator {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.job-history {
+  padding: 0.25rem 0;
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.job-item {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg-card);
+  padding: 0.75rem 0.9rem;
+}
+
+.job-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.job-type {
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+.job-status {
+  font-weight: 900;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.job-status.st-done {
+  color: #2e7d32;
+  border-color: rgba(46, 125, 50, 0.35);
+  background: rgba(76, 175, 80, 0.12);
+}
+
+.job-status.st-failed {
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.35);
+  background: rgba(244, 67, 54, 0.10);
+}
+
+.job-meta {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.job-result {
+  margin-top: 0.55rem;
+  font-size: 0.85rem;
+}
+
+.job-error {
+  margin-top: 0.35rem;
+  color: #c62828;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
 }
 </style>
