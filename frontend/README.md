@@ -50,6 +50,10 @@ Firebase 설정을 위해 `.env`에 다음 변수를 설정합니다.
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
 
+로그인 유지 정책(브라우저 persistence)을 명시하려면 아래 변수를 설정할 수 있습니다.
+
+- `VITE_AUTH_PERSISTENCE`: `local`(기본값) 또는 `session`
+
 `init:admin` 사용 시 Admin 이메일/비밀번호 등 추가 변수는 `init_admin.mjs`를 참고하세요.
 
 ## 소스 구조 (요약)
